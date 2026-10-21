@@ -5,7 +5,7 @@ import { ContextDrawer } from "@/components/learn/ContextDrawer";
 import { Badge, btnVariants } from "@/components/learn/ui";
 import { cn } from "@/lib/utils";
 
-const TITLE = "Overview — The Intelligence Lab: five AI engineering concepts";
+const TITLE = "Overview — RAG Learning: five AI engineering concepts";
 const DESC =
   "An interactive learning resource on RAG, caching and routing, evaluation, guardrails, and tool use, with the design-phase EvidenceLens project as a case study.";
 
@@ -28,7 +28,7 @@ function Overview() {
     <div className="mx-auto max-w-4xl px-5 py-12 lg:px-10 lg:py-16">
       <p className="eyebrow">A personal learning resource</p>
       <h1 className="mt-3 text-5xl font-medium leading-[1.05] sm:text-6xl">
-        THE INTELLIGENCE LAB{" "}
+        RAG LEARNING{" "}
         <span className="block text-2xl font-normal text-muted-foreground">
           Overview of the five lessons
         </span>
