@@ -41,11 +41,11 @@ export interface SceneTransfer {
 
 // World coordinates, shared by objects, connections and the travelling data.
 export const PREPARATION_POSITIONS: Partial<Record<SceneNode, Point3>> = {
-  source: [-5, -0.7, 0.7],
-  chunks: [-2.5, -0.7, 0.8],
-  vectors: [0.2, -0.7, 0.5],
-  index: [3.2, 0.7, -0.8],
-  model: [7.2, 1.2, -0.5],
+  source: [-6.4, -0.5, 0.6],
+  chunks: [-3.4, -0.5, 0.6],
+  vectors: [-0.5, -0.5, 0.5],
+  index: [3.2, 0.3, -0.6],
+  model: [7.6, 0.8, -0.5],
 };
 export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   question: [-8, 0, 0.4],
@@ -140,9 +140,6 @@ const PATH_BENDS: Partial<Record<string, Point3[]>> = {
     [-5, -3.2, 0.8],
     [-7, -2, 0.8],
   ],
-  "source:chunks": [[-3.8, -0.45, 0.8]],
-  "chunks:vectors": [[-1.15, -0.4, 0.8]],
-  "vectors:index": [[1.7, -0.35, 0.2]],
   "question:input": [[-7, 0.15, 0.4]],
   "input:router": [[-5.05, 0.15, 0.4]],
   "router:cache": [
@@ -464,11 +461,12 @@ export function travelPoint(
           (-a[axis]! + 3 * b[axis]! - 3 * c[axis]! + d[axis]!) * u * u * u),
     ) as Point3;
   }
-  const eased = t * t * (3 - 2 * t);
-  const lift = Math.sin(Math.PI * t);
+  // A clean, shallow arc proportional to the span: no S-bend, constant direction.
+  const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
+  const lift = Math.sin(Math.PI * t) * Math.min(0.45, span * 0.08);
   return [
-    from[0] + (to[0] - from[0]) * eased,
-    from[1] + (to[1] - from[1]) * eased + lift * 0.5,
-    from[2] + (to[2] - from[2]) * eased + lift * 0.65,
+    from[0] + (to[0] - from[0]) * t,
+    from[1] + (to[1] - from[1]) * t + lift,
+    from[2] + (to[2] - from[2]) * t + lift * 0.6,
   ];
 }

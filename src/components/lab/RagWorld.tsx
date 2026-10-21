@@ -400,8 +400,8 @@ function Connection({
   useFrame(() => {
     if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
     if (arrow.current) {
-      geometry.curve.getPointAt(0.91, arrow.current.position);
-      geometry.curve.getTangentAt(0.91, tangent);
+      geometry.curve.getPointAt(0.965, arrow.current.position);
+      geometry.curve.getTangentAt(0.965, tangent);
       arrow.current.quaternion.setFromUnitVectors(axis, tangent);
     }
     packets.current.forEach((mesh, i) => {
@@ -425,9 +425,9 @@ function Connection({
       <Line
         points={geometry.points}
         color={color}
-        lineWidth={active ? 2 : 1.3}
+        lineWidth={active ? 2.2 : 1.5}
         transparent
-        opacity={0.15 + emphasis * 0.75}
+        opacity={0.3 + emphasis * 0.65}
         toneMapped={false}
         depthWrite={false}
       />
@@ -437,19 +437,19 @@ function Connection({
         color={signal}
         lineWidth={2}
         dashed
-        dashSize={0.16}
-        gapSize={0.2}
+        dashSize={0.08}
+        gapSize={0.34}
         transparent
         opacity={active ? 0.8 : 0}
         toneMapped={false}
         depthWrite={false}
       />
       <mesh ref={arrow}>
-        <coneGeometry args={[0.085, 0.26, 3]} />
+        <coneGeometry args={[0.11, 0.3, 16]} />
         <meshBasicMaterial
           color={active ? signal : color}
           transparent
-          opacity={0.2 + emphasis * 0.7}
+          opacity={0.35 + emphasis * 0.6}
           toneMapped={false}
         />
       </mesh>
