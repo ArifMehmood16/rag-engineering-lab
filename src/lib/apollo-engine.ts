@@ -219,23 +219,22 @@ export function advance(s: EngineState, records: EvidenceRecord[]): EngineState 
         input: [`${ctx.context.length} kept passages`, `facets: ${Object.keys(FACETS).join(", ")}`],
         output: [...out, all ? "Decision: sufficient" : "Decision: evidence gap"],
       };
-      if (!all) ctx.released = undefined;
       break;
     }
     case "draft": {
       const has = (id: string, ...all: string[]) =>
         all.every((p) => byId(id).text.toLowerCase().includes(p));
       const uniq = (a: string[]) => [...new Set(a)];
-      const walkers = ctx.facets.moonwalkers!.filter(
+      const walkers = ctx.facets["moonwalkers"]!.filter(
         (id) =>
           has(id, "armstrong", "aldrin") ||
           (has(id, "armstrong") && has(id, "stepped onto the moon")),
       );
-      const orbit = ctx.facets.orbiter!.filter(
+      const orbit = ctx.facets["orbiter"]!.filter(
         (id) => has(id, "collins") && (has(id, "orbited") || has(id, "lunar orbit")),
       );
       const craft = uniq([
-        ...ctx.facets.craft!.filter((id) => has(id, "csm, columbia")),
+        ...ctx.facets["craft"]!.filter((id) => has(id, "csm, columbia")),
         ...orbit.filter((id) => has(id, "csm piloted by collins")),
       ]);
       ctx.claims = [
