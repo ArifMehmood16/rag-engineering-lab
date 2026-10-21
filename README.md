@@ -1,88 +1,137 @@
 # RAG Engineering Lab
 
-Repo name: `rag-engineering-lab`. Site brand: **RAG Learning · AI Learning Lab**.
+**Learn five practical AI engineering concepts by watching a RAG system work.**
 
-An interactive, read-only learning site for five AI engineering concepts: retrieval and embeddings, caching and routing, evaluations, guardrails, and tools/context management.
+[Open the live lab](https://rag-engineering-lab.lovable.app/) · [Lab guide](docs/LAB_GUIDE.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md)
 
-The home page shows **how RAG works**. Documents become provenance-preserving passages and numeric vectors in an index. A question retrieves passages, builds a bounded context, reaches a generator, and passes through claim/citation and current-eligibility checks before release. Animation follows that data flow rather than depicting hidden model reasoning.
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-7fb9b0.svg)](LICENSE)
+![React](https://img.shields.io/badge/React-19-86b7d2)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-9aaed8)
+![Three.js](https://img.shields.io/badge/Three.js-3D_lab-b49dce)
 
-Apollo 11 is a familiar example corpus, not the subject of the visualisation. EvidenceLens remains a **design-phase case study**, with implementation guidance in the five lessons. This lab does not establish EvidenceLens benchmarks, implementation completion, or clinical validation.
+RAG Engineering Lab is an interactive educational website with a full-screen 3D system, moving documents and data packets, and a scrollable explanation beside it. The site brand is **RAG Learning · AI Learning Lab**.
+
+Build a knowledge index, follow a question to its checked answer, and inspect the decisions that make an AI application grounded, efficient, measurable, and controlled. The examples run locally from reviewed fixtures: **no API keys, paid model calls, or database required**.
+
+![RAG Learning with its full 3D knowledge-building overview](docs/screenshots/lab-overview.jpg)
+
+## The five learnings
+
+- **Context — RAG and embeddings:** follow source text into chunks, seven-dimensional toy vectors, and an index; compare exact words with semantic features and inspect retrieved evidence.
+- **Caching and routing:** watch a cold prefix become reusable model-side state. A warm prefix still produces a new draft; an approved-answer cache hit takes a separate bypass. Compare small/large model selections and fictional work units.
+- **Evaluations and judges:** watch labelled test cases move through retrieval, generation, and scoring. Separate missing-evidence failures from unsupported answers, and compare a claim with its source using a simulated judge rubric.
+- **Guardrails and permissions:** inspect input screening, untrusted document instructions, output schemas, citation support, access denial, and release-time eligibility. Model-response checks and application permissions have different jobs.
+- **Tools and context:** follow a validated source-passage read and see what survives a context budget. This is a bounded application workflow; the lab does not assume RAG needs an autonomous agent.
+
+## Try the lab
+
+1. Choose **Build knowledge** or **Answer a question**. Both streams are independent and available immediately; the answer stream uses a prepared fixture index.
+2. Scroll the visible card column. The centred card selects the scene and shows its input, operation, or output. On mobile, the cards sit below the scene.
+3. Open **Context**, **Caching**, **Evals**, **Guardrails**, or **Tools** for controlled examples. **Back to flow** restores your place in the current stream.
+4. Use **Explore details** for configuration and comparisons, or **Inspect run** for the execution report and citations.
+
+Pause freezes ambient motion; deliberate scrolling still changes the selected step. Reduced-motion and static low-effects views are supported. Exploration progress counts what you have viewed during this visit and resets on a fresh load.
+
+### One complete question flow
+
+The question map uses an aligned request spine, compact paired service lanes, and separate model and answer-return corridors. Rounded bends stay within their routing lanes, while consistent arrow sizes and restrained zoom keep the 3D flow readable.
+
+![Question flow with aligned components and structured 3D routing lanes](docs/screenshots/question-flow.jpg)
+
+<details>
+<summary>Completed knowledge index and source records</summary>
+
+![The fully rendered knowledge index with passage tiles, vector values, and source metadata](docs/screenshots/knowledge-index.jpg)
+
+</details>
+
+### Prompt caching in the scene
+
+Prefix segments remain in schematic model-side state while variable input enters the LLM and a new draft leaves it. The result strip distinguishes reused prefix tokens, new generation calls, and searches.
+
+![Warm prefix reuse with one new generation call](docs/screenshots/prompt-caching.jpg)
+
+### Evaluations in the scene
+
+The test deck sends Q1–Q3 through the evaluation bench. A correctly handled unanswerable case bypasses generation and passes its expected evidence-gap outcome. Other examples isolate retrieval failures, generation faults, and judge verdicts.
+
+![Reviewed evaluation cases and recorded outcomes](docs/screenshots/evaluations.jpg)
+
+These images are captures of the running app. [Screenshot notes and refresh instructions](docs/screenshots/README.md).
+
+<details>
+<summary>Mobile prefix-learning view</summary>
+
+<img src="docs/screenshots/mobile-prefix.jpg" alt="Mobile prefix scene, short explanation, and recorded results" width="390" />
+
+</details>
 
 ## Run locally
 
-For a checkout with dependencies already installed:
+Use **Bun 1.4.0** and the committed `bun.lock`. A recent Node.js LTS installation is recommended for the Vite/TanStack tooling.
 
 ```sh
+git clone https://github.com/ArifMehmood16/rag-engineering-lab.git
+cd rag-engineering-lab
+bun install --frozen-lockfile
 bun run dev
 ```
 
-Open the local URL printed by Vite. The application uses React, TypeScript, TanStack Start, Tailwind, and accessible HTML/SVG. No model credentials, database, or paid API are needed.
+Open the URL printed by Vite. To choose an explicit local address:
 
-**Dependency-install limitation:** Vite 8.3.5 is retained by the project owner's decision. Its release is currently too recent for the 24-hour minimum-release-age policy in `bunfig.toml`; that policy has not been bypassed. The existing installation builds and runs, but the Bun lockfile still predates the Vite update. Once the age policy permits it, run `bun install` to reconcile the lockfile before relying on `bun install --frozen-lockfile` for a fresh checkout. The npm lockfile already records the installed Vite update.
+```sh
+bun run dev -- --host 127.0.0.1 --port 5173
+```
+
+No environment file or model-provider credentials are required. The install policy in `bunfig.toml` enforces a 24-hour minimum package age; preserve it when changing dependencies. Use Bun for reproducible installation rather than mixing package managers in one checkout.
+
+### Verify and build
 
 ```sh
 bun run test
 bunx tsc --noEmit
+bun run lint
 bun run build
+bun run preview
 ```
 
-The existing Lovable/TanStack build emits its client and server output under `.output/`. Keep its Vite integration intact.
+Tests cover deterministic engine outcomes, evidence/citation checks, cache behaviour, tool permissions, story continuity, gallery position, and learning-view isolation. They do not establish model quality or learning effectiveness. The Lovable/TanStack build writes `.output/`; use the printed preview address to inspect the production build.
 
-## Explore the lab
+## How it works
 
-- **Find all five learnings immediately:** Context, Caching, Evals, Guardrails, and Tools are named controls above the 3D world, with all five visible on narrow screens too. Each opens a short, natively scrollable learning view with controlled examples, a result, a takeaway, and a link to applying it in EvidenceLens. Back to flow restores the existing stream and its reading position. These views do not modify the active request, warm its caches, or mark its engine stages as viewed.
-- **Watch prefix reuse in its own 3D scene:** fixed policy/schema/example tiles pass through prefill into schematic model-side prefix state. The warm view retains those tiles while new input enters the LLM and a new draft leaves it. The approved-answer view takes a separate application-cache path around the idle LLM. Three comparison lanes show which work each path avoids. A fixed result strip keeps the recorded counts readable; fictional work units are not prices or measured latency.
-- **Watch offline evaluation runs:** labelled Q1–Q3 tiles travel through a separate retrieval/generation/scoring bench. The unanswerable case bypasses generation and passes its expected evidence-gap outcome. A missing fact leaves the generator idle; a generation fault preserves all three retrieved facts but fails answer support. The judge scene brings a source and contradictory claim into a simulated rubric and displays separate support, citation-resolution, and completeness verdicts.
-- **Keep the other differences concrete:** Context compares a synonym pair and the full question's keyword/cosine signals. Guardrails contrasts malformed structure with structurally valid but unsupported content, and distinguishes screening from permissions. Tools follows an application-controlled source read and shows retained/excluded evidence under two context budgets. All generation, provider-prefix behaviour, and judge verdicts are labelled as simulated.
-- **Keep evaluation outside the live path:** the Evals view observes completed fixture runs. It holds the 3D system at a completed result without adding an evaluation operation to the request flow. Ratios come from the existing deterministic metrics; N/A is not treated as success. A safe refusal can still fail an answerable end-to-end test.
-- **Choose either stream:** Build knowledge follows source text → curated chunks → toy vectors → searchable index. Answer a question independently starts from the prepared index. Both are available immediately and remember their own scroll position. Changing a question/configuration starts a fresh replay; exploration counts remain for this visit.
-- **Complete one question:** the question-example selector offers eleven independent journeys: large LLM, small LLM, approved-answer cache hit, warm prompt prefix with new generation, useful source-read tool, denied tool read, direct record lookup, rejected input instruction, access denial, rejected citation, and missing evidence. The question remains visible throughout. Each selection resets request/cache state; the answer-repeat and prefix examples seed only their configured cache types from a successful fixture run. Skipped stages disappear from that journey, while a disabled tool gets one brief explanation. A refusal returns a notice to the same user and ends the story at its actual stopping point.
-- **Scroll the card gallery:** an opening card explains the interaction, and a visible scrollbar and smaller neighbouring cards invite reading down the right column. Each input, individual operation, and output has its own card. The card nearest the middle is larger and controls the scene; cards above and below tilt away with restrained perspective. Input and output cards hold their results for reading, while operation cards scrub the data transfer. Native wheel, touch, arrow-key, and Page Down scrolling work, with optional chapter links. There is no timed advancement or required Next button. Each stream remembers its card and reading position, including after a resize. On smaller screens the gallery sits below the scene; reduced motion removes the tilt and depth.
-- **Enter the system:** a full-screen Three.js space sits behind floating glass cards. A perspective camera fits the active operation and its endpoints into the space beside the reader, opens up for inputs, and tightens for outputs; the overview control pulls back to the whole world. Curved paths connect the outer edges of objects, with separate lanes for outward and returning traffic. Paths and directional arrowheads remain visible in every stage. Blue marks requests/documents, teal evidence, violet model/encoding work, amber cache reuse, rose tools, and green checks/return. A compact key explains these colours. Inactive entities and unrelated routes dim while the current participants stay clear; output/input holds never imply live execution. Projected labels yield space to the active annotation and avoid overlapping one another. Restrained lighting keeps the entities readable; only the connection carrying data receives a soft glow and moving signal, which clear at input/output or when execution is skipped/blocked. The route map stays sharp without a screen-wide blur. Packet trails and document transformations show the data flow. Input/work/output annotations are projected onto the same path as the moving data packet and change with the scroll position. Each operation continues the same document journey instead of restarting it.
-- **Read the request layout:** the user connects to input checks, then a router. The answer cache sits near the request and the small-model branch beside the router. A larger LLM, context tray, knowledge index, and a document-shaped source-read console occupy distinct positions. Routing explains a selection; it does not execute the model. On a cache miss, the same request travels through retrieval → index → retrieved results → context before reaching the selected LLM. The default multi-part, three-fact question selects the large profile; the narrower two-fact question selects the small one. This is an explicit teaching rule, not a trained classifier or evidence of model quality. A compatible approved-answer hit bypasses retrieval, tools, and generation but still passes verification and current-eligibility checks. Output checks feed a curved return path to the original user.
-- **Follow one chunk:** numbered passage selectors retain the chosen record across preparation stages. Inspect its actual text, provenance, estimated size, and seven feature values. Desktop shows the system beside an Input / Work / Output reader; narrow screens reserve an upper window into the same world above the reading card. The index is a holographic globe with one document tile per indexed passage. Its spherical arrangement is illustrative, not the embedding space used for search.
-- **See this visit's exploration:** the primary meter counts concepts whose final result/takeaway card has been viewed, out of five. Opening a view or precomputing examples does not mark it explored. A separate count retains distinct flow outputs viewed, out of four preparation and eleven request stages. Reviewing a concept or repeating a stage does not add another count. Counts live only in React state and start at zero on a fresh lab load; no browser storage, accounts, or mastery claims are involved.
-- **Read without squinting:** IBM Plex Sans supplies UI headings and reading cards, with 16px card prose, stronger 22–29px headings, 12–13px metadata, and brighter secondary text. Shared text tokens and a 12px minimum for custom lab/inspector labels carry the hierarchy through lessons, navigation, and details. Mobile controls simplify their layout rather than shrinking their text.
-- **Review without rerunning:** scrolling backwards restores exact input/output engine snapshots without generating again or warming another cache entry. Future context never appears in an earlier stage's input. A blocked request ends at its actual stopping stage. Replay with warm caches explicitly starts a new simulated request.
-- **Retrieval:** compare keyword overlap, transparent toy semantic scoring, reciprocal rank fusion, toy reranking, deduplication, candidate limits, and context budgets.
-- **Caching and routing:** repeat a request to observe local vector/retrieval/approved-answer reuse and simulated provider-prefix reuse. Approved answers still pass verification and current-eligibility checks; prompt caching still generates. Model profiles are explicitly simulated.
-- **Evaluation:** inject a retrieval miss, unsupported claim, bad/missing citation, false refusal, or provider outage. Ratios are computed from that run with visible denominators; unanswerable questions and infrastructure errors stay separate.
-- **Guardrails:** test a document instruction, access denial, or revocation after verification. A deliberately limited injection heuristic is separate from application permissions and fixture-support checks.
-- **Tools/context:** the useful-tool example intentionally retrieves too little usable evidence. Its question names a known fallback passage ID, and the fixed application workflow proposes `get_source_passage({ evidence_id: "A11-LA-CAP" })`, validates permission, returns the passage to context, and then generates. The normal complete-evidence example explains why no extra tool is needed. Advanced controls also demonstrate timeout, empty result, and budget handling. The workflow permits one local read and no automatic retries; it is not an autonomous agent.
-- **Comparison:** hold the question and corpus fixed, compare default and modified cold runs, and optionally repeat the modified run against its own warm cache.
+The app uses **React 19, TypeScript, TanStack Start/Router, Three.js, React Three Fiber, Drei, Tailwind CSS, and Vitest**. There is no live model integration or vector database.
 
-Scroll within the visible card gallery to inspect inputs, operations, and outputs; selecting a passage or citation is optional deeper inspection. Experiments, full execution reports, comparisons, and further reading live in the Explore details drawer. The page stays within one viewport while the reading column moves past the fixed scene. Opening the drawer or hiding the page pauses the visual world. Pause ambient motion freezes idle activity; deliberate scrolling still updates the story and snaps the camera to its step. Reduced motion similarly removes ambient animation and camera easing; Low effects uses a static illustration without WebGL.
+- `src/content/`: lessons, reviewed source records, scenarios, and synthetic fixtures.
+- `src/lib/`: pure request engine, retrieval, caches, metrics, permissions, and recorded scene states.
+- `src/components/lab/`: scroll gallery, 3D worlds, accessible readers, and inspectors.
+- `src/components/learn/`: lesson renderers and interactive explanations.
+- `src/routes/`: file-based application routes.
+- `src/test/`: behaviour and regression tests.
 
-## Interaction design
+The live request path and the offline evaluation bench are separate. Animation observes stored snapshots; replaying or reverse-scrolling does not call a model or alter recorded results. [Architecture and data flow](docs/ARCHITECTURE.md).
 
-The owner-provided sibling project `five-parts-ai-engineering` informed the perspective-camera direction, fixed scene layer, curved packet paths, and holographic document globe. This lab retains its own dataset, deterministic engine, independent preparation/request stories, and snapshots. The open neural sphere, firing points, and connection pulses are an illustrative AI entity, not a visualization of internal model reasoning. Ambient space motion continues while reading until paused; it never advances the engine.
+## Demonstration boundaries
 
-- [Mayer and Pilegard: learner-paced segmentation](https://www.cambridge.org/core/books/abs/cambridge-handbook-of-multimedia-learning/principles-for-managing-essential-processing-in-multimedia-learning-segmenting-pretraining-and-modality-principles/DD24C2F48B9B1277CE59F78276110258) supports dividing a complex explanation into meaningful segments that the learner controls.
-- [NN/G: visibility of system status](https://www.nngroup.com/articles/visibility-system-status/) informed immediate stage feedback, active-object highlighting, and the visit's exploration meter.
-- [W3C: pause, stop, hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide) informed the ambient-motion pause control and reduced-motion equivalent. Document transfers are bounded and driven by deliberate scrolling. Neural pulses, camera drift, and globe rotation stop when paused; narrative steps never advance on a timer.
+Keyword scoring, explicit toy vectors, cosine similarity, ranking, in-memory cache checks, permissions, and fixture metrics execute locally. Learned embeddings, model generation, routing quality, provider prompt caching, and LLM judging are **simulated**. Token counts are estimates; work units are fictional, with no real latency or pricing claim.
 
-## What executes, and what is simulated
+Apollo 11 is a familiar example corpus, not the subject of the app. Source records retain URLs, locators, versions, and excerpt/paraphrase labels. Synthetic adversarial and fault cases are identified separately. EvidenceLens is a design-phase case study for applying the concepts; this lab does not demonstrate its production implementation or validation.
 
-**Runs locally:** keyword scoring, explicit seven-feature vectors and cosine similarity, rank fusion, selection/budgets, versioned in-memory cache lookup, scope/eligibility checks, fixture-based metrics, and bounded local tool results.
+## Documentation
 
-**Simulated:** learned embeddings, trained reranking, model routing quality, language-model generation, LLM judges, provider outages, and provider prompt caching. Generation fills reviewed answer templates. Support checks compare these templates and reviewed evidence labels; they are not a general semantic verifier.
+- [Lab guide](docs/LAB_GUIDE.md): complete streams, examples, controls, motion, and simulation details.
+- [Architecture](docs/ARCHITECTURE.md): engine, snapshots, scene boundaries, and routes.
+- [Contributing](CONTRIBUTING.md): setup, changes, verification, and screenshot workflow.
+- [Attributions](docs/ATTRIBUTIONS.md): example sources, dependencies, fonts, and design references.
+- [Project conventions](AGENTS.md): repository-specific implementation rules.
 
-Token counts use a declared word-count estimate. Cost comparisons use fictional work units, with the formula shown in the interface. No real provider price, latency, model accuracy, or hidden reasoning is inferred.
+## GitHub and Lovable
 
-The dedicated prefix and evaluation worlds replay recorded fixtures in a slow visual loop. Their animation clocks never run requests, increment metrics, warm caches, or advance cards. Pause, reduced motion, a hidden page, and the details drawer freeze visual time. The same per-mode outcomes have static SVG fallbacks. On narrow screens, concise object labels and result values stay with the short explanation; detailed caveats remain expandable.
+The published app is [rag-engineering-lab.lovable.app](https://rag-engineering-lab.lovable.app/).
 
-The index uses curated passages rather than claiming to parse NASA pages live. Records retain source URLs, version, locators, excerpt/paraphrase status, and synthetic-test labels. Facts were checked against [NASA's mission overview](https://www.nasa.gov/missions/apollo/apollo-11/apollo-11-mission-overview/) and [NASA Science's launch resource](https://science.nasa.gov/resource/apollo-11-launch/).
+The repository is [ArifMehmood16/rag-engineering-lab](https://github.com/ArifMehmood16/rag-engineering-lab). Its linked [Lovable editor project](https://lovable.dev/projects/03c32535-dfe7-4d9d-8711-6602260deed2) is an editing workspace, not the public app URL.
 
-`src/test/rag-scenarios.test.ts` checks each example's outcome and every animated handoff: the next operation must start where the preceding one ended, and every completed or blocked journey must return to the original user. Scene tests separately keep model execution after retrieval/context and distinguish selection from generation.
+Commits pushed to the connected branch sync to Lovable. Preserve published history: do not force-push or rewrite it. Repository topics cover RAG, AI engineering, caching, evaluations, guardrails, tool calling, and the interactive 3D stack.
 
-`src/test/rag-learning.test.ts` checks controlled prefix reuse/invalidation, generation bypass, evaluation isolation, and schema-versus-support distinctions. `src/test/rag-theatre.test.ts` checks that the 3D scene models retain actual call counts, correct evidence-gap outcomes, and distinct retrieval/generation failures. Interface tests cover the named views, concept progress, and returning to both independent stream positions. These verify application behaviour, not learning effectiveness; comprehension still needs testing with people unfamiliar with the project.
+## License
 
-## Privacy and content
-
-The learning experience accepts no visitor text and persists no notes, progress, or quiz answers. Controls, exploration counts, and cache state live only in the current lab's memory. Thinking points and copyable observation outlines support reflection without adding accounts or storage.
-
-Lesson content is under `src/content/`; lesson renderers are under `src/components/learn/`. The connected lab has its own components under `src/components/lab/`, pure logic under `src/lib/`, and behavioral tests under `src/test/`. See `AGENTS.md` for project conventions.
-
-## Lovable sync
-
-This project is connected to the [Lovable editor](https://lovable.dev/projects/03c32535-dfe7-4d9d-8711-6602260deed2) and [GitHub repository](https://github.com/ArifMehmood16/ai-engineering-made-practical). Pushing working commits to the connected branch syncs them back to Lovable. Preserve published history; do not force-push or rewrite it.
+Original code and authored learning material are licensed under [Apache License 2.0](LICENSE), © 2026 Arif Mehmood. See [NOTICE](NOTICE) and [Attributions](docs/ATTRIBUTIONS.md) for third-party material, which retains its own terms.
