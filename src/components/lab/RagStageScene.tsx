@@ -178,7 +178,11 @@ export function RagStageScene(
     ...flowLabel(tour, props.record, props.records),
     ...props.annotationOverride,
   };
-  const [overview, setOverview] = useState(false);
+  const [manualOverview, setOverview] = useState<boolean | null>(null);
+  // Idle moments (the intro card, before any flow) show the whole system; flow steps focus.
+  const autoOverview = !!props.autoOverview;
+  useEffect(() => setOverview(null), [autoOverview]);
+  const overview = manualOverview ?? autoOverview;
   useEffect(() => {
     setReady(typeof window.WebGL2RenderingContext !== "undefined");
   }, []);
