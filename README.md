@@ -1,4 +1,4 @@
-# The Intelligence Lab
+# RAG Simulator · AI Learning Lab
 
 An interactive, read-only learning site for five AI engineering concepts: retrieval and embeddings, caching and routing, evaluations, guardrails, and tools/context management.
 
