@@ -268,7 +268,7 @@ export default function OrbitScene({ states, selected, animate, speed, onSelect 
       <Dust animate={animate} />
       <Core animate={animate} active={progress > 0} speed={speed} progress={progress} />
       <StageNodes
-        states={states}
+        states={states ?? []}
         selected={selected}
         onSelect={onSelect}
         animate={animate}
