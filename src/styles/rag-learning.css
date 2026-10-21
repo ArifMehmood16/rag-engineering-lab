@@ -554,8 +554,15 @@
     display: none;
   }
   [data-learning] .scene-flow-label {
-    max-width: 190px;
+    max-width: 250px;
     padding: 8px 10px;
+  }
+  [data-learning] .scene-flow-label > span {
+    display: none;
+  }
+  [data-learning] .scene-flow-label > strong {
+    font-size: 13px;
+    line-height: 1.45;
   }
   .learning-world-note h3 {
     display: none;
