@@ -29,24 +29,24 @@ export interface SceneTransfer {
 
 // World coordinates, shared by objects, connections and the travelling data.
 export const PREPARATION_POSITIONS: Partial<Record<SceneNode, Point3>> = {
-  source: [-4.6, 1.25, 0],
-  chunks: [-2.6, 0.8, 0.5],
-  vectors: [-0.45, 0.55, 0.15],
-  index: [1.3, -1.45, 0.2],
-  model: [3.1, 0.9, -0.6],
+  source: [-5, -0.7, 0.7],
+  chunks: [-2.8, -1.1, 0.8],
+  vectors: [-0.6, -0.45, 0.5],
+  index: [-2.5, 2, -1.4],
+  model: [3, 0.7, -0.5],
 };
 export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
-  source: [-4.6, 1.85, -0.9],
-  index: [-2.5, 1.75, -0.3],
-  question: [-4.8, -0.8, 0.5],
-  router: [-3.2, -0.85, 0.4],
-  retrieve: [-2, -0.7, 0.4],
-  cache: [-0.3, 2.15, -0.5],
-  context: [-0.15, -0.85, 0.3],
-  tool: [0.1, -2.25, -0.1],
-  model: [2.6, 0.75, -0.4],
-  check: [4.7, -1.25, 0.4],
-  answer: [4.7, -1.25, 0.4],
+  source: [-5, 2.4, -2],
+  index: [-3, 2.4, -1.4],
+  question: [-5.7, -1, 0.8],
+  router: [-3.9, -1, 0.7],
+  retrieve: [-2.2, -0.7, 0.8],
+  cache: [-0.5, 3, -0.4],
+  context: [-0.5, 1, 1],
+  tool: [1, -2, 0.2],
+  model: [3, 0.7, -0.5],
+  check: [5.6, -0.8, 0.6],
+  answer: [5.6, -0.8, 0.6],
 };
 const preparation: SceneTransfer[] = [
   { from: "source", to: "source", kind: "document" },

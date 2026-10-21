@@ -3,6 +3,10 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { RagFocus } from "./RagFocus";
+import { RagNeuralEntity } from "./RagNeuralEntity";
+import { RagKnowledgeGlobe } from "./RagKnowledgeGlobe";
+import { cameraPose } from "@/lib/rag-camera";
+import type { Line2 } from "three-stdlib";
 import type { EvidenceRecord } from "@/content/apollo";
 import { buildKnowledgeIndex } from "@/lib/knowledge-index";
 import { atOutput, stageInput, stageOutput, type WalkthroughState } from "@/lib/rag-walkthrough";
@@ -23,6 +27,8 @@ export interface RagWorldProps {
   visible: boolean;
   duration: number;
   replay: number;
+  overview?: boolean;
+  labels?: React.RefObject<Map<SceneNode, HTMLDivElement>>;
 }
 const CYAN = "#64fff1";
 const VIOLET = "#bc83ff";
@@ -146,112 +152,6 @@ function VectorBars({
   );
 }
 
-function IndexVault({ active }: { active: boolean }) {
-  return (
-    <group>
-      <Glow color={CYAN} scale={2.7} opacity={active ? 0.55 : 0.15} />
-      {[0, 1, 2].map((n) => (
-        <group key={n} position={[0, (n - 1) * 0.24, 0]}>
-          <mesh>
-            <cylinderGeometry args={[0.55, 0.55, 0.17, 48]} />
-            <meshStandardMaterial color="#0d3449" metalness={0.85} roughness={0.25} />
-          </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0.08, 0]}>
-            <torusGeometry args={[0.55, 0.012, 8, 64]} />
-            <meshBasicMaterial color={active ? CYAN : "#2f829c"} />
-          </mesh>
-          {[0, 1, 2, 3].map((i) => (
-            <mesh key={i} position={[(i - 1.5) * 0.14, 0, 0.53]}>
-              <sphereGeometry args={[0.025, 8, 8]} />
-              <meshBasicMaterial color={CYAN} />
-            </mesh>
-          ))}
-        </group>
-      ))}
-    </group>
-  );
-}
-
-function Entity({ active, progress }: { active: boolean; progress: React.RefObject<number> }) {
-  const shell = useRef<THREE.Group>(null);
-  useFrame(() => {
-    if (!shell.current) return;
-    shell.current.rotation.y = 0.35 + progress.current * 0.38;
-    shell.current.rotation.z = -0.16 + progress.current * 0.08;
-  });
-  const neurons = useMemo(
-    () =>
-      Array.from({ length: 36 }, (_, i) => {
-        const phi = Math.acos(1 - 2 * ((i + 0.5) / 36));
-        const theta = Math.PI * (1 + Math.sqrt(5)) * i;
-        return new THREE.Vector3(
-          1.18 * Math.sin(phi) * Math.cos(theta),
-          1.18 * Math.cos(phi),
-          1.18 * Math.sin(phi) * Math.sin(theta),
-        );
-      }),
-    [],
-  );
-  return (
-    <group>
-      <Glow color="#a16aff" scale={6.5} opacity={active ? 1 : 0.62} />
-      <Glow color="#588bff" scale={3.2} opacity={0.7} />
-      <group ref={shell} rotation={[0.15, 0.35, -0.16]}>
-        <mesh>
-          <icosahedronGeometry args={[1.3, 1]} />
-          <meshStandardMaterial
-            color="#251649"
-            emissive="#5c27a0"
-            emissiveIntensity={active ? 0.8 : 0.38}
-            metalness={0.7}
-            roughness={0.23}
-            flatShading
-            transparent
-            opacity={0.94}
-          />
-          <Edges color={VIOLET} threshold={10} />
-        </mesh>
-        <mesh scale={1.08}>
-          <icosahedronGeometry args={[1.3, 1]} />
-          <meshBasicMaterial color="#8b75ee" wireframe transparent opacity={0.18} />
-        </mesh>
-        {neurons.map((p, i) => (
-          <group key={i}>
-            <mesh position={p}>
-              <sphereGeometry args={[i % 5 === 0 ? 0.055 : 0.026, 10, 10]} />
-              <meshBasicMaterial color={i % 4 === 0 ? "#e9d2ff" : "#b993ff"} />
-            </mesh>
-            {i % 2 === 0 && (
-              <Line
-                points={[p, neurons[(i + 7) % neurons.length]!]}
-                color="#e1a5ff"
-                lineWidth={0.6}
-                transparent
-                opacity={0.45}
-              />
-            )}
-          </group>
-        ))}
-        <mesh rotation={[0, 0, 0.55]}>
-          <torusGeometry args={[1.32, 0.022, 8, 96]} />
-          <meshBasicMaterial color="#dfaaff" transparent opacity={0.65} />
-        </mesh>
-        <mesh rotation={[0.95, 0.4, -0.4]}>
-          <torusGeometry args={[1.33, 0.012, 8, 96]} />
-          <meshBasicMaterial color="#9fb5ff" transparent opacity={0.65} />
-        </mesh>
-      </group>
-      <group position={[0, -1.65, 0]}>
-        <mesh rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.8, 0.83, 64]} />
-          <meshBasicMaterial color="#a47bff" transparent opacity={0.55} side={THREE.DoubleSide} />
-        </mesh>
-        <Glow color={VIOLET} scale={2.5} opacity={0.25} />
-      </group>
-    </group>
-  );
-}
-
 function Portal({ color = CYAN, shield = false }: { color?: string; shield?: boolean }) {
   return (
     <group>
@@ -289,32 +189,156 @@ function Connection({
   from,
   to,
   active,
+  moving,
+  time,
   color = CYAN,
 }: {
   from: Point3;
   to: Point3;
   active: boolean;
+  moving: boolean;
+  time: React.RefObject<number>;
   color?: string;
 }) {
-  const points = Array.from({ length: 33 }, (_, n) => travelPoint(from, to, n / 32));
-  const arrow = travelPoint(from, to, 0.78);
+  const geometry = useMemo(() => {
+    const curve = new THREE.CatmullRomCurve3(
+      Array.from({ length: 25 }, (_, i) => new THREE.Vector3(...travelPoint(from, to, i / 24))),
+    );
+    return {
+      curve,
+      tube: new THREE.TubeGeometry(curve, 72, 0.012, 6, false),
+      points: curve.getSpacedPoints(80),
+    };
+  }, [from, to]);
+  useEffect(() => () => geometry.tube.dispose(), [geometry]);
+  const line = useRef<Line2>(null),
+    arrow = useRef<THREE.Mesh>(null);
+  const packets = useRef<THREE.Mesh[]>([]);
+  const tangent = useMemo(() => new THREE.Vector3(), []);
+  const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  useFrame(() => {
+    if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
+    if (arrow.current) {
+      geometry.curve.getPointAt(0.8, arrow.current.position);
+      geometry.curve.getTangentAt(0.8, tangent);
+      arrow.current.quaternion.setFromUnitVectors(axis, tangent);
+    }
+    packets.current.forEach((mesh, i) => {
+      mesh.visible = moving;
+      const t = (time.current * 0.17 - i * 0.019 + 10) % 1;
+      geometry.curve.getPointAt(t, mesh.position);
+    });
+  });
   return (
     <group>
+      <mesh geometry={geometry.tube}>
+        <meshBasicMaterial
+          color={active ? color : "#263450"}
+          transparent
+          opacity={active ? 0.55 : 0.25}
+          toneMapped={false}
+          depthWrite={false}
+        />
+      </mesh>
       <Line
-        points={points}
-        color={active ? color : "#265474"}
-        lineWidth={active ? 1.5 : 0.7}
+        ref={line}
+        points={geometry.points}
+        color={color}
+        lineWidth={1.8}
+        dashed
+        dashSize={0.16}
+        gapSize={0.2}
         transparent
-        opacity={active ? 0.8 : 0.45}
+        opacity={active ? 0.8 : 0}
+        toneMapped={false}
+        depthWrite={false}
       />
-      {active && (
-        <mesh position={arrow} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.07, 0.2, 3]} />
-          <meshBasicMaterial color={color} />
+      <mesh ref={arrow} visible={active}>
+        <coneGeometry args={[0.065, 0.2, 3]} />
+        <meshBasicMaterial color={color} toneMapped={false} />
+      </mesh>
+      {Array.from({ length: 6 }, (_, i) => (
+        <mesh
+          key={i}
+          ref={(mesh) => {
+            if (mesh) packets.current[i] = mesh;
+          }}
+          visible={false}
+        >
+          <sphereGeometry args={[0.055 - i * 0.005, 10, 10]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={1 - i * 0.15}
+            toneMapped={false}
+            depthWrite={false}
+          />
         </mesh>
-      )}
+      ))}
     </group>
   );
+}
+
+function Director({
+  tour,
+  reduced,
+  paused,
+  visible,
+  overview,
+  time,
+}: {
+  tour: WalkthroughState;
+  reduced: boolean;
+  paused: boolean;
+  visible: boolean;
+  overview: boolean;
+  time: React.RefObject<number>;
+}) {
+  const { camera, size } = useThree();
+  const look = useRef(new THREE.Vector3());
+  const initialized = useRef(false);
+  const pose = cameraPose(tour, overview);
+  useEffect(() => {
+    const cam = camera as THREE.PerspectiveCamera;
+    const wide = size.width >= 1000;
+    cam.setViewOffset(
+      size.width,
+      size.height,
+      wide ? Math.min(230, size.width * 0.185) : 0,
+      wide ? 0 : size.height * 0.2,
+      size.width,
+      size.height,
+    );
+    cam.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
+  useFrame((_, delta) => {
+    if (!visible || paused) return;
+    const wide = size.width >= 1000;
+    const aspect =
+      (wide ? size.width - 460 : size.width) / (wide ? size.height * 0.78 : size.height * 0.65);
+    const pull = aspect < 1.3 ? Math.pow(1.3 / aspect, 0.9) : 1;
+    const target = new THREE.Vector3(...pose.target);
+    const position = new THREE.Vector3(...pose.position)
+      .sub(target)
+      .multiplyScalar(pull)
+      .add(target);
+    if (!reduced) {
+      position.x += Math.sin(time.current * 0.13) * 0.22;
+      position.y += Math.sin(time.current * 0.17) * 0.12;
+    }
+    if (reduced || !initialized.current) {
+      camera.position.copy(position);
+      look.current.copy(target);
+      initialized.current = true;
+    } else {
+      const k = 1 - Math.exp(-delta * 1.8);
+      camera.position.lerp(position, k);
+      look.current.lerp(target, k);
+    }
+    camera.lookAt(look.current);
+    camera.updateMatrixWorld();
+  }, -1);
+  return null;
 }
 
 function TravellingData({
@@ -394,12 +418,23 @@ function TravellingData({
 }
 
 function World(props: RagWorldProps) {
-  const { tour, records, record, reduced, paused, visible, duration, replay } = props;
+  const {
+    tour,
+    records,
+    record,
+    reduced,
+    paused,
+    visible,
+    duration,
+    replay,
+    overview = false,
+  } = props;
   const plan = scenePlan(tour);
   const prep = tour.phase === "knowledge";
   const index = useMemo(() => buildKnowledgeIndex(records), [records]);
   const values = index.chunks.find((c) => c.id === record.id)?.vector ?? [];
   const [begin, end] = sceneProgressRange(tour);
+  const time = useRef(0);
   const elapsed = useRef(0);
   const progress = useRef(reduced ? end : begin);
   const { invalidate, size, camera } = useThree();
@@ -411,18 +446,29 @@ function World(props: RagWorldProps) {
   }, [tour.phase, tour.stage, tour.beat, record.id, replay, reduced, plan.moving, invalidate]);
   useEffect(() => {
     invalidate();
-  }, [paused, visible, invalidate]);
-  useEffect(() => {
-    const ortho = camera as THREE.OrthographicCamera;
-    ortho.zoom = Math.min(size.width / 11.8, size.height / 5.35);
-    ortho.updateProjectionMatrix();
-    invalidate();
-  }, [size.width, size.height, camera, invalidate]);
+  }, [paused, visible, overview, invalidate]);
   useFrame((_, delta) => {
-    if (!visible || paused || reduced || !plan.moving || progress.current >= end) return;
-    elapsed.current += Math.min(delta, 0.06);
-    progress.current = begin + (end - begin) * Math.min(1, elapsed.current / duration);
+    if (!visible || paused || reduced) return;
+    const dt = Math.min(delta, 0.08);
+    time.current += dt;
+    if (plan.moving && progress.current < end) {
+      elapsed.current += dt;
+      progress.current = begin + (end - begin) * Math.min(1, elapsed.current / duration);
+    }
     invalidate();
+  }, -2);
+  const projected = useMemo(() => new THREE.Vector3(), []);
+  useFrame(() => {
+    props.labels?.current.forEach((element, node) => {
+      const point = plan.positions[node];
+      if (!point) return;
+      const offset =
+        node === "model" ? -2.35 : node === "index" ? -1.95 : node === "chunks" ? -1.02 : -0.9;
+      projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
+      element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
+      element.style.top = `${(-projected.y * 0.5 + 0.5) * size.height}px`;
+      element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1.1 ? "1" : "0";
+    });
   });
   const active = (n: SceneNode) => plan.active === n;
   const positions = plan.positions;
@@ -431,7 +477,11 @@ function World(props: RagWorldProps) {
       key={`${from}-${to}`}
       from={positions[from]!}
       to={positions[to]!}
-      active={plan.transfer.from === from && plan.transfer.to === to && tour.beat > 0}
+      active={
+        plan.transfer.from === from && plan.transfer.to === to && tour.beat > 0 && !plan.skipped
+      }
+      moving={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
+      time={time}
     />
   );
   const cacheEnabled =
@@ -441,13 +491,26 @@ function World(props: RagWorldProps) {
   return (
     <>
       <color attach="background" args={["#040711"]} />
-      <fog attach="fog" args={["#040711", 15, 30]} />
+      <fog attach="fog" args={["#040711", 25, 100]} />
       <ambientLight intensity={1.3} />
       <directionalLight position={[-3, 5, 8]} intensity={3.5} color="#94c9ff" />
       <pointLight position={[3, 2, 4]} intensity={18} color="#b15aff" distance={12} />
       <pointLight position={[-4, 1, 3]} intensity={12} color={CYAN} distance={10} />
-      <gridHelper args={[28, 28, "#18394e", "#0b1b30"]} position={[0, -2.85, -3]} />
-      <Stars />
+      <Director
+        tour={tour}
+        reduced={reduced}
+        paused={paused}
+        visible={visible}
+        overview={overview}
+        time={time}
+      />
+      <Stars time={time} />
+      <group position={[-5, 3, -10]}>
+        <Glow color="#244ddd" scale={40} opacity={0.24} />
+      </group>
+      <group position={[6, -2, -9]}>
+        <Glow color="#7137a3" scale={35} opacity={0.22} />
+      </group>
       {prep ? (
         <>
           {connection("source", "chunks")}
@@ -498,7 +561,13 @@ function World(props: RagWorldProps) {
           </group>
 
           <group position={positions.index!}>
-            <IndexVault active={active("index")} />
+            <RagKnowledgeGlobe
+              chunks={index.chunks}
+              selected={record.id}
+              active={active("index")}
+              ready={!prep || tour.stage === 3}
+              time={time}
+            />
           </group>
         </>
       ) : (
@@ -516,7 +585,13 @@ function World(props: RagWorldProps) {
             <Paper />
           </group>
           <group position={positions.index!}>
-            <IndexVault active={active("index") || tour.stage === 3} />
+            <RagKnowledgeGlobe
+              chunks={index.chunks}
+              selected={record.id}
+              active={tour.stage === 3 || active("index")}
+              ready
+              time={time}
+            />
           </group>
           <group position={positions.question!}>
             <Portal />
@@ -597,9 +672,9 @@ function World(props: RagWorldProps) {
         </>
       )}
       <group position={positions.model!} scale={1.12}>
-        <Entity
+        <RagNeuralEntity
           active={!prep && tour.stage === 7 && !plan.skipped && !plan.applicationLookup}
-          progress={progress}
+          time={time}
         />
       </group>
 
@@ -609,27 +684,41 @@ function World(props: RagWorldProps) {
   );
 }
 
-function Stars() {
+function Stars({ time }: { time: React.RefObject<number> }) {
+  const group = useRef<THREE.Points>(null);
   const points = useMemo(
     () =>
       new Float32Array(
-        Array.from({ length: 180 }, (_, n) => {
+        Array.from({ length: 4500 }, (_, n) => {
           const i = Math.floor(n / 3);
           return n % 3 === 0
-            ? Math.sin(i * 43.7) * 14
+            ? Math.sin(i * 43.7) * 35
             : n % 3 === 1
-              ? Math.cos(i * 19.3) * 7
-              : -4 - (i % 8);
+              ? Math.cos(i * 19.3) * 21
+              : -5 - (i % 30);
         }),
       ),
     [],
   );
+  useFrame(() => {
+    if (group.current) {
+      group.current.rotation.y = Math.sin(time.current * 0.025) * 0.035;
+      group.current.rotation.z = Math.sin(time.current * 0.017) * 0.018;
+    }
+  });
   return (
-    <points>
+    <points ref={group}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[points, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color="#79a9dc" transparent opacity={0.6} sizeAttenuation />
+      <pointsMaterial
+        size={0.035}
+        color="#91b7f0"
+        transparent
+        opacity={0.55}
+        sizeAttenuation
+        depthWrite={false}
+      />
     </points>
   );
 }
@@ -637,11 +726,10 @@ function Stars() {
 export default function RagWorld(props: RagWorldProps) {
   return (
     <Canvas
-      orthographic
-      camera={{ position: [0, 2.1, 14], zoom: 60, near: 0.1, far: 50 }}
-      dpr={[1, 2]}
+      camera={{ position: [0, 2, 17], fov: 42, near: 0.1, far: 150 }}
+      dpr={[1, 1.75]}
       frameloop="demand"
-      gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
+      gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       aria-hidden
       onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
     >

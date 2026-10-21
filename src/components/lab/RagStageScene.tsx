@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { Pause, Play, RotateCcw, Sparkles } from "lucide-react";
+import { Pause, Play, RotateCcw, Sparkles, Maximize2, Focus } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import { KNOWLEDGE_TAKEAWAYS, REQUEST_TAKEAWAYS } from "@/content/rag-walkthrough";
 import { toyEmbedding } from "@/lib/apollo-engine";
@@ -7,76 +7,6 @@ import { atOutput, walkthroughStep, type WalkthroughState } from "@/lib/rag-walk
 import { scenePlan, type SceneNode } from "@/lib/rag-scene";
 import { cn } from "@/lib/utils";
 import type { RagWorldProps } from "./RagWorld";
-
-const LABELS: Partial<Record<SceneNode, [string, number, string?]>> = {
-  source: ["Documents", -0.94, "2 sources"],
-  chunks: ["Chunks", -1.05, "10 passages"],
-  vectors: ["Vectors · 7D", -0.85, "Actual toy values"],
-  index: ["Knowledge index", -0.7],
-  question: ["Question", -0.7],
-  retrieve: ["Retrieve", -0.65],
-  context: ["Context", -0.75],
-  cache: ["Cache", -0.65],
-  tool: ["Read-only tool", -0.48],
-  model: ["AI entity", -2.05],
-  check: ["Release gate", -0.8],
-  answer: ["Answer", -0.8],
-};
-function SceneLabels({
-  tour,
-  width,
-  height,
-}: {
-  tour: WalkthroughState;
-  width: number;
-  height: number;
-}) {
-  const plan = scenePlan(tour);
-  const zoom = Math.min(width / 11.8, height / 5.35);
-  return (
-    <div className="scene-labels" aria-hidden>
-      {Object.entries(plan.positions).map(([key, p]) => {
-        const node = key as SceneNode;
-        const label = LABELS[node];
-        if (
-          !label ||
-          node === "answer" ||
-          (node === "source" && tour.phase === "request") ||
-          (node === "tool" && tour.stage !== 5) ||
-          (node === "cache" && tour.stage !== 2)
-        )
-          return null;
-        const isModel = node === "model";
-        const name = node === "check" && tour.stage === 10 ? "Answer" : label[0];
-        const note = isModel
-          ? tour.phase === "knowledge"
-            ? "Standby · no model call"
-            : tour.stage === 7
-              ? plan.skipped
-                ? "Generation skipped"
-                : plan.applicationLookup
-                  ? "Application lookup · no model"
-                  : "Fixture generation"
-              : "LLM · simulated"
-          : label[2];
-        return (
-          <div
-            key={node}
-            className={cn("world-label", plan.active === node && "world-label-active")}
-            style={{
-              left: width / 2 + p[0] * zoom,
-              top: height / 2 - ((p[1] + label[1]) * 0.989 - (p[2] + 0.2) * 0.148) * zoom,
-            }}
-          >
-            {plan.active === node && <span className="world-focus-arrow">↓</span>}
-            <strong>{name}</strong>
-            {note && <small>{note}</small>}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
 
 // Keep WebGL and Three out of SSR and the ordinary lesson bundles.
 const RagWorld = lazy(() => import("./RagWorld"));
@@ -135,20 +65,12 @@ export function RagStageScene(
   },
 ) {
   const { tour, reduced, paused, onPause, lowEffects } = props;
-  const viewport = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ width: 800, height: 400 });
+  const labels = useRef(new Map<SceneNode, HTMLDivElement>());
   const [ready, setReady] = useState(false);
   const [replay, setReplay] = useState(0);
+  const [overview, setOverview] = useState(false);
   useEffect(() => {
     setReady(typeof window.WebGL2RenderingContext !== "undefined");
-  }, []);
-  useEffect(() => {
-    if (!viewport.current || typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(([entry]) => {
-      if (entry) setSize({ width: entry.contentRect.width, height: entry.contentRect.height });
-    });
-    observer.observe(viewport.current);
-    return () => observer.disconnect();
   }, []);
   const output = atOutput(tour);
   const plan = scenePlan(tour);
@@ -166,18 +88,72 @@ export function RagStageScene(
         <span className="scene-live-dot" /> SYSTEM / 3D{" "}
         <span>{tour.phase === "knowledge" ? "Prepare the evidence" : "Follow the request"}</span>
       </figcaption>
-      <div className="system-viewport" ref={viewport}>
+      <div className="system-viewport">
         <SceneBoundary fallback={fallback}>
           {ready && !lowEffects ? (
             <Suspense fallback={fallback}>
-              <RagWorld {...props} replay={replay} />
+              <RagWorld {...props} replay={replay} overview={overview} labels={labels} />
             </Suspense>
           ) : (
             fallback
           )}
         </SceneBoundary>
         {ready && !lowEffects && (
-          <SceneLabels tour={tour} width={size.width} height={size.height} />
+          <div className="scene-labels" aria-hidden>
+            {Object.keys(plan.positions).map((key) => {
+              const node = key as SceneNode;
+              const names: Partial<Record<SceneNode, string>> = {
+                source: "Source documents",
+                chunks: "Bounded chunks",
+                vectors: "Embedding · 7D",
+                index: "Knowledge index",
+                model: "Neural AI entity",
+                question: "Question",
+                retrieve: "Retrieve",
+                context: "Context tray",
+                cache: "Cache",
+                tool: "Read-only tool",
+                check: "Release gate",
+              };
+              if (
+                (tour.phase === "knowledge" &&
+                  ((node === "chunks" && tour.stage < 1) ||
+                    (node === "vectors" && tour.stage < 2))) ||
+                !names[node] ||
+                (node === "source" && tour.phase !== "knowledge") ||
+                (node === "tool" && tour.stage !== 5) ||
+                (node === "cache" && tour.stage !== 2)
+              )
+                return null;
+              const note =
+                node === "model"
+                  ? tour.phase === "knowledge"
+                    ? "Standby · no model call"
+                    : plan.applicationLookup
+                      ? "Application lookup · no model"
+                      : plan.skipped
+                        ? "No generation"
+                        : "Simulated LLM · visual metaphor"
+                  : node === "index"
+                    ? "Passages + vectors · illustrative layout"
+                    : undefined;
+              return (
+                <div
+                  key={node}
+                  ref={(element) => {
+                    if (element) labels.current.set(node, element);
+                    else labels.current.delete(node);
+                  }}
+                  className={cn("world-label", plan.active === node && "world-label-active")}
+                  style={{ opacity: 0 }}
+                >
+                  {plan.active === node && <span className="world-focus-arrow">↓</span>}
+                  <strong>{names[node]}</strong>
+                  {note && <small>{note}</small>}
+                </div>
+              );
+            })}
+          </div>
         )}
         <div className="scene-mode-label">
           {plan.blocked
@@ -192,6 +168,14 @@ export function RagStageScene(
           <span>{reduced ? "Motion reduced" : paused ? "Motion paused" : "Neon / depth view"}</span>
         </div>
         <div className="scene-motion-controls">
+          <button
+            type="button"
+            aria-label={overview ? "Focus active stage" : "Show whole system"}
+            title={overview ? "Focus active stage" : "Show whole system"}
+            onClick={() => setOverview(!overview)}
+          >
+            {overview ? <Focus size={14} /> : <Maximize2 size={14} />}
+          </button>
           <button
             type="button"
             aria-label={paused ? "Resume visual motion" : "Pause visual motion"}

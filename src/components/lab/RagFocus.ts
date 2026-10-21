@@ -4,6 +4,7 @@ import { Vector2, Vector3 } from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { scenePlan, travelPoint } from "@/lib/rag-scene";
 import type { WalkthroughState } from "@/lib/rag-walkthrough";
@@ -44,13 +45,16 @@ export function RagFocus({
     const composer = new EffectComposer(gl);
     const render = new RenderPass(scene, camera);
     const focus = new ShaderPass(focusShader);
+    const bloom = new UnrealBloomPass(new Vector2(800, 600), 0.65, 0.55, 0.4);
     const output = new OutputPass();
     composer.addPass(render);
+    composer.addPass(bloom);
     composer.addPass(focus);
     composer.addPass(output);
     return {
       composer,
       focus,
+      bloom,
       render,
       output,
       target: new Vector3(),
@@ -70,6 +74,7 @@ export function RagFocus({
     () => () => {
       effect.composer.dispose();
       effect.focus.dispose();
+      effect.bloom.dispose();
       effect.render.dispose();
       effect.output.dispose();
     },
@@ -88,6 +93,7 @@ export function RagFocus({
     effect.screen.set(effect.target.x * 0.5 + 0.5, effect.target.y * 0.5 + 0.5);
     (effect.focus.uniforms["focus"]!.value as Vector2).lerp(effect.screen, reduced ? 1 : 0.12);
     effect.focus.uniforms["strength"]!.value = reduced ? 0 : plan.moving ? 0.85 : 0.25;
+    effect.bloom.enabled = !reduced;
     effect.composer.render(delta);
   }, 1);
   return null;
