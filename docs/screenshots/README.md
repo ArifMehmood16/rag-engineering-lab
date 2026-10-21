@@ -9,6 +9,8 @@ These JPEG files are actual captures of RAG Engineering Lab after the repository
 - `evaluations.jpg`: reviewed Q1–Q3 cases, separate evaluation routes, and recorded outcomes.
 - `mobile-prefix.jpg`: the narrow-screen prefix scene, short explanation, and results in one frame.
 
+The additional `learning-flow-balanced.jpg` capture shows the router explanation after the performance and reader changes through `b566415`, at 1800 × 867 CSS pixels. It includes Balanced graphics and the Input → Change → Result cues.
+
 ## Refresh the images
 
 1. Install with `bun install --frozen-lockfile` and run `bun run dev`.

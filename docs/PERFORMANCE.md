@@ -16,6 +16,8 @@ The lab keeps its 3D worlds and two independent streams, but stops redrawing an 
 
 The canvas still uses demand rendering. Do not add a per-frame `invalidate()` loop: that would undo the reading-time savings.
 
+![Router explanation beside the 3D scene in Balanced graphics](screenshots/learning-flow-balanced.jpg)
+
 ## Verification on 21 October 2026
 
 Compared a saved, unchanged production build at `1cfe18d` with the optimized production build containing `2b0e5b0`, `623230f`, and the final control/label fixes in `b566415`. Both used Chrome on the same laptop, with DevTools Performance monitor open, an unthrottled connection, and a **1139 × 867 CSS-pixel viewport**. Neither run used the Pause control to obtain its reading-time result.
