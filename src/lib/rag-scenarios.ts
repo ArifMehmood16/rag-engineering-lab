@@ -2,7 +2,7 @@ import { APOLLO_QUESTIONS, type EvidenceRecord } from "@/content/apollo";
 import { REQUEST_SCENARIOS } from "@/content/rag-scenarios";
 import { advance, initEngine } from "./apollo-engine";
 
-/** A new example is isolated. Only the explicit repeat example starts with an approved cache entry. */
+/** A new example is isolated. Explicit warm examples seed only their configured cache types. */
 export function scenarioSeed(id: string, records: EvidenceRecord[]) {
   const scenario = REQUEST_SCENARIOS.find((s) => s.id === id)!;
   const question = APOLLO_QUESTIONS.find((q) => q.id === scenario.questionId)!;

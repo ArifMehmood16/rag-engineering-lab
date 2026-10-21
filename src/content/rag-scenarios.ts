@@ -42,6 +42,15 @@ export const REQUEST_SCENARIOS: RequestScenario[] = [
       "Reuse the answer, bypass retrieval and both models, recheck citations and current eligibility, then return it.",
   },
   {
+    id: "prefix-hit",
+    title: "Shared prefix · new generation",
+    questionId: "crew",
+    config: { promptCache: true, answerCache: false },
+    warm: true,
+    purpose: "A prior fixture run processed the same stable instructions. Reuse that prefix processing while retrieving evidence and generating a new answer.",
+    expected: "160 assumed prefix tokens are reused. One new fixture generation still runs, followed by all release checks. No approved answer is reused.",
+  },
+  {
     id: "tool-read",
     title: "Missing passage · use a tool",
     questionId: "source-read",
