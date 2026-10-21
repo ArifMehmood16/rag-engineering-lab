@@ -19,8 +19,8 @@ export const Route = createFileRoute("/lessons/$slug")({
   head: ({ loaderData }) => {
     const l = loaderData ? getLesson(loaderData.slug) : undefined;
     const title = l
-      ? `Lesson ${l.number}: ${l.concept} — The Intelligence Lab`
-      : "Lesson unavailable — The Intelligence Lab";
+      ? `Lesson ${l.number}: ${l.concept} — RAG Learning`
+      : "Lesson unavailable — RAG Learning";
     const description = l ? l.summary : "This lesson could not be found.";
     return {
       meta: [

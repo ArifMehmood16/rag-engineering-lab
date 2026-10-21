@@ -150,7 +150,7 @@ export function Lab() {
       <header className="lab-intro">
         <div>
           <p className="eyebrow">
-            <span className="live-indicator" /> The intelligence lab / interactive systems
+            <span className="live-indicator" /> RAG Learning / AI Learning Lab
           </p>
           <h1>
             See how <span>RAG works.</span>
