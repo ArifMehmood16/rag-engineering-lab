@@ -100,9 +100,9 @@ export function advance(s: EngineState, records: EvidenceRecord[]): EngineState 
         })
         .filter((x) => x.score > 0)
         .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))
-        .slice(0, 8);
+        .slice(0, 10);
       ctx.retrieved = scored;
-      r = { status: "done", input: [`terms: ${terms.join(", ")}`, "k = 8, lexical overlap"], output: scored.map((x) => `${x.id} · score ${x.score}`) };
+      r = { status: "done", input: [`terms: ${terms.join(", ")}`, "k = 10, lexical overlap"], output: scored.map((x) => `${x.id} · score ${x.score}`) };
       break;
     }
     case "assemble": {
@@ -139,11 +139,15 @@ export function advance(s: EngineState, records: EvidenceRecord[]): EngineState 
       break;
     }
     case "draft": {
-      const pick = (ids: string[], must: string) => ids.filter((id) => tokens(byId(id).text).includes(must));
+      const has = (id: string, ...all: string[]) => all.every((p) => byId(id).text.toLowerCase().includes(p));
+      const uniq = (a: string[]) => [...new Set(a)];
+      const walkers = ctx.facets.moonwalkers!.filter((id) => has(id, "armstrong", "aldrin") || (has(id, "armstrong") && has(id, "stepped onto the moon")));
+      const orbit = ctx.facets.orbiter!.filter((id) => has(id, "collins") && (has(id, "orbited") || has(id, "lunar orbit")));
+      const craft = uniq([...ctx.facets.craft!.filter((id) => has(id, "csm, columbia")), ...orbit.filter((id) => has(id, "csm piloted by collins"))]);
       ctx.claims = [
-        { id: "C1", text: "Neil Armstrong and Buzz Aldrin walked on the Moon.", cites: [...new Set([...pick(ctx.facets.moonwalkers!, "stepped"), ...pick(ctx.facets.moonwalkers!, "landed")])], supportTerms: [["armstrong"], ["aldrin"], ["stepped", "landed"]] },
-        { id: "C2", text: "Michael Collins remained in lunar orbit.", cites: pick(ctx.facets.orbiter!, "orbited").concat(pick(ctx.facets.orbiter!, "orbit")).filter((v, i, a) => a.indexOf(v) === i), supportTerms: [["collins"], ["orbited", "orbit"]] },
-        { id: "C3", text: "He was aboard the command and service module Columbia.", cites: [...pick(ctx.facets.craft!, "columbia").slice(0, 1), ...pick(ctx.context, "piloted")], supportTerms: [["columbia"], ["collins"], ["csm", "command"]] },
+        { id: "C1", text: "Neil Armstrong and Buzz Aldrin walked on the Moon.", cites: uniq(walkers.filter((id) => has(id, "moon"))), supportTerms: [["armstrong"], ["aldrin"], ["stepped", "landed"]] },
+        { id: "C2", text: "Michael Collins remained in lunar orbit.", cites: uniq(orbit), supportTerms: [["collins"], ["orbited", "orbit"]] },
+        { id: "C3", text: "He was aboard the command and service module Columbia.", cites: craft, supportTerms: [["columbia"], ["collins"], ["csm", "command"]] },
       ];
       r = { status: "done", input: ["Verified facets + kept passage IDs", "Fixture template (no model)"], output: ctx.claims.map((c) => `${c.id}: ${c.text} [${c.cites.join(", ")}]`), note: "Generation is fixture-based; no real model is running." };
       break;
