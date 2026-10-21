@@ -35,7 +35,7 @@ function QualifierRow({ label, value, ok }: { label: string; value: string; ok: 
   );
 }
 
-function Inspector({ item, passage }: { item?: RankedPassage; passage: Passage }) {
+function Inspector({ item, passage }: { item: RankedPassage | undefined; passage: Passage }) {
   return (
     <aside aria-label="Evidence inspector" className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-6">
       <p className="eyebrow">Evidence inspector</p>

@@ -25,7 +25,7 @@ describe("retrieval lab", () => {
   });
 
   it("RRF uses 1/(k+rank)", () => {
-    expect(reciprocalRankFusion([["a"], ["a"]])[0][1]).toBeCloseTo(2 / 61);
+    expect(reciprocalRankFusion([["a"], ["a"]])[0]?.[1]).toBeCloseTo(2 / 61);
     expect(() => reciprocalRankFusion([["a"]], 0)).toThrow();
   });
 });
