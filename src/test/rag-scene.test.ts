@@ -117,6 +117,12 @@ describe("the visual data path", () => {
     expect(transferProgress(outward, 0.5)).toBe(1);
     expect(transferProgress(inward, 0.5)).toBe(0);
     expect(transferProgress(inward, 1)).toBe(1);
+    for (const tool of ["invalid", "denied", "timeout", "empty"] as const) {
+      const failed = buildStoryFrames(initEngine(DEFAULT_QUESTION, { tool }), APOLLO_RECORDS);
+      const stopped = scenePlan(storyTour("request", 5, 2, failed));
+      expect(stopped.transfer.to).toBe("tool");
+      expect(stopped.moving).toBe(false);
+    }
   });
   it("takes reused answers through output checks while generation stays bypassed", () => {
     const cold = buildStoryFrames(
@@ -132,5 +138,12 @@ describe("the visual data path", () => {
     expect(scenePlan(storyTour("request", 7, 1, warm)).moving).toBe(false);
     expect(scenePlan(storyTour("request", 8, 1, warm)).transfer.from).toBe("cache");
     expect(scenePlan(storyTour("request", 10, 1, warm)).transfer.to).toBe("question");
+    const bad = buildStoryFrames(
+      initEngine(DEFAULT_QUESTION, { fault: "badCitation" }),
+      APOLLO_RECORDS,
+    );
+    const withheld = scenePlan(storyTour("request", 8, 3, bad));
+    expect(withheld.active).toBe("check");
+    expect(withheld.moving).toBe(false);
   });
 });

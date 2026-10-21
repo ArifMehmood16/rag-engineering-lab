@@ -62,6 +62,22 @@ function inspectRun() {
 const progress = () => screen.getByRole("progressbar", { name: "Stages explored this visit" });
 
 describe("RAG scroll lab", () => {
+  it("keeps the request topology understandable without WebGL", () => {
+    render(<Lab />);
+    answerStream();
+    const diagram = screen.getByRole("img", { name: /^Question flow: user, input checks/ });
+    for (const label of [
+      "You",
+      "Input checks",
+      "Router",
+      "Answer cache",
+      "Small LLM",
+      "LLM",
+      "Tools",
+      "Output checks",
+    ])
+      expect(within(diagram).getByText(label, { exact: true })).toBeInTheDocument();
+  });
   it("keeps tools in a drawer and starts either stream without a prerequisite", () => {
     render(<Lab />);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();

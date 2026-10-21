@@ -1016,3 +1016,18 @@
     top: 26%;
   }
 }
+
+.request-fallback {
+  display: block;
+  padding: 125px 420px 150px 16px;
+}
+.request-fallback > svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+@media (max-width: 999px) {
+  .request-fallback {
+    padding: 175px 12px 50vh;
+  }
+}

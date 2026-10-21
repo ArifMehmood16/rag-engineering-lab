@@ -54,12 +54,49 @@ export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   answer: [-8, 0, 0.4],
 };
 
+export const REQUEST_CONNECTIONS: [SceneNode, SceneNode][] = [
+  ["question", "input"],
+  ["input", "router"],
+  ["router", "cache"],
+  ["cache", "router"],
+  ["router", "small"],
+  ["router", "model"],
+  ["router", "retrieve"],
+  ["router", "context"],
+  ["index", "retrieve"],
+  ["retrieve", "context"],
+  ["context", "model"],
+  ["context", "small"],
+  ["context", "check"],
+  ["model", "check"],
+  ["small", "check"],
+  ["cache", "check"],
+  ["index", "check"],
+  ["context", "tool"],
+  ["tool", "context"],
+  ["model", "tool"],
+  ["check", "question"],
+];
+export const REQUEST_NODE_NAMES: Partial<Record<SceneNode, string>> = {
+  question: "You",
+  input: "Input checks",
+  router: "Router",
+  cache: "Answer cache",
+  small: "Small LLM",
+  retrieve: "Retrieve",
+  index: "Knowledge index",
+  context: "Context tray",
+  model: "LLM",
+  tool: "Tools",
+  check: "Output checks",
+};
+
 /** Shared bends keep lines, arrowheads, data packets, labels and focus on one route. */
 const PATH_BENDS: Partial<Record<string, Point3[]>> = {
   "check:question": [
-    [4.7, -2.9, 0.8],
-    [0, -4, 1],
-    [-5.8, -3.2, 0.8],
+    [4.7, -2.7, 0.8],
+    [0, -3.6, 1],
+    [-5.8, -2.9, 0.8],
   ],
   "small:check": [
     [-1, -2.9, 0.8],
@@ -128,7 +165,7 @@ export function scenePlan(tour: WalkthroughState) {
   ];
   const transfer = prep ? preparation[tour.stage]! : routes[tour.stage]!;
   // Tool returns travel back into the context before sufficiency/generation.
-  const toolReturn = !prep && tour.stage === 5 && tour.beat >= 2 && input.config.tool !== "off";
+  const toolReturn = !prep && tour.stage === 5 && tour.beat >= 2 && input.config.tool === "valid";
   const actual = toolReturn
     ? { from: "tool" as const, to: "context" as const, kind: "evidence" as const }
     : transfer;
@@ -137,12 +174,22 @@ export function scenePlan(tour: WalkthroughState) {
     (result?.status === "skipped" ||
       (tour.stage === 5 && input.config.tool === "off") ||
       (tour.stage >= 3 && tour.stage <= 7 && input.ctx.usage.answerHit));
+  const toolFailure =
+    !prep &&
+    tour.stage === 5 &&
+    tour.beat >= 2 &&
+    input.config.tool !== "off" &&
+    input.config.tool !== "valid";
   const blocked = !prep && result?.status === "blocked";
   return {
     positions: prep ? PREPARATION_POSITIONS : REQUEST_POSITIONS,
     transfer: actual,
-    active: tour.beat === 0 || blocked ? actual.from : actual.to,
-    moving: tour.beat > 0 && !atOutput(tour) && !skipped && !blocked,
+    active: toolFailure
+      ? ("tool" as const)
+      : tour.beat === 0 || (blocked && tour.stage === 1)
+        ? actual.from
+        : actual.to,
+    moving: tour.beat > 0 && !atOutput(tour) && !skipped && !blocked && !toolFailure,
     skipped,
     blocked,
     applicationLookup,
@@ -155,7 +202,9 @@ export function scenePlan(tour: WalkthroughState) {
 export function transferProgress(tour: WalkthroughState, progress: number) {
   if (tour.phase !== "request" || tour.stage !== 5 || stageInput(tour).config.tool === "off")
     return progress;
-  return tour.beat < 2 ? Math.min(1, progress * 2) : Math.max(0, (progress - 0.5) * 2);
+  return tour.beat < 2 || stageInput(tour).config.tool !== "valid"
+    ? Math.min(1, progress * 2)
+    : Math.max(0, (progress - 0.5) * 2);
 }
 
 /** Each operation continues the same transformation; scrolling can review it in reverse. */

@@ -6,7 +6,7 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
-import { scenePlan, travelPoint } from "@/lib/rag-scene";
+import { scenePlan, travelPoint, flowWaypoints, transferProgress } from "@/lib/rag-scene";
 import type { WalkthroughState } from "@/lib/rag-walkthrough";
 
 // A bounded focus pull and a soft halo on bright edges. The HTML reader stays sharp.
@@ -86,7 +86,8 @@ export function RagFocus({
       ? travelPoint(
           plan.positions[plan.transfer.from]!,
           plan.positions[plan.transfer.to]!,
-          progress.current,
+          transferProgress(tour, progress.current),
+          flowWaypoints(plan.transfer.from, plan.transfer.to),
         )
       : plan.positions[plan.active]!;
     effect.target.set(...position).project(camera);

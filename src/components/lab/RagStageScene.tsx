@@ -1,10 +1,26 @@
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Component,
+  lazy,
+  Suspense,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { Pause, Play, Sparkles, Maximize2, Focus } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import { KNOWLEDGE_TAKEAWAYS, REQUEST_TAKEAWAYS } from "@/content/rag-walkthrough";
 import { toyEmbedding } from "@/lib/apollo-engine";
 import { atOutput, walkthroughStep, type WalkthroughState } from "@/lib/rag-walkthrough";
-import { scenePlan, type SceneNode } from "@/lib/rag-scene";
+import {
+  scenePlan,
+  REQUEST_CONNECTIONS,
+  REQUEST_NODE_NAMES,
+  travelPoint,
+  flowWaypoints,
+  type SceneNode,
+} from "@/lib/rag-scene";
 import { flowLabel } from "@/lib/rag-flow-label";
 import { cn } from "@/lib/utils";
 import type { RagWorldProps } from "./RagWorld";
@@ -12,7 +28,86 @@ import type { RagWorldProps } from "./RagWorld";
 // Keep WebGL and Three out of SSR and the ordinary lesson bundles.
 const RagWorld = lazy(() => import("./RagWorld"));
 function StaticWorld({ tour, record }: { tour: WalkthroughState; record: EvidenceRecord }) {
-  const kind = scenePlan(tour).transfer.kind;
+  const plan = scenePlan(tour);
+  const marker = useId();
+  const kind = plan.transfer.kind;
+  if (tour.phase === "request")
+    return (
+      <div className="world-fallback request-fallback">
+        <svg
+          viewBox="-9 -6.2 16 11"
+          role="img"
+          aria-label="Question flow: user, input checks, router, cache, model branches, tools, output checks, and return to user"
+        >
+          <defs>
+            <marker
+              id={marker}
+              markerWidth="5"
+              markerHeight="5"
+              refX="4"
+              refY="2.5"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M0,0 L5,2.5 L0,5" fill="#80c5d4" />
+            </marker>
+          </defs>
+          {REQUEST_CONNECTIONS.map(([from, to]) => {
+            const active =
+              plan.transfer.from === from &&
+              plan.transfer.to === to &&
+              !plan.skipped &&
+              !plan.blocked;
+            const points = Array.from({ length: 40 }, (_, n) =>
+              travelPoint(
+                plan.positions[from]!,
+                plan.positions[to]!,
+                n / 39,
+                flowWaypoints(from, to),
+              ),
+            );
+            return (
+              <path
+                key={`${from}:${to}`}
+                d={points.map(([x, y], n) => `${n ? "L" : "M"}${x},${-y}`).join(" ")}
+                fill="none"
+                stroke={active ? "#8dffe1" : "#31516c"}
+                strokeWidth={active ? 0.04 : 0.02}
+                markerEnd={`url(#${marker})`}
+              />
+            );
+          })}
+          {Object.entries(REQUEST_NODE_NAMES).map(([name, title]) => {
+            const node = name as SceneNode;
+            const [x, y] = plan.positions[node]!;
+            const radius =
+              node === "model" ? 1.05 : node === "index" ? 0.9 : node === "small" ? 0.5 : 0.27;
+            return (
+              <g key={node} transform={`translate(${x},${-y})`}>
+                <circle
+                  r={radius}
+                  fill="#0b1c2c"
+                  stroke={plan.active === node ? "#b7fff0" : "#82b9cc"}
+                  strokeWidth="0.025"
+                />
+                {(node === "model" || node === "small" || node === "index") && (
+                  <circle
+                    r={radius * 0.7}
+                    fill="none"
+                    stroke="#6086b0"
+                    strokeWidth="0.02"
+                    strokeDasharray=".1 .1"
+                  />
+                )}
+                <text y={radius + 0.45} textAnchor="middle" fill="#c4e5ef" fontSize="0.26">
+                  {title}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+    );
   return (
     <div className="world-fallback" aria-label="Static system illustration">
       <div className="fallback-pages">
@@ -112,42 +207,60 @@ export function RagStageScene(
             {Object.keys(plan.positions).map((key) => {
               const node = key as SceneNode;
               const names: Partial<Record<SceneNode, string>> = {
+                ...REQUEST_NODE_NAMES,
                 source: "Source documents",
                 chunks: "Bounded chunks",
                 vectors: "Embedding · 7D",
-                index: "Knowledge index",
-                model: "LLM",
-                question: "Question",
-                retrieve: "Retrieve",
-                context: "Context tray",
-                cache: "Cache",
-                tool: "Read-only tool",
-                check: "Release gate",
               };
               if (
                 (tour.phase === "knowledge" &&
                   ((node === "chunks" && tour.stage < 1) ||
                     (node === "vectors" && tour.stage < 2))) ||
                 !names[node] ||
-                (node === "source" && tour.phase !== "knowledge") ||
-                (node === "tool" && tour.stage !== 5) ||
-                (node === "cache" && tour.stage !== 2)
+                (node === "source" && tour.phase !== "knowledge")
               )
                 return null;
+              const input = tour.frames[tour.stage] ?? tour.frames[0]!;
               const note =
-                node === "model"
-                  ? tour.phase === "knowledge"
-                    ? "Standby · no model call"
-                    : plan.applicationLookup
-                      ? "Application lookup · no model"
-                      : plan.skipped
-                        ? "No generation"
-                        : "Simulated LLM · visual metaphor"
-                  : node === "index"
-                    ? tour.phase === "knowledge" && !(tour.stage === 3 && output)
-                      ? "Scaffold · awaiting indexed passages"
-                      : "Passages + vectors · illustrative layout"
-                    : undefined;
+                node === "question"
+                  ? tour.stage === 10
+                    ? output
+                      ? "Answer received"
+                      : "Returning answer"
+                    : "Question input"
+                  : node === "input"
+                    ? "Input + access"
+                    : node === "router"
+                      ? plan.applicationLookup
+                        ? "Application lookup"
+                        : "Route selection"
+                      : node === "cache"
+                        ? plan.cached
+                          ? "Hit · output checks still run"
+                          : input.config.answerCache
+                            ? "Scoped, versioned reuse"
+                            : "Disabled in this run"
+                        : node === "small"
+                          ? plan.generator === "small" && !plan.cached
+                            ? "Selected profile · simulated"
+                            : "Standby · simulated profile"
+                          : node === "tool"
+                            ? input.config.tool === "off"
+                              ? "Optional · no call in this run"
+                              : "Read-only passage lookup"
+                            : node === "check"
+                              ? "Claims · citations · permissions"
+                              : node === "model"
+                                ? tour.phase === "knowledge"
+                                  ? "Standby · no model call"
+                                  : plan.generator === "model" && !plan.cached
+                                    ? "Selected large profile · simulated"
+                                    : "Standby · large profile"
+                                : node === "index"
+                                  ? tour.phase === "knowledge" && !(tour.stage === 3 && output)
+                                    ? "Scaffold · awaiting indexed passages"
+                                    : "Passages + vectors · illustrative layout"
+                                  : undefined;
               return (
                 <div
                   key={node}
@@ -160,7 +273,12 @@ export function RagStageScene(
                 >
                   {plan.active === node && <span className="world-focus-arrow">↓</span>}
                   <strong>{names[node]}</strong>
-                  {note && <small>{note}</small>}
+                  {note &&
+                    (plan.active === node ||
+                      (node === "small" && tour.stage === 7) ||
+                      (node === "model" && tour.stage === 7) ||
+                      (node === "tool" && tour.stage === 5) ||
+                      (node === "cache" && tour.stage === 2)) && <small>{note}</small>}
                 </div>
               );
             })}

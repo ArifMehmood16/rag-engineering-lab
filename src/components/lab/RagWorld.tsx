@@ -12,6 +12,9 @@ import { buildKnowledgeIndex } from "@/lib/knowledge-index";
 import { atOutput, stageInput, stageOutput, type WalkthroughState } from "@/lib/rag-walkthrough";
 import {
   scenePlan,
+  flowWaypoints,
+  REQUEST_CONNECTIONS,
+  transferProgress,
   sceneProgressRange,
   travelPoint,
   type Point3,
@@ -187,6 +190,82 @@ function Portal({ color = CYAN, shield = false }: { color?: string; shield?: boo
   );
 }
 
+/** A person and a question/answer sheet share the same endpoint of the request loop. */
+function UserTerminal({ released }: { released: boolean }) {
+  const color = released ? "#a5ffcb" : CYAN;
+  return (
+    <group>
+      <mesh position={[0, 0.24, 0]}>
+        <sphereGeometry args={[0.18, 18, 12]} />
+        <meshStandardMaterial color="#13384b" emissive={color} emissiveIntensity={0.32} />
+        <Edges color={color} />
+      </mesh>
+      <Line
+        points={[
+          [-0.36, -0.5, 0],
+          [-0.29, -0.13, 0],
+          [0, -0.02, 0],
+          [0.29, -0.13, 0],
+          [0.36, -0.5, 0],
+        ]}
+        color={color}
+        lineWidth={2}
+      />
+      <group position={[0.6, -0.15, 0.1]} scale={0.7}>
+        <Paper small color={color} />
+      </group>
+      {released && <Glow color={color} scale={2} opacity={0.3} />}
+    </group>
+  );
+}
+
+function CacheStore({ active, enabled }: { active: boolean; enabled: boolean }) {
+  const color = enabled ? "#ffc875" : "#9a8b6f";
+  return (
+    <group>
+      {[-0.23, 0, 0.23].map((y) => (
+        <mesh key={y} position={[0, y, 0]}>
+          <cylinderGeometry args={[0.35, 0.35, 0.13, 32]} />
+          <meshStandardMaterial
+            color="#2b2530"
+            metalness={0.7}
+            roughness={0.3}
+            emissive={color}
+            emissiveIntensity={active ? 0.5 : 0.08}
+          />
+          <Edges color={color} />
+        </mesh>
+      ))}
+      {active && <Glow color="#ffc875" opacity={0.3} />}
+    </group>
+  );
+}
+
+/** A keypad-shaped tool dock; the executable fixture remains a bounded passage lookup. */
+function ToolConsole({ active }: { active: boolean }) {
+  const color = active ? "#b7ffdf" : "#83a7b9";
+  return (
+    <group rotation={[0.08, -0.18, -0.08]}>
+      <mesh>
+        <boxGeometry args={[0.7, 0.9, 0.15]} />
+        <meshStandardMaterial color="#102b38" metalness={0.7} roughness={0.3} />
+        <Edges color={color} />
+      </mesh>
+      <mesh position={[0, 0.25, 0.085]}>
+        <boxGeometry args={[0.49, 0.18, 0.025]} />
+        <meshBasicMaterial color={color} transparent opacity={active ? 0.85 : 0.35} />
+      </mesh>
+      {Array.from({ length: 9 }, (_, n) => (
+        <mesh key={n} position={[((n % 3) - 1) * 0.17, -0.01 - Math.floor(n / 3) * 0.16, 0.09]}>
+          <boxGeometry args={[0.1, 0.08, 0.035]} />
+          <meshBasicMaterial color={color} transparent opacity={active ? 0.8 : 0.35} />
+        </mesh>
+      ))}
+      {active && <Glow color="#a5ffcb" scale={2} opacity={0.25} />}
+    </group>
+  );
+}
+
 function Connection({
   from,
   to,
@@ -194,9 +273,11 @@ function Connection({
   moving,
   time,
   color = CYAN,
+  via = [],
 }: {
   from: Point3;
   to: Point3;
+  via?: Point3[];
   active: boolean;
   moving: boolean;
   time: React.RefObject<number>;
@@ -204,14 +285,17 @@ function Connection({
 }) {
   const geometry = useMemo(() => {
     const curve = new THREE.CatmullRomCurve3(
-      Array.from({ length: 25 }, (_, i) => new THREE.Vector3(...travelPoint(from, to, i / 24))),
+      Array.from(
+        { length: 25 },
+        (_, i) => new THREE.Vector3(...travelPoint(from, to, i / 24, via)),
+      ),
     );
     return {
       curve,
       tube: new THREE.TubeGeometry(curve, 72, 0.012, 6, false),
       points: curve.getSpacedPoints(80),
     };
-  }, [from, to]);
+  }, [from, to, via]);
   useEffect(() => () => geometry.tube.dispose(), [geometry]);
   const line = useRef<Line2>(null),
     arrow = useRef<THREE.Mesh>(null);
@@ -235,9 +319,9 @@ function Connection({
     <group>
       <mesh geometry={geometry.tube}>
         <meshBasicMaterial
-          color={active ? color : "#263450"}
+          color={active ? color : "#365273"}
           transparent
-          opacity={active ? 0.55 : 0.25}
+          opacity={active ? 0.65 : 0.5}
           toneMapped={false}
           depthWrite={false}
         />
@@ -255,9 +339,14 @@ function Connection({
         toneMapped={false}
         depthWrite={false}
       />
-      <mesh ref={arrow} visible={active}>
+      <mesh ref={arrow}>
         <coneGeometry args={[0.065, 0.2, 3]} />
-        <meshBasicMaterial color={color} toneMapped={false} />
+        <meshBasicMaterial
+          color={active ? color : "#7197b9"}
+          transparent
+          opacity={active ? 1 : 0.4}
+          toneMapped={false}
+        />
       </mesh>
       {Array.from({ length: 6 }, (_, i) => (
         <mesh
@@ -365,8 +454,10 @@ function TravellingData({
   const count = split ? 10 : plan.transfer.kind === "evidence" ? 3 : 1;
   useFrame(() => {
     if (!group.current) return;
-    const t = progress.current;
-    group.current.position.set(...travelPoint(from, to, t));
+    const t = transferProgress(tour, progress.current);
+    group.current.position.set(
+      ...travelPoint(from, to, t, flowWaypoints(plan.transfer.from, plan.transfer.to)),
+    );
     group.current.rotation.y = -0.22 + Math.sin(Math.PI * t) * 0.35;
     group.current.rotation.z = Math.sin(Math.PI * t) * -0.1;
     if (document.current)
@@ -470,10 +561,18 @@ function World(props: RagWorldProps) {
     if (props.flowLabel?.current) {
       const from = plan.positions[plan.transfer.from]!;
       const to = plan.positions[plan.transfer.to]!;
-      const point = travelPoint(from, to, progress.current);
-      projected.set(point[0], point[1] + 0.95, point[2] + 0.1).project(camera);
+      const point = travelPoint(
+        from,
+        to,
+        transferProgress(tour, progress.current),
+        flowWaypoints(plan.transfer.from, plan.transfer.to),
+      );
+      const lift = tour.phase === "request" && (tour.stage < 2 || tour.stage === 10) ? 2.9 : 0.95;
+      projected.set(point[0], point[1] + lift, point[2] + 0.1).project(camera);
       const element = props.flowLabel.current;
-      element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
+      const x = (projected.x * 0.5 + 0.5) * size.width;
+      const margin = size.width < 1000 ? 110 : 150;
+      element.style.left = `${Math.max(margin, Math.min(size.width - margin, x))}px`;
       const y = (-projected.y * 0.5 + 0.5) * size.height;
       element.style.top = `${size.width < 1000 ? Math.max(size.height < 760 ? 232 : 225, Math.min(size.height < 760 ? 240 : size.height * 0.4, y)) : y}px`;
       element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1 ? "1" : "0";
@@ -482,7 +581,19 @@ function World(props: RagWorldProps) {
       const point = plan.positions[node];
       if (!point) return;
       const offset =
-        node === "model" ? -2.35 : node === "index" ? -1.95 : node === "chunks" ? -1.02 : -0.9;
+        node === "model"
+          ? -2.35
+          : node === "index"
+            ? -1.95
+            : node === "chunks"
+              ? -1.02
+              : node === "small"
+                ? -1.1
+                : node === "tool"
+                  ? 0.95
+                  : node === "cache"
+                    ? -0.7
+                    : -0.9;
       projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
       element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
       element.style.top = `${(-projected.y * 0.5 + 0.5) * size.height}px`;
@@ -496,17 +607,25 @@ function World(props: RagWorldProps) {
       key={`${from}-${to}`}
       from={positions[from]!}
       to={positions[to]!}
+      via={flowWaypoints(from, to)}
+      color={
+        from === "cache" || to === "cache"
+          ? "#ffc875"
+          : from === "check" && to === "question"
+            ? "#a5ffcb"
+            : CYAN
+      }
       active={
-        plan.transfer.from === from && plan.transfer.to === to && tour.beat > 0 && !plan.skipped
+        plan.transfer.from === from &&
+        plan.transfer.to === to &&
+        tour.beat > 0 &&
+        !plan.skipped &&
+        !plan.blocked
       }
       moving={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
       time={time}
     />
   );
-  const cacheEnabled =
-    stageInput(tour).config.answerCache ||
-    stageInput(tour).config.promptCache ||
-    stageInput(tour).config.retrievalCache;
   return (
     <>
       <color attach="background" args={["#040711"]} />
@@ -591,18 +710,14 @@ function World(props: RagWorldProps) {
         </>
       ) : (
         <>
-          {connection("question", "router")}
-          {connection("router", "retrieve")}
-          {connection("index", "retrieve")}
-          {connection("retrieve", "context")}
-          {connection("context", "model")}
-          {plan.applicationLookup && connection("context", "check")}
-          {connection("model", "check")}
-          {(cacheEnabled || tour.stage === 2) && connection("router", "cache")}
-          {tour.stage === 5 && connection("context", "tool")}
-          <group position={positions.source!} scale={0.65} rotation={[0, -0.2, -0.1]}>
-            <Paper />
-          </group>
+          {REQUEST_CONNECTIONS.filter(([from, to]) => {
+            if ((from === "router" && to === "context") || (from === "context" && to === "check"))
+              return plan.applicationLookup;
+            if ((from === "cache" && to === "check") || (from === "cache" && to === "router"))
+              return stageInput(tour).config.answerCache;
+            if (from === "index" && to === "check") return tour.stage === 9;
+            return true;
+          }).map(([from, to]) => connection(from, to))}
           <group position={positions.index!}>
             <RagKnowledgeGlobe
               chunks={index.chunks}
@@ -613,7 +728,19 @@ function World(props: RagWorldProps) {
             />
           </group>
           <group position={positions.question!}>
-            <Portal />
+            <UserTerminal
+              released={tour.stage === 10 && atOutput(tour) && Boolean(after?.ctx.released)}
+            />
+            {active("question") && <Glow scale={2} opacity={0.3} color="#a5ffcb" />}
+          </group>
+          <group position={positions.input!}>
+            <Portal shield color={tour.stage === 1 && plan.blocked ? "#ff878d" : CYAN} />
+          </group>
+          <group position={positions.small!} scale={0.48}>
+            <RagNeuralEntity
+              active={tour.stage === 7 && plan.generator === "small" && !plan.skipped}
+              time={time}
+            />
           </group>
           <group position={positions.router!}>
             <mesh rotation={[0, 0, Math.PI / 4]}>
@@ -656,43 +783,20 @@ function World(props: RagWorldProps) {
               </group>
             ))}
           </group>
-          {(cacheEnabled || tour.stage === 2) && (
-            <>
-              <group position={positions.cache!}>
-                <mesh rotation={[0.4, 0.5, 0.3]}>
-                  <octahedronGeometry args={[0.4]} />
-                  <meshStandardMaterial
-                    color="#a66a21"
-                    emissive="#edaf58"
-                    emissiveIntensity={0.4}
-                    metalness={0.8}
-                    roughness={0.2}
-                  />
-                  <Edges color="#ffd78a" />
-                </mesh>
-                <Glow color="#ffb94a" opacity={0.3} />
-              </group>
-            </>
-          )}
-          {tour.stage === 5 && (
-            <>
-              <group position={positions.tool!} scale={0.65}>
-                <Portal color="#8cf1b5" shield />
-              </group>
-            </>
-          )}
+          <group position={positions.cache!}>
+            <CacheStore active={active("cache")} enabled={stageInput(tour).config.answerCache} />
+          </group>
+          <group position={positions.tool!} scale={0.9}>
+            <ToolConsole active={tour.stage === 5 && stageInput(tour).config.tool !== "off"} />
+          </group>
           <group position={positions.check!}>
-            {tour.stage === 10 && atOutput(tour) && after?.ctx.released ? (
-              <Paper color="#aaffce" />
-            ) : (
-              <Portal color={plan.blocked ? "#ff878d" : "#aaffce"} shield />
-            )}
+            <Portal color={plan.blocked && tour.stage >= 8 ? "#ff878d" : "#aaffce"} shield />
           </group>
         </>
       )}
       <group position={positions.model!} scale={1.12}>
         <RagNeuralEntity
-          active={!prep && tour.stage === 7 && !plan.skipped && !plan.applicationLookup}
+          active={!prep && tour.stage === 7 && plan.generator === "model" && !plan.skipped}
           time={time}
         />
       </group>
