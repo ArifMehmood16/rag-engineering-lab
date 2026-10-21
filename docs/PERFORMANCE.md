@@ -4,9 +4,9 @@
 
 ## What changed
 
-The lab keeps its 3D worlds and two independent streams, but stops redrawing an unchanged scene while someone reads.
+The lab keeps its 3D worlds and two independent streams, with restrained motion while someone reads.
 
-- Stream transitions request frames for 2.5 seconds after a new card, scroll position, camera mode, or inspected passage. The scene then rests until the next interaction. The camera no longer drifts indefinitely.
+- Stream transitions request frames for 2.5 seconds after a new card, scroll position, camera mode, or inspected passage. Then only the main LLM and knowledge index continue their gentle ambient movement, using a separate clock at 12 FPS. Transfers, stars, the small-model branch, and camera stop advancing. The same scheduler serves transitions and ambient motion; unchanged camera and label projection work is skipped. This requires ongoing canvas redraws and is not the former zero-frame idle state.
 - Balanced graphics is the default: pixel ratio capped at 1.25 and scheduled transition frames at 30 FPS. High detail raises these to 1.75 and 60 FPS. Text remains ordinary HTML at browser resolution. React updates, scrolling, and resizing can also request frames.
 - Caching and evaluation examples play once, then retain their result. Each packet completes its own path, with delayed departures instead of a wrapping clock. Replay visual example replays only the illustration, never the engine or cache.
 - Pause, reduced motion, hidden tabs, and the details drawer cancel scheduled animation. Reduced motion keeps a static equivalent, with deliberate scrolling still selecting the recorded step.
@@ -19,6 +19,8 @@ The canvas still uses demand rendering. Do not add a per-frame `invalidate()` lo
 ![Router explanation beside the 3D scene in Balanced graphics](screenshots/learning-flow-balanced.jpg)
 
 ## Verification on 21 October 2026
+
+The measurements below predate the ongoing 12-FPS LLM/index motion. They describe the earlier fully settled implementation, not the current reading-time CPU or GPU cost; fresh hardware measurements are needed.
 
 Compared a saved, unchanged production build at `1cfe18d` with the optimized production build containing `2b0e5b0`, `623230f`, and the final control/label fixes in `b566415`. Both used Chrome on the same laptop, with DevTools Performance monitor open, an unthrottled connection, and a **1139 × 867 CSS-pixel viewport**. Neither run used the Pause control to obtain its reading-time result.
 

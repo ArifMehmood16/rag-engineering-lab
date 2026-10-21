@@ -479,6 +479,7 @@
 }
 .lab-utility-bar {
   position: fixed;
+  pointer-events: none;
   bottom: 14px;
   right: 24px;
   left: 24px;
@@ -490,6 +491,7 @@
   display: none;
 }
 .lab-utility-bar > div {
+  pointer-events: auto;
   margin-left: auto;
   background: #081221c7;
   padding: 7px 12px;

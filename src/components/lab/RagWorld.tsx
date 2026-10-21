@@ -24,7 +24,6 @@ import {
   sceneConnections,
   transferProgress,
   sceneProgressRange,
-  travelPoint,
   createFlowSampler,
   type Point3,
   type SceneNode,
@@ -501,17 +500,24 @@ function Director({
   paused,
   visible,
   overview,
+  time,
 }: {
   tour: WalkthroughState;
   reduced: boolean;
   paused: boolean;
   visible: boolean;
   overview: boolean;
+  time: React.RefObject<number>;
 }) {
   const { camera, size } = useThree();
   const look = useRef(new THREE.Vector3());
   const initialized = useRef(false);
+  const lastTime = useRef(-1);
+  const dirty = useRef(true);
   const pose = cameraPose(tour, overview);
+  useLayoutEffect(() => {
+    dirty.current = true;
+  });
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     const region = sceneRegion(size.width, size.height, tour.phase === "request");
@@ -527,6 +533,9 @@ function Director({
   }, [camera, size.width, size.height, tour.phase]);
   useFrame((_, delta) => {
     if (!visible) return;
+    if (!dirty.current && lastTime.current === time.current) return;
+    dirty.current = false;
+    lastTime.current = time.current;
     const region = sceneRegion(size.width, size.height, tour.phase === "request");
     const halfFov = Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2));
     const distance = Math.max(
@@ -565,6 +574,14 @@ function TravellingData({
   const pieces = useRef<THREE.Group[]>([]);
   const bars = useRef<THREE.Group>(null);
   const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
+  const sample = useMemo(
+    () => createFlowSampler(from, to, via),
+    [plan.positions, plan.transfer.from, plan.transfer.to],
+  );
+  const lastProgress = useRef(-1);
+  useLayoutEffect(() => {
+    lastProgress.current = -1;
+  });
   const split = plan.transfer.kind === "split";
   const encode = plan.transfer.kind === "encode";
   const vector = plan.transfer.kind === "vector";
@@ -572,7 +589,9 @@ function TravellingData({
   useFrame(() => {
     if (!group.current) return;
     const t = transferProgress(tour, progress.current);
-    group.current.position.set(...travelPoint(from, to, t, via));
+    if (lastProgress.current === t) return;
+    lastProgress.current = t;
+    group.current.position.set(...sample(t));
     group.current.rotation.y = -0.22 + Math.sin(Math.PI * t) * 0.35;
     group.current.rotation.z = Math.sin(Math.PI * t) * -0.1;
     if (document.current)
@@ -646,11 +665,15 @@ function World(props: RagWorldProps) {
   const index = useMemo(() => buildKnowledgeIndex(records), [records]);
   const values = index.chunks.find((c) => c.id === record.id)?.vector ?? [];
   const [begin, end] = sceneProgressRange(tour);
+  // Separate decorative clock: never drives transfers, stars, or the request engine.
+  const ambientTime = useRef(0);
   const time = useSceneFrames({
     wakeKey: `${tour.phase}:${tour.stage}:${tour.beat}:${record.id}:${overview}:${props.scrollProgress}:${replay}`,
     visible,
     paused,
     reduced,
+    ambientTime,
+    ambientFps: 12,
     fps: props.quality === "high" ? 60 : 30,
     settleAfter: props.scrollProgress === undefined ? Math.max(2500, duration * 1000) : 2500,
   });
@@ -699,7 +722,17 @@ function World(props: RagWorldProps) {
     }
   }, -2);
   const projected = useMemo(() => new THREE.Vector3(), []);
+  const lastProjection = useRef({ matrix: new THREE.Matrix4(), progress: -1, dirty: true });
+  useLayoutEffect(() => {
+    lastProjection.current.dirty = true;
+  });
   useFrame(() => {
+    const last = lastProjection.current;
+    if (!last.dirty && last.progress === progress.current && last.matrix.equals(camera.matrixWorld))
+      return;
+    last.dirty = false;
+    last.progress = progress.current;
+    last.matrix.copy(camera.matrixWorld);
     if (props.flowLabel?.current) {
       const point = sampleTransfer(transferProgress(tour, progress.current));
       projected.set(point[0], point[1], point[2] + 0.1).project(camera);
@@ -820,6 +853,7 @@ function World(props: RagWorldProps) {
         paused={paused}
         visible={visible}
         overview={overview}
+        time={time}
       />
       <Stars time={time} />
       <group position={[-5, 3, -10]}>
@@ -901,7 +935,7 @@ function World(props: RagWorldProps) {
               selected={record.id}
               active={active("index")}
               ready={!prep || (tour.stage === 3 && atOutput(tour))}
-              time={time}
+              time={ambientTime}
             />
           </EntityFocus>
         </>
@@ -918,7 +952,7 @@ function World(props: RagWorldProps) {
               selected={record.id}
               active={tour.stage === 3 || active("index")}
               ready
-              time={time}
+              time={ambientTime}
             />
           </EntityFocus>
           <EntityFocus
@@ -1042,7 +1076,7 @@ function World(props: RagWorldProps) {
             plan.generator === "model" &&
             !plan.skipped
           }
-          time={time}
+          time={ambientTime}
         />
       </EntityFocus>
 
