@@ -565,7 +565,7 @@ function World(props: RagWorldProps) {
               chunks={index.chunks}
               selected={record.id}
               active={active("index")}
-              ready={!prep || tour.stage === 3}
+              ready={!prep || (tour.stage === 3 && atOutput(tour))}
               time={time}
             />
           </group>

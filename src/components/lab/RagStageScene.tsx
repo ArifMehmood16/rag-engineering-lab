@@ -135,7 +135,9 @@ export function RagStageScene(
                         ? "No generation"
                         : "Simulated LLM · visual metaphor"
                   : node === "index"
-                    ? "Passages + vectors · illustrative layout"
+                    ? tour.phase === "knowledge" && !(tour.stage === 3 && output)
+                      ? "Scaffold · awaiting indexed passages"
+                      : "Passages + vectors · illustrative layout"
                     : undefined;
               return (
                 <div
