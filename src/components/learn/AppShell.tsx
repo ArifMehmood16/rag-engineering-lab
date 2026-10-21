@@ -95,7 +95,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const lab = useRouterState({ select: (st) => st.location.pathname }) === "/";
   return (
-    <div className={cn("min-h-screen", !lab && "lg:grid lg:grid-cols-[17rem_1fr]")}>
+    <div
+      className={cn(
+        "min-h-screen",
+        lab && "immersive-shell",
+        !lab && "lg:grid lg:grid-cols-[17rem_1fr]",
+      )}
+    >
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:p-2"
