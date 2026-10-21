@@ -1,3 +1,4 @@
+import type React from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { getLesson } from "@/content/lessons";
@@ -37,7 +38,8 @@ export const Route = createFileRoute("/lessons/$slug")({
 function LessonPage() {
   const { slug } = Route.useLoaderData();
   const lesson = getLesson(slug)!;
-  const Body = { context: LessonContext, "cost-latency": LessonCost, evaluation: LessonEval, guardrails: LessonGuard, "tools-agents": LessonAgents }[lesson.slug];
+  const BODIES: Record<string, () => React.ReactElement> = { context: LessonContext, "cost-latency": LessonCost, evaluation: LessonEval, guardrails: LessonGuard, "tools-agents": LessonAgents };
+  const Body = BODIES[lesson.slug];
   if (Body) return (<><Body /><LessonPager slug={lesson.slug} /></>);
 
   return (

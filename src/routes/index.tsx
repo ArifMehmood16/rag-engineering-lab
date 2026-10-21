@@ -76,12 +76,22 @@ function Overview() {
         })}
       </ol>
 
-      <section aria-labelledby="arch-h" className="mt-14 rounded-lg border border-dashed border-border bg-card p-5">
-        <h2 id="arch-h" className="font-sans text-sm font-semibold">Interactive architecture view</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          A clickable map of the planned query workflow, with caching, routing, tool, and evaluation overlays, is scheduled for a later increment. Until
-          then, the planned query flow is listed in the EvidenceLens context panel.
-        </p>
+      <section aria-labelledby="across-h" className="mt-14">
+        <h2 id="across-h" className="text-3xl font-medium">Across the lessons</h2>
+        <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+          {([
+            ["/architecture", "Architecture map", "Click through the planned query workflow and turn on caching, routing, tool, and evaluation overlays."],
+            ["/roadmap", "Implementation priorities", "A phased, qualitative roadmap — and what to defer until evidence justifies it."],
+            ["/writing", "Writing exercises", "Reflection prompts and six-part post outlines, copyable as Markdown."],
+          ] as const).map(([to, t, d]) => (
+            <li key={to}>
+              <Link to={to} className="block h-full rounded-lg border border-border bg-card p-4 hover:border-primary">
+                <span className="block font-semibold">{t}</span>
+                <span className="mt-1 block text-sm text-muted-foreground">{d}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );

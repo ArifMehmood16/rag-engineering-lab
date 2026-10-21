@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <nav aria-label="Lessons" className="flex flex-col gap-1">
+    <nav aria-label="Site" className="flex flex-col gap-1">
       <Link
         to="/"
         onClick={onNavigate}
@@ -48,6 +48,13 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </ol>
+      <p className="eyebrow mt-4 px-3">Across lessons</p>
+      {([["/architecture", "Architecture map"], ["/roadmap", "Implementation priorities"], ["/writing", "Writing exercises"]] as const).map(([to, label]) => (
+        <Link key={to} to={to} onClick={onNavigate} aria-current={path === to ? "page" : undefined}
+          className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === to && "bg-card font-semibold shadow-sm")}>
+          {label}
+        </Link>
+      ))}
     </nav>
   );
 }
