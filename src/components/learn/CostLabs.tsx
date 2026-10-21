@@ -62,14 +62,8 @@ export function PrefixDemo() {
     <div className="space-y-4">
       <SyntheticNotice>Synthetic illustration. No provider is called; real behaviour depends on the provider and model selected.</SyntheticNotice>
       <div className="grid gap-2 sm:grid-cols-2">
-        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border bg-card p-3 text-sm">
-          <input type="checkbox" className="mt-1 size-4 accent-[var(--color-primary)]" checked={timestampFirst} onChange={(e) => setTimestampFirst(e.target.checked)} />
-          <span><span className="block font-semibold">Timestamp before the prefix</span><span className="text-xs text-muted-foreground">e.g. “Current time: …” at the top</span></span>
-        </label>
-        <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border bg-card p-3 text-sm">
-          <input type="checkbox" className="mt-1 size-4 accent-[var(--color-primary)]" checked={evidenceFirst} onChange={(e) => setEvidenceFirst(e.target.checked)} />
-          <span><span className="block font-semibold">Retrieved evidence before instructions</span><span className="text-xs text-muted-foreground">Another common ordering mistake</span></span>
-        </label>
+        <ToggleChip label="Timestamp before the prefix" desc="e.g. “Current time: …” at the top" pressed={timestampFirst} onChange={setTimestampFirst} />
+        <ToggleChip label="Retrieved evidence before instructions" desc="Another common ordering mistake" pressed={evidenceFirst} onChange={setEvidenceFirst} />
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {["Request A", "Request B"].map((r) => (
@@ -127,10 +121,7 @@ export function InvalidationLab() {
           <legend className="text-sm font-semibold">Apply changes since approval</legend>
           <div className="mt-2 grid gap-1.5">
             {CHANGES.map((c) => (
-              <label key={c.key} className="flex cursor-pointer items-center gap-3 rounded-md border border-border bg-card px-3 py-2 text-sm">
-                <input type="checkbox" className="size-4 accent-[var(--color-primary)]" checked={active.includes(c.key)} onChange={() => toggle(c.key)} />
-                {c.label}
-              </label>
+              <ToggleChip key={c.key} label={c.label} pressed={active.includes(c.key)} onChange={() => toggle(c.key)} />
             ))}
           </div>
         </fieldset>
