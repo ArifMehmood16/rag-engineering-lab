@@ -2,12 +2,17 @@ import { describe, expect, it } from "vitest";
 import { SCENARIOS } from "@/content/lesson-guardrails";
 import { evaluateScenario } from "@/lib/guardrails";
 
-const get = (id: string) => evaluateScenario(SCENARIOS.find((s) => s.id === id)!, false);
+const get = (id: string) =>
+  evaluateScenario(
+    SCENARIOS.find((s) => s.id === id)!,
+    false,
+  );
 const result = (id: string, c: string) => get(id).rows.find((r) => r.control.id === c)!.result;
 
 describe("trust-boundary lab", () => {
   it("every scenario is stopped or contained by at least one application control", () => {
-    for (const s of SCENARIOS) expect(evaluateScenario(s, false).stoppedBy.length).toBeGreaterThan(0);
+    for (const s of SCENARIOS)
+      expect(evaluateScenario(s, false).stoppedBy.length).toBeGreaterThan(0);
   });
   it("schema-valid unsupported output passes schema and is caught by claim verification", () => {
     expect(result("schemaValid", "schema")).toBe("passed");

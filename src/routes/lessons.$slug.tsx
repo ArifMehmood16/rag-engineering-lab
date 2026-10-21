@@ -1,6 +1,8 @@
+import type React from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { getLesson } from "@/content/lessons";
+import { LessonPager } from "@/components/learn/LessonPager";
 import { LessonContext } from "@/components/learn/LessonContext";
 import { LessonCost } from "@/components/learn/LessonCost";
 import { LessonEval } from "@/components/learn/LessonEval";
@@ -16,7 +18,9 @@ export const Route = createFileRoute("/lessons/$slug")({
   },
   head: ({ loaderData }) => {
     const l = loaderData ? getLesson(loaderData.slug) : undefined;
-    const title = l ? `Lesson ${l.number}: ${l.concept} — AI Engineering, Made Practical` : "Lesson unavailable — AI Engineering, Made Practical";
+    const title = l
+      ? `Lesson ${l.number}: ${l.concept} — AI Engineering, Made Practical`
+      : "Lesson unavailable — AI Engineering, Made Practical";
     const description = l ? l.summary : "This lesson could not be found.";
     return {
       meta: [
@@ -36,11 +40,21 @@ export const Route = createFileRoute("/lessons/$slug")({
 function LessonPage() {
   const { slug } = Route.useLoaderData();
   const lesson = getLesson(slug)!;
-  if (lesson.slug === "context") return <LessonContext />;
-  if (lesson.slug === "cost-latency") return <LessonCost />;
-  if (lesson.slug === "evaluation") return <LessonEval />;
-  if (lesson.slug === "guardrails") return <LessonGuard />;
-  if (lesson.slug === "tools-agents") return <LessonAgents />;
+  const BODIES: Record<string, () => React.ReactElement> = {
+    context: LessonContext,
+    "cost-latency": LessonCost,
+    evaluation: LessonEval,
+    guardrails: LessonGuard,
+    "tools-agents": LessonAgents,
+  };
+  const Body = BODIES[lesson.slug];
+  if (Body)
+    return (
+      <>
+        <Body />
+        <LessonPager slug={lesson.slug} />
+      </>
+    );
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-14 lg:px-10">
@@ -57,13 +71,19 @@ function LessonPage() {
       <div className="mt-8 rounded-lg border border-dashed border-border bg-card p-5">
         <h2 className="font-sans text-sm font-semibold">Planned for the next increment</h2>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
-          {lesson.nextUp?.map((n) => <li key={n}>{n}</li>)}
+          {lesson.nextUp?.map((n) => (
+            <li key={n}>{n}</li>
+          ))}
         </ul>
         <p className="mt-4 text-sm text-muted-foreground">
           This lesson has no content yet. It will follow the same nine-part structure as Lesson 1.
         </p>
       </div>
-      <Link to="/lessons/$slug" params={{ slug: "context" }} className={`${btnVariants({ variant: "primary" })} mt-8`}>
+      <Link
+        to="/lessons/$slug"
+        params={{ slug: "context" }}
+        className={`${btnVariants({ variant: "primary" })} mt-8`}
+      >
         Go to Lesson 1
       </Link>
     </article>

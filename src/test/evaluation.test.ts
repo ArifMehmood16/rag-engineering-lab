@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { runEvaluation } from "@/lib/evaluation";
 
-const metric = (f: Parameters<typeof runEvaluation>[0], key: string) => runEvaluation(f).metrics.find((m) => m.key === key)!;
+const metric = (f: Parameters<typeof runEvaluation>[0], key: string) =>
+  runEvaluation(f).metrics.find((m) => m.key === key)!;
 
 describe("evaluation lab", () => {
   it("baseline is perfect on the fixture", () => {

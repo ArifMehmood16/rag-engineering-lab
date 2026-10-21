@@ -16,8 +16,7 @@ export const CANDIDATES_PER_RETRIEVER = 6;
 export const RRF_CONSTANT = 60;
 
 export type Decision =
-  | { status: "selected"; reason: string }
-  | { status: "rejected"; reason: string };
+  { status: "selected"; reason: string } | { status: "rejected"; reason: string };
 
 export interface RankedPassage {
   passage: Passage;
@@ -47,7 +46,10 @@ export interface Sufficiency {
 
 export function keywordScore(p: Passage): number {
   const text = p.text.toLowerCase();
-  return QUERY_TERMS.reduce((n, term) => n + (text.match(new RegExp(`\\b${term}\\b`, "g"))?.length ?? 0), 0);
+  return QUERY_TERMS.reduce(
+    (n, term) => n + (text.match(new RegExp(`\\b${term}\\b`, "g"))?.length ?? 0),
+    0,
+  );
 }
 
 function rankBy(passages: Passage[], score: (p: Passage) => number): string[] {
@@ -63,7 +65,9 @@ export function reciprocalRankFusion(rankings: string[][], k = RRF_CONSTANT): [s
   if (k <= 0) throw new Error("rank_constant must be positive");
   const scores = new Map<string, number>();
   for (const ranking of rankings) {
-    [...new Set(ranking)].forEach((id, i) => scores.set(id, (scores.get(id) ?? 0) + 1 / (k + i + 1)));
+    [...new Set(ranking)].forEach((id, i) =>
+      scores.set(id, (scores.get(id) ?? 0) + 1 / (k + i + 1)),
+    );
   }
   return [...scores.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
@@ -107,12 +111,18 @@ export function runLab(passages: Passage[], settings: LabSettings): LabResult {
     let decision: Decision;
     const dupOf = p.studyId ? seenStudies.get(p.studyId) : undefined;
     if (settings.dedupe && dupOf) {
-      decision = { status: "rejected", reason: `Duplicate: reports the same study (${p.studyId}) as ${dupOf}, which ranked higher.` };
+      decision = {
+        status: "rejected",
+        reason: `Duplicate: reports the same study (${p.studyId}) as ${dupOf}, which ranked higher.`,
+      };
     } else {
       afterDedupe++;
       if (p.studyId && !seenStudies.has(p.studyId)) seenStudies.set(p.studyId, p.id);
       if (tokensUsed + p.tokens > settings.budget) {
-        decision = { status: "rejected", reason: `Over budget: needs ${p.tokens} tokens, ${settings.budget - tokensUsed} remain.` };
+        decision = {
+          status: "rejected",
+          reason: `Over budget: needs ${p.tokens} tokens, ${settings.budget - tokensUsed} remain.`,
+        };
       } else {
         tokensUsed += p.tokens;
         decision = { status: "selected", reason: selectionReason(p) };
@@ -146,21 +156,40 @@ function selectionReason(p: Passage): string {
   if (!p.matches.formulation) misses.push("formulation");
   if (!p.matches.population) misses.push("population");
   if (!p.matches.outcome) misses.push("outcome");
-  if (p.sourceType === "Commentary") return "Selected within budget, but it is commentary about a study, not the study itself.";
-  if (misses.length === 0) return "Selected within budget; formulation, population, and outcome all match the question.";
+  if (p.sourceType === "Commentary")
+    return "Selected within budget, but it is commentary about a study, not the study itself.";
+  if (misses.length === 0)
+    return "Selected within budget; formulation, population, and outcome all match the question.";
   return `Selected within budget, but it does not match the question's ${misses.join(", ")}. Relevant-looking is not the same as relevant.`;
 }
 
 export function assessSufficiency(selected: Passage[]): Sufficiency {
-  const full = selected.filter((p) => p.matches.formulation && p.matches.population && p.matches.outcome && p.sourceType !== "Commentary");
+  const full = selected.filter(
+    (p) =>
+      p.matches.formulation &&
+      p.matches.population &&
+      p.matches.outcome &&
+      p.sourceType !== "Commentary",
+  );
   const matchingStudies = [...new Set(full.map((p) => p.studyId!).filter(Boolean))];
   const includesContradiction = full.some((p) => p.direction === "no-difference");
   const notes: string[] = [];
   const offTarget = selected.length - full.length;
-  if (offTarget > 0) notes.push(`${offTarget} selected passage(s) miss at least one qualifier or are commentary.`);
+  if (offTarget > 0)
+    notes.push(`${offTarget} selected passage(s) miss at least one qualifier or are commentary.`);
   if (matchingStudies.length > 0 && !includesContradiction)
-    notes.push("A fixture study reporting no difference was not selected, so the context would hide disagreement.");
-  if (matchingStudies.length === 1) notes.push("Only one matching study is present; the brief could not describe the range of findings.");
-  const level = matchingStudies.length === 0 ? "gap" : matchingStudies.length >= 2 && includesContradiction ? "sufficient" : "partial";
+    notes.push(
+      "A fixture study reporting no difference was not selected, so the context would hide disagreement.",
+    );
+  if (matchingStudies.length === 1)
+    notes.push(
+      "Only one matching study is present; the brief could not describe the range of findings.",
+    );
+  const level =
+    matchingStudies.length === 0
+      ? "gap"
+      : matchingStudies.length >= 2 && includesContradiction
+        ? "sufficient"
+        : "partial";
   return { level, matchingStudies, includesContradiction, notes };
 }

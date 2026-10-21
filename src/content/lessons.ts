@@ -18,7 +18,8 @@ export const LESSONS: LessonMeta[] = [
     slug: "context",
     title: "Give the AI Context",
     concept: "RAG and embeddings",
-    summary: "How retrieval supplies evidence, why similarity is not support, and why selection after retrieval matters.",
+    summary:
+      "How retrieval supplies evidence, why similarity is not support, and why selection after retrieval matters.",
     status: "available",
   },
   {
@@ -26,7 +27,8 @@ export const LESSONS: LessonMeta[] = [
     slug: "cost-latency",
     title: "Reduce Cost and Latency",
     concept: "Prompt caching and model routing",
-    summary: "Embedding, retrieval, answer, prompt, and semantic caches — and conservative routing.",
+    summary:
+      "Embedding, retrieval, answer, prompt, and semantic caches — and conservative routing.",
     status: "available",
   },
   {
@@ -42,7 +44,8 @@ export const LESSONS: LessonMeta[] = [
     slug: "guardrails",
     title: "Add Guardrails",
     concept: "Guardrails and application permissions",
-    summary: "Untrusted retrieved text, output validation, citation verification, and enforced permissions.",
+    summary:
+      "Untrusted retrieved text, output validation, citation verification, and enforced permissions.",
     status: "available",
   },
   {

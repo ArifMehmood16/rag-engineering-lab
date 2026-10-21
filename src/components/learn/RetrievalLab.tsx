@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, CheckCircle2, MinusCircle, XCircle } from "lucide-react";
 import { LAB_QUESTION, PASSAGES, type Passage } from "@/content/lesson-context";
-import { runLab, type LabSettings, type RankedPassage, type RetrievalMode, CANDIDATES_PER_RETRIEVER } from "@/lib/retrieval";
+import {
+  runLab,
+  type LabSettings,
+  type RankedPassage,
+  type RetrievalMode,
+  CANDIDATES_PER_RETRIEVER,
+} from "@/lib/retrieval";
 import { cn } from "@/lib/utils";
 import { Badge, SyntheticNotice, ToggleChip } from "./ui";
 
@@ -17,7 +23,11 @@ function QualifierRow({ label, value, ok }: { label: string; value: string; ok: 
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="flex items-center gap-1 text-right">
         {value}
-        {ok ? <CheckCircle2 className="size-3.5 text-primary" aria-label="matches question" /> : <XCircle className="size-3.5 text-destructive" aria-label="does not match question" />}
+        {ok ? (
+          <CheckCircle2 className="size-3.5 text-primary" aria-label="matches question" />
+        ) : (
+          <XCircle className="size-3.5 text-destructive" aria-label="does not match question" />
+        )}
       </dd>
     </div>
   );
@@ -25,29 +35,72 @@ function QualifierRow({ label, value, ok }: { label: string; value: string; ok: 
 
 function Inspector({ item, passage }: { item: RankedPassage | undefined; passage: Passage }) {
   return (
-    <aside aria-label="Evidence inspector" className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-6">
+    <aside
+      aria-label="Evidence inspector"
+      className="rounded-lg border border-border bg-card p-4 lg:sticky lg:top-6"
+    >
       <p className="eyebrow">Evidence inspector</p>
       <h4 className="mt-1 font-serif text-lg">
         {passage.id} · {passage.title}
       </h4>
-      <blockquote className="mt-2 border-l-2 border-border pl-3 font-serif text-sm italic">{passage.text}</blockquote>
+      <blockquote className="mt-2 border-l-2 border-border pl-3 font-serif text-sm italic">
+        {passage.text}
+      </blockquote>
       <dl className="mt-4 space-y-1.5 text-sm">
-        <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Synthetic document ID</dt><dd className="font-mono text-xs">{passage.docId}</dd></div>
-        <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Synthetic study ID</dt><dd className="font-mono text-xs">{passage.studyId ?? "None (not a study)"}</dd></div>
-        <QualifierRow label="Population" value={passage.population} ok={passage.matches.population} />
-        <QualifierRow label="Formulation" value={passage.formulation} ok={passage.matches.formulation} />
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">Synthetic document ID</dt>
+          <dd className="font-mono text-xs">{passage.docId}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">Synthetic study ID</dt>
+          <dd className="font-mono text-xs">{passage.studyId ?? "None (not a study)"}</dd>
+        </div>
+        <QualifierRow
+          label="Population"
+          value={passage.population}
+          ok={passage.matches.population}
+        />
+        <QualifierRow
+          label="Formulation"
+          value={passage.formulation}
+          ok={passage.matches.formulation}
+        />
         <QualifierRow label="Outcome" value={passage.outcome} ok={passage.matches.outcome} />
-        <QualifierRow label="Source type" value={passage.sourceType} ok={passage.sourceType !== "Commentary"} />
-        <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Version</dt><dd className="font-mono text-xs">{passage.version}</dd></div>
-        <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Locator</dt><dd>{passage.locator}</dd></div>
-        <div className="flex justify-between gap-2"><dt className="text-muted-foreground">Estimated tokens</dt><dd className="font-mono text-xs">{passage.tokens}</dd></div>
+        <QualifierRow
+          label="Source type"
+          value={passage.sourceType}
+          ok={passage.sourceType !== "Commentary"}
+        />
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">Version</dt>
+          <dd className="font-mono text-xs">{passage.version}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">Locator</dt>
+          <dd>{passage.locator}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-muted-foreground">Estimated tokens</dt>
+          <dd className="font-mono text-xs">{passage.tokens}</dd>
+        </div>
       </dl>
-      <div className={cn("mt-4 rounded-md p-3 text-sm", !item ? "bg-muted" : item.decision.status === "selected" ? "bg-primary-soft" : "bg-destructive-soft")}>
+      <div
+        className={cn(
+          "mt-4 rounded-md p-3 text-sm",
+          !item
+            ? "bg-muted"
+            : item.decision.status === "selected"
+              ? "bg-primary-soft"
+              : "bg-destructive-soft",
+        )}
+      >
         <p className="font-semibold">
           {!item ? "Not retrieved" : item.decision.status === "selected" ? "Selected" : "Rejected"}
         </p>
         <p className="mt-0.5">
-          {item ? item.decision.reason : `Did not reach the top ${CANDIDATES_PER_RETRIEVER} candidates of the active retriever(s).`}
+          {item
+            ? item.decision.reason
+            : `Did not reach the top ${CANDIDATES_PER_RETRIEVER} candidates of the active retriever(s).`}
         </p>
       </div>
       <p className="mt-3 text-sm text-muted-foreground">{passage.lesson}</p>
@@ -56,10 +109,16 @@ function Inspector({ item, passage }: { item: RankedPassage | undefined; passage
 }
 
 export function RetrievalLab() {
-  const [settings, setSettings] = useState<LabSettings>({ mode: "keyword", dedupe: false, rerank: false, budget: 1200 });
+  const [settings, setSettings] = useState<LabSettings>({
+    mode: "keyword",
+    dedupe: false,
+    rerank: false,
+    budget: 1200,
+  });
   const [inspect, setInspect] = useState("P1");
   const result = useMemo(() => runLab(PASSAGES, settings), [settings]);
-  const set = <K extends keyof LabSettings>(k: K, v: LabSettings[K]) => setSettings((s) => ({ ...s, [k]: v }));
+  const set = <K extends keyof LabSettings>(k: K, v: LabSettings[K]) =>
+    setSettings((s) => ({ ...s, [k]: v }));
   const inspected = PASSAGES.find((p) => p.id === inspect)!;
   const inspectedItem = result.candidates.find((c) => c.passage.id === inspect);
   const suff = result.sufficiency;
@@ -75,7 +134,10 @@ export function RetrievalLab() {
       <div className="grid gap-4 md:grid-cols-2">
         <fieldset>
           <legend className="text-sm font-semibold">Retrieval</legend>
-          <div role="radiogroup" className="mt-2 grid grid-cols-3 gap-1 rounded-md border border-border bg-card p-1">
+          <div
+            role="radiogroup"
+            className="mt-2 grid grid-cols-3 gap-1 rounded-md border border-border bg-card p-1"
+          >
             {MODES.map((m) => (
               <button
                 key={m.value}
@@ -83,7 +145,12 @@ export function RetrievalLab() {
                 role="radio"
                 aria-checked={settings.mode === m.value}
                 onClick={() => set("mode", m.value)}
-                className={cn("rounded px-2 py-2 text-sm", settings.mode === m.value ? "bg-primary text-primary-foreground" : "hover:bg-muted")}
+                className={cn(
+                  "rounded px-2 py-2 text-sm",
+                  settings.mode === m.value
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted",
+                )}
               >
                 <span className="block font-medium">{m.label}</span>
                 <span className="block text-[0.68rem] opacity-80">{m.hint}</span>
@@ -105,12 +172,25 @@ export function RetrievalLab() {
           />
         </fieldset>
         <div className="grid gap-2">
-          <ToggleChip label="Study deduplication" desc="Keep one passage per underlying study" pressed={settings.dedupe} onChange={(v) => set("dedupe", v)} />
-          <ToggleChip label="Reranking" desc="Toy reranker rewarding qualifier matches; penalises commentary" pressed={settings.rerank} onChange={(v) => set("rerank", v)} />
+          <ToggleChip
+            label="Study deduplication"
+            desc="Keep one passage per underlying study"
+            pressed={settings.dedupe}
+            onChange={(v) => set("dedupe", v)}
+          />
+          <ToggleChip
+            label="Reranking"
+            desc="Toy reranker rewarding qualifier matches; penalises commentary"
+            pressed={settings.rerank}
+            onChange={(v) => set("rerank", v)}
+          />
         </div>
       </div>
 
-      <ol aria-label="Pipeline counts" className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4">
+      <ol
+        aria-label="Pipeline counts"
+        className="grid grid-cols-2 gap-2 text-center text-sm sm:grid-cols-4"
+      >
         {[
           ["Candidates", result.stageCounts.retrieved],
           ["After dedup", settings.dedupe ? result.stageCounts.afterDedupe : "—"],
@@ -147,7 +227,11 @@ export function RetrievalLab() {
                       <span className="font-semibold">{c.passage.id}</span>
                       <span>{c.passage.title}</span>
                       <Badge tone={sel ? "done" : "warn"} className="ml-auto">
-                        {sel ? <CheckCircle2 className="size-3" aria-hidden /> : <MinusCircle className="size-3" aria-hidden />}
+                        {sel ? (
+                          <CheckCircle2 className="size-3" aria-hidden />
+                        ) : (
+                          <MinusCircle className="size-3" aria-hidden />
+                        )}
                         {sel ? "Selected" : "Rejected"}
                       </Badge>
                     </span>
@@ -172,7 +256,10 @@ export function RetrievalLab() {
                     type="button"
                     onClick={() => setInspect(p.id)}
                     aria-pressed={inspect === p.id}
-                    className={cn("rounded-md border border-dashed px-2 py-1 text-xs hover:bg-muted", inspect === p.id && "ring-2 ring-ring")}
+                    className={cn(
+                      "rounded-md border border-dashed px-2 py-1 text-xs hover:bg-muted",
+                      inspect === p.id && "ring-2 ring-ring",
+                    )}
                   >
                     {p.id} · {p.title}
                   </button>
@@ -188,17 +275,30 @@ export function RetrievalLab() {
         role="status"
         className={cn(
           "rounded-lg border p-4",
-          suff.level === "sufficient" ? "border-primary/40 bg-primary-soft" : suff.level === "partial" ? "border-accent/50 bg-accent-soft" : "border-destructive/40 bg-destructive-soft",
+          suff.level === "sufficient"
+            ? "border-primary/40 bg-primary-soft"
+            : suff.level === "partial"
+              ? "border-accent/50 bg-accent-soft"
+              : "border-destructive/40 bg-destructive-soft",
         )}
       >
         <p className="flex items-center gap-2 font-semibold">
-          {suff.level === "sufficient" ? <CheckCircle2 className="size-4" aria-hidden /> : <AlertTriangle className="size-4" aria-hidden />}
+          {suff.level === "sufficient" ? (
+            <CheckCircle2 className="size-4" aria-hidden />
+          ) : (
+            <AlertTriangle className="size-4" aria-hidden />
+          )}
           Toy sufficiency check:{" "}
-          {suff.level === "sufficient" ? "covers distinct matching studies, including disagreement" : suff.level === "partial" ? "partial — the brief would need to say what is missing" : "evidence gap — no selected passage matches all qualifiers"}
+          {suff.level === "sufficient"
+            ? "covers distinct matching studies, including disagreement"
+            : suff.level === "partial"
+              ? "partial — the brief would need to say what is missing"
+              : "evidence gap — no selected passage matches all qualifiers"}
         </p>
         <p className="mt-1 text-sm">
-          Matching studies in context: {suff.matchingStudies.length ? suff.matchingStudies.join(", ") : "none"}. Conflicting finding included:{" "}
-          {suff.includesContradiction ? "yes" : "no"}.
+          Matching studies in context:{" "}
+          {suff.matchingStudies.length ? suff.matchingStudies.join(", ") : "none"}. Conflicting
+          finding included: {suff.includesContradiction ? "yes" : "no"}.
         </p>
         {suff.notes.length > 0 && (
           <ul className="mt-2 list-disc pl-5 text-sm">
@@ -208,8 +308,9 @@ export function RetrievalLab() {
           </ul>
         )}
         <p className="mt-2 text-xs text-muted-foreground">
-          Learning fixture. Not a measured project result. “Sufficient” here means the context could support a balanced brief — it says nothing about
-          whether a generated answer would use it correctly.
+          Learning fixture. Not a measured project result. “Sufficient” here means the context could
+          support a balanced brief — it says nothing about whether a generated answer would use it
+          correctly.
         </p>
       </div>
     </div>

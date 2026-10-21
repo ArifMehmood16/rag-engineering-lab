@@ -21,7 +21,8 @@ export interface Passage {
   lesson: string;
 }
 
-export const LAB_QUESTION = "What evidence addresses magnesium glycinate and sleep outcomes in adults?";
+export const LAB_QUESTION =
+  "What evidence addresses magnesium glycinate and sleep outcomes in adults?";
 
 export const PASSAGES: Passage[] = [
   {
@@ -76,7 +77,8 @@ export const PASSAGES: Passage[] = [
     toySimilarity: 0.8,
     matches: { formulation: false, population: true, outcome: true },
     direction: "not-applicable",
-    lesson: "A different formulation. Magnesium oxide evidence does not answer a glycinate question.",
+    lesson:
+      "A different formulation. Magnesium oxide evidence does not answer a glycinate question.",
   },
   {
     id: "P4",
@@ -130,7 +132,8 @@ export const PASSAGES: Passage[] = [
     toySimilarity: 0.74,
     matches: { formulation: true, population: true, outcome: true },
     direction: "not-applicable",
-    lesson: "Commentary about a study, not the study itself. Keyword search ranks it highly because it repeats the terms.",
+    lesson:
+      "Commentary about a study, not the study itself. Keyword search ranks it highly because it repeats the terms.",
   },
   {
     id: "P7",
@@ -148,7 +151,8 @@ export const PASSAGES: Passage[] = [
     toySimilarity: 0.78,
     matches: { formulation: true, population: true, outcome: true },
     direction: "improvement",
-    lesson: "Relevant but shares no exact query words. Keyword search misses it; dense search can find it.",
+    lesson:
+      "Relevant but shares no exact query words. Keyword search misses it; dense search can find it.",
   },
   {
     id: "P8",
@@ -212,12 +216,42 @@ def reciprocal_rank_fusion(
     )`;
 
 export const STAGES = [
-  { key: "lexical", name: "Lexical search", does: "Preserves exact ingredient names, identifiers, units, and numeric terms.", tone: "info" },
-  { key: "dense", name: "Dense search", does: "Retrieves conceptually related wording through embedding similarity.", tone: "info" },
-  { key: "fusion", name: "Fusion", does: "Combines the two candidate rankings into one list.", tone: "primary" },
-  { key: "rerank", name: "Reranking", does: "Changes candidate order using a closer look at each passage against the question.", tone: "primary" },
-  { key: "assembly", name: "Context assembly", does: "Chooses passages under a budget while keeping qualifiers and contradictory findings.", tone: "accent" },
-  { key: "sufficiency", name: "Sufficiency assessment", does: "Asks whether the selected evidence can answer the question at all.", tone: "accent" },
+  {
+    key: "lexical",
+    name: "Lexical search",
+    does: "Preserves exact ingredient names, identifiers, units, and numeric terms.",
+    tone: "info",
+  },
+  {
+    key: "dense",
+    name: "Dense search",
+    does: "Retrieves conceptually related wording through embedding similarity.",
+    tone: "info",
+  },
+  {
+    key: "fusion",
+    name: "Fusion",
+    does: "Combines the two candidate rankings into one list.",
+    tone: "primary",
+  },
+  {
+    key: "rerank",
+    name: "Reranking",
+    does: "Changes candidate order using a closer look at each passage against the question.",
+    tone: "primary",
+  },
+  {
+    key: "assembly",
+    name: "Context assembly",
+    does: "Chooses passages under a budget while keeping qualifiers and contradictory findings.",
+    tone: "accent",
+  },
+  {
+    key: "sufficiency",
+    name: "Sufficiency assessment",
+    does: "Asks whether the selected evidence can answer the question at all.",
+    tone: "accent",
+  },
 ] as const;
 
 export interface QuizQuestion {
@@ -239,11 +273,13 @@ export const QUIZ: QuizQuestion[] = [
       "It can be cited without checking.",
     ],
     answer: 1,
-    explanation: "Similarity is a ranking signal from a particular model and preprocessing. It is not a calibrated probability that a claim is supported. P6 (commentary) and P5 (wrong endpoint) both look similar.",
+    explanation:
+      "Similarity is a ranking signal from a particular model and preprocessing. It is not a calibrated probability that a claim is supported. P6 (commentary) and P5 (wrong endpoint) both look similar.",
   },
   {
     id: "q2",
-    prompt: "You switch embedding models from one with 768 dimensions to one with 1,024. What must happen?",
+    prompt:
+      "You switch embedding models from one with 768 dimensions to one with 1,024. What must happen?",
     options: [
       "Nothing; vectors are interchangeable.",
       "Only new documents need the new model.",
@@ -251,7 +287,8 @@ export const QUIZ: QuizQuestion[] = [
       "Increase the reranking budget.",
     ],
     answer: 2,
-    explanation: "Query and document vectors must come from compatible model spaces. Changing model or dimension means re-embedding and a versioned index migration, not mixing vectors.",
+    explanation:
+      "Query and document vectors must come from compatible model spaces. Changing model or dimension means re-embedding and a versioned index migration, not mixing vectors.",
   },
   {
     id: "q3",
@@ -263,7 +300,8 @@ export const QUIZ: QuizQuestion[] = [
       "It removes the need for reranking.",
     ],
     answer: 0,
-    explanation: "Each retriever fails differently. In the lab, keyword search misses P7 (bisglycinate, different wording) while dense search alone can still surface wrong-formulation passages. Whether hybrid helps must be measured.",
+    explanation:
+      "Each retriever fails differently. In the lab, keyword search misses P7 (bisglycinate, different wording) while dense search alone can still surface wrong-formulation passages. Whether hybrid helps must be measured.",
   },
   {
     id: "q4",
@@ -275,7 +313,8 @@ export const QUIZ: QuizQuestion[] = [
       "Make citations correct.",
     ],
     answer: 1,
-    explanation: "More is not better by default. Selection should maximise distinct, qualifier-matching studies — including conflicting ones — within a budget.",
+    explanation:
+      "More is not better by default. Selection should maximise distinct, qualifier-matching studies — including conflicting ones — within a budget.",
   },
   {
     id: "q5",
@@ -287,7 +326,8 @@ export const QUIZ: QuizQuestion[] = [
       "Only if the passage is short.",
     ],
     answer: 1,
-    explanation: "Citation existence is not citation support. Verification compares the claim with the cited span, including its population, formulation, and outcome.",
+    explanation:
+      "Citation existence is not citation support. Verification compares the claim with the cited span, including its population, formulation, and outcome.",
   },
 ];
 
@@ -296,18 +336,55 @@ export const WRITING_TOPIC = "Why retrieval similarity is not answer confidence"
 export const TAKEAWAY_CONTEXT = {
   topic: "Why retrieval similarity is not answer confidence",
   points: [
-    { prompt: "Explain it in your own words", tip: "Try one sentence: retrieval finds nearby text; something else must decide whether that text answers the question." },
-    { prompt: "What might surprise you", tip: "The most keyword-dense passage in the lab (P6) is commentary, and the most useful paraphrase (P7) shares no query words." },
-    { prompt: "Where it fits in EvidenceLens", tip: "Between pinning an index release and generation: retrieve, fuse, deduplicate, rerank, assemble, then assess sufficiency." },
-    { prompt: "An experiment worth running", tip: "Compare lexical, dense, and hybrid retrieval on the same labelled questions, measuring Recall@k and study diversity separately." },
-    { prompt: "A result that would change the plan", tip: "If dense-only retrieval matched hybrid on identifiers and units, the lexical path might not justify its cost." },
+    {
+      prompt: "Explain it in your own words.",
+      tip: "Try one sentence: retrieval finds nearby text; something else must decide whether that text answers the question.",
+    },
+    {
+      prompt: "What surprised you?",
+      tip: "The most keyword-dense passage in the lab (P6) is commentary, and the most useful paraphrase (P7) shares no query words.",
+    },
+    {
+      prompt: "Where does it fit in EvidenceLens?",
+      tip: "Between pinning an index release and generation: retrieve, fuse, deduplicate, rerank, assemble, then assess sufficiency.",
+    },
+    {
+      prompt: "What experiment would you run?",
+      tip: "Compare lexical, dense, and hybrid retrieval on the same labelled questions, measuring Recall@k and study diversity separately.",
+    },
+    {
+      prompt: "What result would change your mind?",
+      tip: "If dense-only retrieval matched hybrid on identifiers and units, the lexical path might not justify its cost.",
+    },
   ],
   outline: [
-    { label: "The misconception", guidance: "A high similarity score means the answer is probably right." },
-    { label: "The concept", guidance: "Embeddings measure closeness in one model’s space; support is a separate property of a claim and its evidence." },
-    { label: "An EvidenceLens design example", guidance: "A glycinate question retrieving oxide, adolescent, and commentary passages — and how the planned stages handle each." },
-    { label: "A trade-off", guidance: "More passages improve recall but add duplication, latency, and contradiction-handling difficulty." },
-    { label: "An experiment to validate it", guidance: "Separate retrieval baselines evaluated on labelled development questions." },
-    { label: "What remains unknown", guidance: "Model choice, chunk sizes, budgets, and real retrieval quality — none measured yet." },
+    {
+      label: "The misconception",
+      guidance: "A high similarity score means the answer is probably right.",
+    },
+    {
+      label: "The concept",
+      guidance:
+        "Embeddings measure closeness in one model’s space; support is a separate property of a claim and its evidence.",
+    },
+    {
+      label: "An EvidenceLens design example",
+      guidance:
+        "A glycinate question retrieving oxide, adolescent, and commentary passages — and how the planned stages handle each.",
+    },
+    {
+      label: "A trade-off",
+      guidance:
+        "More passages improve recall but add duplication, latency, and contradiction-handling difficulty.",
+    },
+    {
+      label: "An experiment to validate it",
+      guidance: "Separate retrieval baselines evaluated on labelled development questions.",
+    },
+    {
+      label: "What remains unknown",
+      guidance:
+        "Model choice, chunk sizes, budgets, and real retrieval quality — none measured yet.",
+    },
   ],
 };

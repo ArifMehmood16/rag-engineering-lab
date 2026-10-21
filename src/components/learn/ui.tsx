@@ -21,7 +21,11 @@ export const badgeVariants = cva(
   },
 );
 
-export function Badge({ tone, children, className }: VariantProps<typeof badgeVariants> & { children: ReactNode; className?: string }) {
+export function Badge({
+  tone,
+  children,
+  className,
+}: VariantProps<typeof badgeVariants> & { children: ReactNode; className?: string }) {
   return <span className={cn(badgeVariants({ tone }), className)}>{children}</span>;
 }
 
@@ -41,9 +45,23 @@ export const btnVariants = cva(
   },
 );
 
-export function Section({ id, step, title, children }: { id: string; step: string; title: string; children: ReactNode }) {
+export function Section({
+  id,
+  step,
+  title,
+  children,
+}: {
+  id: string;
+  step: string;
+  title: string;
+  children: ReactNode;
+}) {
   return (
-    <section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-t border-border pt-10">
+    <section
+      id={id}
+      aria-labelledby={`${id}-h`}
+      className="scroll-mt-24 border-t border-border pt-10"
+    >
       <p className="eyebrow">{step}</p>
       <h2 id={`${id}-h`} className="mt-1 text-3xl font-medium">
         {title}
@@ -57,7 +75,11 @@ export function SyntheticNotice({ children }: { children?: ReactNode }) {
   return (
     <p className="flex items-start gap-2 rounded-md border border-info/30 bg-info-soft px-3 py-2 text-sm text-info">
       <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-      <span>{children ?? "Synthetic learning simulation. No live embedding model or EvidenceLens retrieval service is running."}</span>
+      <span>
+        {children ??
+          "Synthetic learning simulation. No live embedding model or EvidenceLens retrieval service is running."}{" "}
+        <strong>Learning fixture. Not a measured project result.</strong>
+      </span>
     </p>
   );
 }
@@ -73,13 +95,31 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
         setTimeout(() => setState("idle"), 2200);
       }}
     >
-      {state === "ok" ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
-      <span aria-live="polite">{state === "ok" ? "Copied" : state === "fail" ? "Clipboard unavailable — select and copy manually" : label}</span>
+      {state === "ok" ? (
+        <Check className="size-4" aria-hidden />
+      ) : (
+        <Copy className="size-4" aria-hidden />
+      )}
+      <span aria-live="polite">
+        {state === "ok"
+          ? "Copied"
+          : state === "fail"
+            ? "Clipboard unavailable — select and copy manually"
+            : label}
+      </span>
     </button>
   );
 }
 
-export function CodeBlock({ code, label, language = "python" }: { code: string; label: string; language?: string }) {
+export function CodeBlock({
+  code,
+  label,
+  language = "python",
+}: {
+  code: string;
+  label: string;
+  language?: string;
+}) {
   return (
     <figure className="overflow-hidden rounded-lg border border-border">
       <figcaption className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-muted px-3 py-2">
@@ -89,14 +129,28 @@ export function CodeBlock({ code, label, language = "python" }: { code: string; 
         </span>
         <CopyButton text={code} label="Copy code" />
       </figcaption>
-      <pre className="overflow-x-auto bg-code p-4 font-mono text-[0.82rem] leading-relaxed text-code-foreground" tabIndex={0}>
+      <p className="border-b border-border bg-accent-soft px-3 py-1.5 text-xs font-medium">
+        Proposed implementation sketch. Not existing EvidenceLens code.
+      </p>
+      <pre
+        className="overflow-x-auto bg-code p-4 font-mono text-[0.82rem] leading-relaxed text-code-foreground"
+        tabIndex={0}
+      >
         <code>{code}</code>
       </pre>
     </figure>
   );
 }
 
-export function Callout({ title, tone = "neutral", children }: { title: string; tone?: "neutral" | "accent" | "primary"; children: ReactNode }) {
+export function Callout({
+  title,
+  tone = "neutral",
+  children,
+}: {
+  title: string;
+  tone?: "neutral" | "accent" | "primary";
+  children: ReactNode;
+}) {
   const tones = {
     neutral: "border-border bg-card",
     accent: "border-accent/50 bg-accent-soft",
@@ -111,7 +165,19 @@ export function Callout({ title, tone = "neutral", children }: { title: string; 
 }
 
 /** On/off control for lab demonstrations. A button with aria-pressed, not a form checkbox. */
-export function ToggleChip({ label, desc, pressed, onChange, disabled }: { label: string; desc?: string; pressed: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+export function ToggleChip({
+  label,
+  desc,
+  pressed,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  desc?: string;
+  pressed: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
@@ -127,7 +193,12 @@ export function ToggleChip({ label, desc, pressed, onChange, disabled }: { label
         <span className="block font-semibold">{label}</span>
         {desc && <span className="block text-xs text-muted-foreground">{desc}</span>}
       </span>
-      <span className={cn("shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.65rem] uppercase", pressed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+      <span
+        className={cn(
+          "shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.65rem] uppercase",
+          pressed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+        )}
+      >
         {pressed ? "On" : "Off"}
       </span>
     </button>

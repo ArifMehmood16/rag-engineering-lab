@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { BUDGET, PASSAGES, REQUIRED_QUALIFIERS, TOOLS, TOOL_CASES } from "@/content/lesson-agents";
 import { evaluateContext, walkToolCall } from "@/lib/agents";
 
-const run = (id: string) => walkToolCall(TOOL_CASES.find((c) => c.id === id)!, TOOLS);
+const run = (id: string) =>
+  walkToolCall(
+    TOOL_CASES.find((c) => c.id === id)!,
+    TOOLS,
+  );
 
 describe("tool-call walkthrough", () => {
   it("valid call is answered and results are capped", () => {
@@ -17,8 +21,10 @@ describe("tool-call walkthrough", () => {
   });
   it("unknown tool is rejected", () => expect(run("unknown").outcome).toBe("rejected"));
   it("missing scope is denied by code", () => expect(run("denied").outcome).toBe("denied"));
-  it("timeout is an infrastructure failure, not a gap", () => expect(run("timeout").outcome).toBe("timed_out"));
-  it("empty result becomes an evidence gap, not escalation", () => expect(run("empty").outcome).toBe("evidence_gap"));
+  it("timeout is an infrastructure failure, not a gap", () =>
+    expect(run("timeout").outcome).toBe("timed_out"));
+  it("empty result becomes an evidence gap, not escalation", () =>
+    expect(run("empty").outcome).toBe("evidence_gap"));
 });
 
 describe("context budget", () => {
