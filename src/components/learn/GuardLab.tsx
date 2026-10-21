@@ -20,10 +20,15 @@ export function GuardLab() {
 
   return (
     <div className="space-y-5">
-      <SyntheticNotice>Synthetic trust-boundary simulation. No model runs and no real or privileged tools are connected.</SyntheticNotice>
+      <SyntheticNotice>
+        Synthetic trust-boundary simulation. No model runs and no real or privileged tools are
+        connected.
+      </SyntheticNotice>
 
       <div>
-        <p className="text-sm font-semibold" id="scen-label">Choose a case</p>
+        <p className="text-sm font-semibold" id="scen-label">
+          Choose a case
+        </p>
         <div role="radiogroup" aria-labelledby="scen-label" className="mt-2 flex flex-wrap gap-1.5">
           {SCENARIOS.map((x) => (
             <button
@@ -32,7 +37,12 @@ export function GuardLab() {
               role="radio"
               aria-checked={id === x.id}
               onClick={() => setId(x.id)}
-              className={cn("rounded-full border px-3 py-1.5 text-sm", id === x.id ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted")}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-sm",
+                id === x.id
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card hover:bg-muted",
+              )}
             >
               {x.title}
             </button>
@@ -71,24 +81,43 @@ export function GuardLab() {
                 <div className="flex flex-wrap items-center gap-2">
                   <R.Icon className="size-4 shrink-0" aria-hidden />
                   <span className="font-semibold">{control.name}</span>
-                  <span className="font-mono text-[0.68rem] text-muted-foreground">Layer {control.layer}</span>
+                  <span className="font-mono text-[0.68rem] text-muted-foreground">
+                    Layer {control.layer}
+                  </span>
                   <span className="ml-auto font-mono text-[0.68rem] uppercase">{R.label}</span>
                 </div>
                 <p className="mt-1">{note}</p>
                 {(result === "caught" || result === "contained") && (
-                  <p className="mt-1 text-xs text-muted-foreground"><strong>Limitation:</strong> {control.limitation}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <strong>Limitation:</strong> {control.limitation}
+                  </p>
                 )}
               </li>
             );
           })}
         </ol>
         {ev.detector.shown && (
-          <div className={cn("mt-2 rounded-md border p-3 text-sm", ev.detector.flagged ? "border-info/40 bg-info-soft" : "border-accent/50 bg-accent-soft")}>
+          <div
+            className={cn(
+              "mt-2 rounded-md border p-3 text-sm",
+              ev.detector.flagged
+                ? "border-info/40 bg-info-soft"
+                : "border-accent/50 bg-accent-soft",
+            )}
+          >
             <p className="font-semibold">
-              Heuristic injection detector: {ev.detector.flagged === null ? "not applicable" : ev.detector.flagged ? "flagged" : "missed"}
+              Heuristic injection detector:{" "}
+              {ev.detector.flagged === null
+                ? "not applicable"
+                : ev.detector.flagged
+                  ? "flagged"
+                  : "missed"}
             </p>
             <p className="mt-0.5">{ev.detector.note}</p>
-            <p className="mt-1 text-xs text-muted-foreground">A detector is a signal, not a guarantee. It does not prove a request or document is safe.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              A detector is a signal, not a guarantee. It does not prove a request or document is
+              safe.
+            </p>
           </div>
         )}
       </div>
@@ -99,7 +128,9 @@ export function GuardLab() {
         <p className="mt-2 flex flex-wrap gap-1 text-xs">
           Stopped or contained by:{" "}
           {ev.stoppedBy.map((c) => (
-            <Badge key={c} tone="proposed">{ev.rows.find((r) => r.control.id === c)!.control.name}</Badge>
+            <Badge key={c} tone="proposed">
+              {ev.rows.find((r) => r.control.id === c)!.control.name}
+            </Badge>
           ))}
         </p>
       </div>
@@ -107,7 +138,9 @@ export function GuardLab() {
       <details className="rounded-lg border border-border bg-card p-4 text-sm">
         <summary className="cursor-pointer font-semibold">The four control layers</summary>
         <ol className="mt-2 list-decimal space-y-1 pl-5">
-          {Object.values(LAYERS).map((l) => <li key={l}>{l}</li>)}
+          {Object.values(LAYERS).map((l) => (
+            <li key={l}>{l}</li>
+          ))}
         </ol>
       </details>
     </div>

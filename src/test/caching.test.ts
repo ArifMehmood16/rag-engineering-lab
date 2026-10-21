@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { buildPrompt, evaluateAnswerReuse, reusablePrefixLength, routeRequest } from "@/lib/caching";
+import {
+  buildPrompt,
+  evaluateAnswerReuse,
+  reusablePrefixLength,
+  routeRequest,
+} from "@/lib/caching";
 
 describe("prompt prefix", () => {
   it("timestamp after the prefix keeps four stable segments reusable", () => {
-    expect(reusablePrefixLength(buildPrompt({ timestampFirst: false, evidenceFirst: false }))).toBe(4);
+    expect(reusablePrefixLength(buildPrompt({ timestampFirst: false, evidenceFirst: false }))).toBe(
+      4,
+    );
   });
   it("timestamp first leaves nothing reusable", () => {
-    expect(reusablePrefixLength(buildPrompt({ timestampFirst: true, evidenceFirst: false }))).toBe(0);
+    expect(reusablePrefixLength(buildPrompt({ timestampFirst: true, evidenceFirst: false }))).toBe(
+      0,
+    );
   });
 });
 
@@ -36,6 +45,8 @@ describe("routing", () => {
     expect(routeRequest("unsupported", "sufficient", true).outcome).toMatch(/gap/i);
   });
   it("metadata lookup uses no model", () => {
-    expect(routeRequest("metadata", "sufficient", false).steps.some((s) => s.tone === "model")).toBe(false);
+    expect(
+      routeRequest("metadata", "sufficient", false).steps.some((s) => s.tone === "model"),
+    ).toBe(false);
   });
 });

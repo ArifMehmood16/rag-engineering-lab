@@ -80,7 +80,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "AI Engineering, Made Practical" },
-      { name: "description", content: "Five AI engineering concepts, taught through the design-phase EvidenceLens case study." },
+      {
+        name: "description",
+        content:
+          "Five AI engineering concepts, taught through the design-phase EvidenceLens case study.",
+      },
     ],
     links: [
       {

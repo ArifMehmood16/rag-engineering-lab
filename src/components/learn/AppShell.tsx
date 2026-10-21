@@ -13,7 +13,10 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         to="/"
         onClick={onNavigate}
-        className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === "/" && "bg-card font-semibold shadow-sm")}
+        className={cn(
+          "rounded-md px-3 py-2 text-sm hover:bg-muted",
+          path === "/" && "bg-card font-semibold shadow-sm",
+        )}
       >
         Overview
       </Link>
@@ -41,7 +44,9 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
                   <span className="font-mono text-xs">0{l.number}</span>{" "}
                   <span className={cn(active && "font-semibold")}>{l.concept}</span>
                   <span className="sr-only"> ({state})</span>
-                  {l.status === "planned" && <span className="block text-xs">Planned next increment</span>}
+                  {l.status === "planned" && (
+                    <span className="block text-xs">Planned next increment</span>
+                  )}
                 </span>
               </Link>
             </li>
@@ -49,9 +54,23 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </ol>
       <p className="eyebrow mt-4 px-3">Across lessons</p>
-      {([["/architecture", "Architecture map"], ["/roadmap", "Implementation priorities"], ["/writing", "Writing exercises"]] as const).map(([to, label]) => (
-        <Link key={to} to={to} onClick={onNavigate} aria-current={path === to ? "page" : undefined}
-          className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === to && "bg-card font-semibold shadow-sm")}>
+      {(
+        [
+          ["/architecture", "Architecture map"],
+          ["/roadmap", "Implementation priorities"],
+          ["/writing", "Writing exercises"],
+        ] as const
+      ).map(([to, label]) => (
+        <Link
+          key={to}
+          to={to}
+          onClick={onNavigate}
+          aria-current={path === to ? "page" : undefined}
+          className={cn(
+            "rounded-md px-3 py-2 text-sm hover:bg-muted",
+            path === to && "bg-card font-semibold shadow-sm",
+          )}
+        >
           {label}
         </Link>
       ))}
@@ -63,7 +82,9 @@ function Brand() {
   return (
     <Link to="/" className="block px-3">
       <span className="block font-serif text-xl leading-tight">AI Engineering,</span>
-      <span className="block font-serif text-xl italic leading-tight text-primary">Made Practical</span>
+      <span className="block font-serif text-xl italic leading-tight text-primary">
+        Made Practical
+      </span>
     </Link>
   );
 }
@@ -72,7 +93,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[17rem_1fr]">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:p-2">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:p-2"
+      >
         Skip to content
       </a>
       <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6 lg:block">
@@ -87,7 +111,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           AI Engineering, <em className="text-primary">Made Practical</em>
         </Link>
         <Dialog.Root open={open} onOpenChange={setOpen}>
-          <Dialog.Trigger className={btnVariants({ variant: "outline", size: "sm" })} aria-label="Open lesson menu">
+          <Dialog.Trigger
+            className={btnVariants({ variant: "outline", size: "sm" })}
+            aria-label="Open lesson menu"
+          >
             <Menu className="size-4" aria-hidden /> Menu
           </Dialog.Trigger>
           <Dialog.Portal>
@@ -99,11 +126,16 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <Brand />
                   </div>
                 </Dialog.Title>
-                <Dialog.Close className={btnVariants({ variant: "ghost", size: "sm" })} aria-label="Close menu">
+                <Dialog.Close
+                  className={btnVariants({ variant: "ghost", size: "sm" })}
+                  aria-label="Close menu"
+                >
                   <X className="size-4" aria-hidden />
                 </Dialog.Close>
               </div>
-              <Dialog.Description className="sr-only">Navigate between the overview and five lessons.</Dialog.Description>
+              <Dialog.Description className="sr-only">
+                Navigate between the overview and five lessons.
+              </Dialog.Description>
               <div className="mt-6">
                 <NavList onNavigate={() => setOpen(false)} />
               </div>

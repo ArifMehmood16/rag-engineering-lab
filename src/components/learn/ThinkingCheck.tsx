@@ -16,11 +16,16 @@ export function ThinkingCheck({ questions }: { questions: QuizQuestion[] }) {
             ))}
           </ul>
           <details className="mt-3 rounded-md bg-muted/60 p-3 text-sm">
-            <summary className="cursor-pointer font-medium text-primary">Show the reasoning</summary>
+            <summary className="cursor-pointer font-medium text-primary">
+              Show the reasoning
+            </summary>
             <p className="mt-2 flex gap-2 leading-relaxed">
               <Lightbulb className="mt-0.5 size-4 shrink-0 text-accent-foreground" aria-hidden />
               <span>
-                <strong>Best answer: ({String.fromCharCode(97 + q.answer)}) {q.options[q.answer]}</strong> {q.explanation}
+                <strong>
+                  Best answer: ({String.fromCharCode(97 + q.answer)}) {q.options[q.answer]}
+                </strong>{" "}
+                {q.explanation}
               </span>
             </p>
           </details>

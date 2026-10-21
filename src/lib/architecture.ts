@@ -17,10 +17,24 @@ export interface Outline {
   outline: { label: string; guidance: string }[];
 }
 
-export const OUTLINE_LABELS = ["The misconception", "The concept", "An EvidenceLens design example", "A trade-off", "An experiment to validate it", "What remains unknown"];
+export const OUTLINE_LABELS = [
+  "The misconception",
+  "The concept",
+  "An EvidenceLens design example",
+  "A trade-off",
+  "An experiment to validate it",
+  "What remains unknown",
+];
 
 export function outlineToMarkdown(o: Outline): string {
-  const lines = [`# ${o.topic}`, "", "_Design-phase draft. EvidenceLens is not implemented; no results exist._", "", "## Outline", ""];
+  const lines = [
+    `# ${o.topic}`,
+    "",
+    "_Design-phase draft. EvidenceLens is not implemented; no results exist._",
+    "",
+    "## Outline",
+    "",
+  ];
   o.outline.forEach((s, i) => lines.push(`${i + 1}. **${s.label}** — ${s.guidance}`));
   lines.push("", "## Reflection prompts", "");
   o.points.forEach((p) => lines.push(`- **${p.prompt}:** ${p.tip}`));

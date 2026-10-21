@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArchitectureMap } from "@/components/learn/ArchitectureMap";
 
 const TITLE = "EvidenceLens architecture map — AI Engineering, Made Practical";
-const DESC = "Clickable map of the planned EvidenceLens query workflow with caching, routing, tool-call, and evaluation overlays.";
+const DESC =
+  "Clickable map of the planned EvidenceLens query workflow with caching, routing, tool-call, and evaluation overlays.";
 
 export const Route = createFileRoute("/architecture")({
   head: () => ({
@@ -20,10 +21,13 @@ export const Route = createFileRoute("/architecture")({
       <p className="eyebrow">Across all lessons</p>
       <h1 className="mt-2 text-4xl font-medium sm:text-5xl">Architecture map</h1>
       <p className="prose-body mt-4 max-w-2xl text-muted-foreground">
-        The default view is the bounded query workflow in the EvidenceLens design. Choose a stage to see what it does, what crosses its trust
-        boundary, and which lesson explains it. Turn on overlays to see where optional techniques would fit.
+        The default view is the bounded query workflow in the EvidenceLens design. Choose a stage to
+        see what it does, what crosses its trust boundary, and which lesson explains it. Turn on
+        overlays to see where optional techniques would fit.
       </p>
-      <div className="mt-8"><ArchitectureMap /></div>
+      <div className="mt-8">
+        <ArchitectureMap />
+      </div>
     </article>
   ),
 });
