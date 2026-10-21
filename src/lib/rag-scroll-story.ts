@@ -4,7 +4,6 @@ import { advance, ENGINE_STAGES, initEngine, type EngineState } from "./apollo-e
 import type { WalkthroughState } from "./rag-walkthrough";
 
 export type StoryStream = WalkthroughState["phase"];
-export const CHAPTER_VIEWPORTS = 2.4;
 
 /** Precompute a deterministic replay once. Viewing it never executes another request. */
 export function buildStoryFrames(seed: EngineState, records: EvidenceRecord[]) {
@@ -15,26 +14,6 @@ export function buildStoryFrames(seed: EngineState, records: EvidenceRecord[]) {
     frames.push(current);
   }
   return frames;
-}
-
-export function storyPosition(offset: number, viewport: number, count: number) {
-  const chapterHeight = Math.max(1, viewport) * CHAPTER_VIEWPORTS;
-  const position = Math.max(0, Math.min(count - 0.00001, offset / chapterHeight));
-  return { stage: Math.floor(position), progress: position % 1 };
-}
-
-/** Input and output have reading plateaus; only the middle scroll interval moves data. */
-export function storyMoment(phase: StoryStream, stage: number, progress: number) {
-  const step = (phase === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH)[stage]!;
-  const p = Math.max(0, Math.min(1, progress));
-  const transfer = Math.max(0, Math.min(1, (p - 0.16) / 0.48));
-  const beat =
-    p < 0.16
-      ? 0
-      : p >= 0.64
-        ? step.work.length + 1
-        : Math.min(step.work.length, Math.floor(transfer * step.work.length) + 1);
-  return { beat, transfer };
 }
 
 export function storyTour(

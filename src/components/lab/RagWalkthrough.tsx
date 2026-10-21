@@ -86,12 +86,13 @@ export function RagWalkthrough(props: Props) {
       }
     }
   }, [stream, stage, output, frames, visible]);
+  const { goTo } = gallery;
   const repeat = useCallback(() => {
     const last = frames.at(-1)!;
     highestFrame.current = 0;
-    gallery.goTo(0);
+    goTo(0);
     setFrames(buildStoryFrames(initEngine(last.ctx.question, last.config, last.memory), records));
-  }, [frames, records, gallery.goTo]);
+  }, [frames, records, goTo]);
 
   // The reading content is stable while scrolling changes only focus and scene progress.
   const cardContent = useMemo(

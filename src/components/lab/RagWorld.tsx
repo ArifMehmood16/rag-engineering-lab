@@ -407,12 +407,13 @@ function Director({
       size.width,
       size.height,
       wide ? Math.min(230, size.width * 0.185) : 0,
-      wide ? 0 : size.height * (tour.phase === "request" ? (size.height < 760 ? 0.1 : 0.14) : 0.28),
+      // Centre the mobile world above the reading gallery, below the stream controls.
+      wide ? 0 : size.height * (size.height < 760 ? 0.21 : 0.12),
       size.width,
       size.height,
     );
     cam.updateProjectionMatrix();
-  }, [camera, size.width, size.height, tour.phase]);
+  }, [camera, size.width, size.height]);
   useFrame((_, delta) => {
     if (!visible) return;
     const wide = size.width >= 1000;
@@ -420,6 +421,7 @@ function Director({
       (wide ? size.width - 460 : size.width) / (wide ? size.height * 0.78 : size.height * 0.65);
     const pull =
       (aspect < 1.3 ? Math.pow(1.3 / aspect, 0.9) : 1) *
+      (wide ? 1 : size.height < 760 ? 1.45 : 1.25) *
       (!wide && tour.phase === "request"
         ? tour.stage === 0 || tour.stage === 10
           ? 1.22
