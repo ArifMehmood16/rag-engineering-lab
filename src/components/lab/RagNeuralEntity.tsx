@@ -133,8 +133,8 @@ export function RagNeuralEntity({ active, time }: { active: boolean; time: RefOb
           depthWrite={false}
           blending={THREE.NormalBlending}
           toneMapped={false}
-          vertexShader={`attribute vec3 aTint;attribute float aSeed;uniform float uTime;uniform float uActivity;varying vec3 vTint;varying float vFire;void main(){float wave=sin(uTime*(1.1+uActivity)+aSeed*7.-length(position)*3.);vFire=pow(max(0.,wave),12.);vTint=aTint;vec3 p=position*(1.+sin(uTime*.7+aSeed)*.009);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp((2.+vFire*(2.4+uActivity*1.6))*(16./-mv.z),1.25,9.);}`}
-          fragmentShader={`varying vec3 vTint;varying float vFire;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;float halo=pow(1.-d,2.);gl_FragColor=vec4(vTint*(1.+vFire*.55),halo*(.28+vFire*.38));}`}
+          vertexShader={`attribute vec3 aTint;attribute float aSeed;uniform float uTime;uniform float uActivity;varying vec3 vTint;varying float vFire;void main(){float wave=sin(uTime*(1.1+uActivity)+aSeed*7.-length(position)*3.);vFire=pow(max(0.,wave),12.);vTint=aTint;vec3 p=position*(1.+sin(uTime*.7+aSeed)*.009);vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp((2.4+vFire*(3.+uActivity*1.6))*(16./-mv.z),1.25,9.);}`}
+          fragmentShader={`varying vec3 vTint;varying float vFire;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;float halo=pow(1.-d,2.);gl_FragColor=vec4(vTint*(1.+vFire*.85),halo*(.5+vFire*.35));}`}
         />
       </points>
       <lineSegments>
@@ -149,7 +149,7 @@ export function RagNeuralEntity({ active, time }: { active: boolean; time: RefOb
           blending={THREE.NormalBlending}
           toneMapped={false}
           vertexShader={`uniform float uTime;varying float vPulse;varying float vDepth;void main(){vPulse=pow(max(0.,sin(uTime*2.4-dot(position,vec3(2.,3.,1.7)))),10.);vec4 p=modelViewMatrix*vec4(position,1.);vDepth=position.z;gl_Position=projectionMatrix*p;}`}
-          fragmentShader={`uniform float uActivity;varying float vPulse;varying float vDepth;void main(){vec3 c=mix(vec3(.18,.34,.48),vec3(.42,.35,.6),vPulse);float a=.10+vPulse*(.12+uActivity*.14);gl_FragColor=vec4(c*(1.+vPulse*.25),a);}`}
+          fragmentShader={`uniform float uActivity;varying float vPulse;varying float vDepth;void main(){vec3 c=mix(vec3(.22,.42,.59),vec3(.55,.45,.7),vPulse);float a=.14+vPulse*(.12+uActivity*.14);gl_FragColor=vec4(c*(1.+vPulse*.25),a);}`}
         />
       </lineSegments>
       <instancedMesh ref={sparks} args={[undefined, undefined, 24]}>
