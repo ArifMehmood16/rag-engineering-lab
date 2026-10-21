@@ -55,6 +55,7 @@ describe("five controlled learning examples", () => {
       if (lens.id === "efficiency") {
         expect(stageInput(deck[0]!.tour).memory.prefixes).toHaveLength(0);
         expect(stageInput(deck[1]!.tour).memory.prefixes.length).toBeGreaterThan(0);
+        expect(stageInput(deck[1]!.tour).memory.runs).toBe(data.warm.memory.runs);
         expect(stageInput(deck[2]!.tour).ctx.usage.answerHit).toBe(true);
       }
       if (lens.id === "guardrails") expect(stageOutput(deck[0]!.tour)?.halted).toBe(true);

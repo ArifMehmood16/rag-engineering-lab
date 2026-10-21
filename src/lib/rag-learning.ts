@@ -139,14 +139,13 @@ export function learningDeck(
     ],
   };
   return spec[id].map(([run, stage, beat], i) => {
-    const frames = buildStoryFrames(initEngine(run.ctx.question, run.config, run.memory), records);
-    // A cold view must remain cold; reconstruct from the exact initial memory, not its final warmed state.
-    const exact = buildStoryFrames(initEngine(run.ctx.question, run.config), records);
-    const chosen = run.ctx.usage.answerHit
-      ? buildStoryFrames(scenarioSeed("cache-hit", records), records)
+    // Reuse the initial memory of the warm request, never its final memory (which would start a third run).
+    const seed = run.ctx.usage.answerHit
+      ? scenarioSeed("cache-hit", records)
       : run.ctx.usage.prefixHit
-        ? frames
-        : exact;
+        ? initEngine(run.ctx.question, run.config, examples.cold.memory)
+        : initEngine(run.ctx.question, run.config);
+    const chosen = buildStoryFrames(seed, records);
     const kind =
       beat === 0 ? "input" : beat > REQUEST_WALKTHROUGH[stage]!.work.length ? "output" : "work";
     const card: StoryCard = {

@@ -78,11 +78,13 @@ export function gallerySelection(
   centers: number[],
   top: number,
   height: number,
+  preferredIndex?: number,
 ) {
   const focus = top + height / 2;
   let index = 0;
   for (let i = 1; i < centers.length; i++)
     if (Math.abs(centers[i]! - focus) < Math.abs(centers[index]! - focus)) index = i;
+  if (preferredIndex !== undefined) index = preferredIndex;
   index = Math.min(index, cards.length - 1);
   const center = centers[index] ?? focus;
   const left = ((centers[index - 1] ?? center - height) + center) / 2;
@@ -99,6 +101,32 @@ export function gallerySelection(
   const transfer =
     card.kind === "output" ? 1 : card.kind === "work" ? (card.beat - 1 + local) / work : 0;
   return { index, offset, transfer };
+}
+
+/** Long worked examples retain focus while their content occupies most of the reading window. */
+export function galleryReadingSelection(
+  cards: StoryCard[],
+  centers: number[],
+  bounds: { top: number; height: number }[],
+  top: number,
+  height: number,
+) {
+  let selected = gallerySelection(cards, centers, top, height).index;
+  const visible = (index: number) => {
+    const card = bounds[index];
+    return card
+      ? Math.max(0, Math.min(top + height, card.top + card.height) - Math.max(top, card.top))
+      : 0;
+  };
+  let most = visible(selected);
+  bounds.forEach((_, index) => {
+    const area = visible(index);
+    if (area > most) {
+      selected = index;
+      most = area;
+    }
+  });
+  return gallerySelection(cards, centers, top, height, selected);
 }
 
 /** Store the place relative to its card so a resized column keeps the same reading moment. */

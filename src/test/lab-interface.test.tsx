@@ -102,11 +102,19 @@ describe("five visible concept views", () => {
     expect(within(nav).getAllByRole("button")).toHaveLength(5);
     expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
     focusCard(2, "output");
+    fireEvent.click(screen.getByLabelText("Learn RAG & embeddings"));
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "0 exact-word overlap",
+    );
     fireEvent.click(screen.getByLabelText("Learn Caching & routing"));
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
       "process the prefix",
     );
     expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
+    fireEvent.click(screen.getByLabelText("Learn Caching & routing"));
+    expect(screen.getByLabelText("Flow annotation")).toHaveTextContent(
+      "Request 1 · process the prefix",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Back to flow" }));
     expect(current()).toHaveTextContent("Embeddings · the result");
     answerStream();
@@ -128,6 +136,7 @@ describe("five visible concept views", () => {
     expect(prefix).toHaveTextContent("REUSED PROCESSING");
     expect(prefix).toHaveTextContent("1 model call");
     expect(prefix).toHaveTextContent("160");
+    expect(prefix).not.toHaveTextContent("Orbit feature");
     focusLearning(2);
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
       "Approved-answer cache",

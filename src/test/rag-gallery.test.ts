@@ -1,9 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { galleryScrollTarget, gallerySelection, storyCards } from "@/lib/rag-gallery";
+import {
+  galleryScrollTarget,
+  gallerySelection,
+  galleryReadingSelection,
+  storyCards,
+} from "@/lib/rag-gallery";
 
 describe("the vertical learning gallery", () => {
   const cards = storyCards("knowledge", 4);
   const centers = cards.map((_, i) => 250 + i * 300);
+  it("keeps a tall example in focus until the next example is more visible", () => {
+    const long = cards.slice(0, 2);
+    const bounds = [
+      { top: 20, height: 800 },
+      { top: 850, height: 350 },
+    ];
+    const centers = bounds.map((b) => b.top + b.height / 2);
+    expect(galleryReadingSelection(long, centers, bounds, 550, 400).index).toBe(0);
+    expect(galleryReadingSelection(long, centers, bounds, 720, 400).index).toBe(1);
+  });
   it("lays out the full explanation in reading order, beginning with an interaction guide", () => {
     expect(cards).toHaveLength(21);
     expect(cards[0]!.kind).toBe("intro");

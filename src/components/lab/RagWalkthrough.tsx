@@ -83,6 +83,7 @@ export function RagWalkthrough(props: Props) {
     setLearningScene(null);
   }, []);
   const chooseLearning = (id: ExperimentId) => {
+    if (concept === id) return;
     setLearningScene(null);
     setConcept(id);
   };

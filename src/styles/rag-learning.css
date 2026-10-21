@@ -59,12 +59,18 @@
   color: #9fbaca;
   font: 12px/1.5 var(--font-sans);
 }
+.learning-heading > div {
+  min-width: 0;
+  flex: 1;
+}
 .learning-heading h2 {
+  overflow-wrap: anywhere;
   color: #e5f0fa;
   font: 600 20px/1.4 var(--font-sans);
   margin-top: 4px;
 }
 .learning-heading button {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -453,6 +459,9 @@
   margin-top: 6px;
   max-width: 260px;
 }
+[data-learning] .scene-flow-label > small {
+  display: none;
+}
 .drawer-experiments {
   grid-template-columns: repeat(2, 1fr);
 }
@@ -527,7 +536,13 @@
     font-size: 12px;
   }
   .learning-world-note {
-    display: none;
+    display: block;
+    top: 187px;
+    bottom: auto;
+    left: 14px;
+    right: 14px;
+    width: auto;
+    padding: 7px 10px;
   }
   .scene-motion-controls {
     top: 246px;
@@ -543,15 +558,22 @@
     padding: 8px 10px;
   }
   .learning-world-note h3 {
-    font-size: 15px;
-    margin: 2px 0;
+    display: none;
   }
   .learning-world-note > span {
-    font-size: 12px;
+    display: none;
   }
-  .learning-world-note p,
   .learning-world-note small {
     display: none;
+  }
+  .learning-world-note p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.45;
   }
   .learning-table {
     font-size: 12px;

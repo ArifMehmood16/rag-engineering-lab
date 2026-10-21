@@ -1,5 +1,10 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { galleryScrollTarget, gallerySelection, type StoryCard } from "@/lib/rag-gallery";
+import {
+  galleryScrollTarget,
+  gallerySelection,
+  galleryReadingSelection,
+  type StoryCard,
+} from "@/lib/rag-gallery";
 import type { StoryStream } from "@/lib/rag-scroll-story";
 
 type Focus = { stream: StoryStream; index: number; offset: number; transfer: number };
@@ -14,6 +19,8 @@ export function useRagGallery(
   const track = useRef<HTMLDivElement>(null);
   const elements = useRef(new Map<string, HTMLElement>());
   const centers = useRef<number[]>([]);
+  const bounds = useRef<{ top: number; height: number }[]>([]);
+  const measured = useRef(false);
   const places = useRef<Record<StoryStream, Omit<Focus, "stream">>>({
     knowledge: { index: 0, offset: 0, transfer: 0 },
     request: { index: 0, offset: 0, transfer: 0 },
@@ -30,7 +37,15 @@ export function useRagGallery(
     const paintAndMeasure = () => {
       frame = 0;
       if (!visible) return;
-      const next = gallerySelection(cards, centers.current, list.scrollTop, list.clientHeight);
+      const next = readLongCardsFromStart
+        ? galleryReadingSelection(
+            cards,
+            centers.current,
+            bounds.current,
+            list.scrollTop,
+            list.clientHeight,
+          )
+        : gallerySelection(cards, centers.current, list.scrollTop, list.clientHeight);
       places.current[stream] = next;
       const rounded = { ...next, transfer: Math.round(next.transfer * 500) / 500, stream };
       setFocus((prev) =>
@@ -44,11 +59,12 @@ export function useRagGallery(
         if (!el) return;
         const distance =
           ((centers.current[index] ?? middle) - middle) / Math.max(1, list.clientHeight * 0.62);
-        const depth = Math.min(Math.abs(distance), 1.4);
+        const depth =
+          readLongCardsFromStart && index === next.index ? 0 : Math.min(Math.abs(distance), 1.4);
         el.style.setProperty("--gallery-scale", String(1 - Math.min(depth, 1) * 0.09));
         el.style.setProperty(
           "--gallery-tilt",
-          `${reduced ? 0 : Math.max(-11, Math.min(11, distance * -8))}deg`,
+          `${reduced || (readLongCardsFromStart && index === next.index) ? 0 : Math.max(-11, Math.min(11, distance * -8))}deg`,
         );
         el.style.setProperty("--gallery-depth", `${reduced ? 0 : -depth * 32}px`);
         el.style.setProperty("--gallery-opacity", String(1 - Math.min(depth, 1) * 0.2));
@@ -62,25 +78,25 @@ export function useRagGallery(
       if (!frame) frame = requestAnimationFrame(paintAndMeasure);
     };
     const layout = () => {
+      if (!visible) return;
       const saved = places.current[stream];
       const first = elements.current.get(cards[0]!.id);
       const last = elements.current.get(cards.at(-1)!.id);
       content.style.paddingTop = `${Math.max(24, (list.clientHeight - (first?.offsetHeight ?? 0)) / 2)}px`;
       content.style.paddingBottom = `${Math.max(24, (list.clientHeight - (last?.offsetHeight ?? 0)) / 2)}px`;
-      centers.current = cards.map((card) => {
+      bounds.current = cards.map((card) => {
         const el = elements.current.get(card.id);
-        const height = el?.offsetHeight ?? 0;
-        // Concept examples can be taller than the reading window. Enter at their heading,
-        // then keep native scrolling available for the entire example instead of starting halfway down.
-        return (
-          (el?.offsetTop ?? 0) +
-          (readLongCardsFromStart ? Math.min(height, list.clientHeight - 40) : height) / 2
-        );
+        return { top: el?.offsetTop ?? 0, height: el?.offsetHeight ?? 0 };
       });
+      centers.current = bounds.current.map((card) => card.top + card.height / 2);
       list.scrollTo({
-        top: galleryScrollTarget(saved, centers.current, list.clientHeight),
+        top:
+          readLongCardsFromStart && !measured.current
+            ? 0
+            : galleryScrollTarget(saved, centers.current, list.clientHeight),
         behavior: "instant",
       });
+      measured.current = true;
       paintAndMeasure();
     };
     measureNow.current = paintAndMeasure;

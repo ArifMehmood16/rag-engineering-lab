@@ -199,6 +199,12 @@ function LearningVisual({
           The lab groups synonyms into seven explicit features. Real embeddings learn
           representations; these word-group features are a transparent teaching model.
         </p>
+        <Flow items={["stayed", "Orbit feature", "remained"]} />
+        <p className="learning-note">
+          For the single words “stayed” and “remained”: {data.synonymPair.keywordOverlap} exact-word
+          overlap; toy cosine {data.synonymPair.toyCosine.toFixed(1)} because both map to the orbit
+          group. The full question also has ordinary keyword matches.
+        </p>
       </>
     ) : page === 1 ? (
       <>
@@ -256,12 +262,6 @@ function LearningVisual({
             />
             <Receipt label="New generation calls" value={run.ctx.usage.generationCalls} />
           </div>
-          <Flow items={["stayed", "Orbit feature", "remained"]} />
-          <p className="learning-note">
-            For the single words “stayed” and “remained”: {data.synonymPair.keywordOverlap}{" "}
-            exact-word overlap; toy cosine {data.synonymPair.toyCosine.toFixed(1)} because both map
-            to the orbit group. The full question also has ordinary keyword matches.
-          </p>
           {page === 1 && (
             <p className="learning-note">
               Put a changing timestamp first and the repeated fixture reuses{" "}
@@ -283,6 +283,10 @@ function LearningVisual({
             An approved answer is reused, including its claims and citations. Current permissions
             and citation checks still apply. This cache belongs to the application; prompt-prefix
             reuse is model-side processing.
+          </p>
+          <p className="learning-note">
+            Embedding caches reuse vectors; retrieval caches reuse candidate lists. Neither stores
+            an approved final answer.
           </p>
         </>
       );
@@ -324,8 +328,9 @@ function LearningVisual({
           happens after context is ready.
         </p>
         <p className="learning-note">
-          Explicit teaching policy, not measured model quality. Work units are fictional—not
-          currency or measured latency. The details report shows the formula.
+          Explicit teaching policy, not measured model quality. Model work units are fictional; they
+          exclude cache lookup, retrieval, and validation costs. They are not currency or measured
+          latency. The details report shows the formula.
         </p>
       </>
     );
