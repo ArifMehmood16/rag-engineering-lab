@@ -7,6 +7,25 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  plugins: [
+    {
+      name: "three-scene-source-compatibility",
+      configResolved(config) {
+        // TanStack's DOM source tags are invalid properties on Three.js objects.
+        // Keep editor inspection everywhere else, including the scene's HTML shell.
+        const transform = config.plugins.find(
+          (plugin) => plugin.name === "@tanstack/devtools:inject-source",
+        )?.transform;
+        if (transform && typeof transform === "object") {
+          const original = transform.handler;
+          transform.handler = function (code, id, ...args) {
+            if (id.split("?")[0]?.endsWith("/RagWorld.tsx")) return null;
+            return original.call(this, code, id, ...args);
+          };
+        }
+      },
+    },
+  ],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

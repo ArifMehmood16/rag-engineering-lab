@@ -11,6 +11,9 @@ import {
   Play,
   RotateCcw,
   ScanLine,
+  Scissors,
+  Binary,
+  ChevronDown,
 } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import { KNOWLEDGE_WALKTHROUGH, REQUEST_WALKTHROUGH } from "@/content/rag-walkthrough";
@@ -478,6 +481,7 @@ export function RagWalkthrough({
   onEvidence,
   onReset,
   reduced,
+  lowEffects = false,
   visible,
 }: {
   engine: EngineState;
@@ -492,10 +496,13 @@ export function RagWalkthrough({
   onEvidence: (id: string) => void;
   onReset: () => void;
   reduced: boolean;
+  lowEffects?: boolean;
   visible: boolean;
 }) {
   const [tour, setTour] = useState(() => createWalkthrough(engine, prepared));
   const [auto, setAuto] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
   const [seconds, setSeconds] = useState(6);
   const [chunkId, setChunkId] = useState("A11-LA-CAP");
   const [mobilePane, setMobilePane] = useState<Pane | null>(null);
@@ -510,6 +517,7 @@ export function RagWalkthrough({
   const active = mobilePane ?? attention;
   const update = (next: WalkthroughState) => {
     setTour(next);
+    setMotionPaused(false);
     setMobilePane(null);
     if (latestEngine(next) !== latestEngine(tour)) onEngine(latestEngine(next));
     if (next.preparedThrough === 3) onPrepared();
@@ -529,6 +537,7 @@ export function RagWalkthrough({
 
   const select = (phase: WalkthroughState["phase"], stage: number) => {
     setAuto(false);
+    setMapOpen(false);
     update(selectWalkthroughStage(tour, phase, stage));
   };
   const next = () => {
@@ -536,6 +545,7 @@ export function RagWalkthrough({
     update(ended ? repeatRequest(tour) : nextWalkthrough(tour, records));
   };
   const play = () => {
+    setMotionPaused(false);
     if (ended) update(repeatRequest(tour));
     else if (output) update(nextWalkthrough(tour, records));
     setAuto(true);
@@ -568,6 +578,62 @@ export function RagWalkthrough({
             <span>02</span> Answer a question
           </button>
         </div>
+        <div className="tour-stage-selector">
+          <button
+            type="button"
+            aria-expanded={mapOpen}
+            aria-label="Browse stages"
+            onClick={() => setMapOpen(!mapOpen)}
+          >
+            Stages <ChevronDown size={12} />
+          </button>
+          {mapOpen && (
+            <div className="tour-map" data-phase={tour.phase} aria-label="Complete RAG pipeline">
+              <div className="tour-map-row">
+                <span>BEFORE A QUESTION</span>
+                <div className="tour-track tour-knowledge-track">
+                  {KNOWLEDGE_WALKTHROUGH.map((s, n) => (
+                    <button
+                      type="button"
+                      key={s.short}
+                      aria-pressed={tour.phase === "knowledge" && tour.stage === n}
+                      disabled={n > tour.preparedThrough + 1}
+                      data-done={n <= tour.preparedThrough}
+                      onClick={() => select("knowledge", n)}
+                    >
+                      <span>{n <= tour.preparedThrough ? <Check size={11} /> : n + 1}</span>
+                      {s.short}
+                      <ArrowRight size={11} aria-hidden />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="tour-map-row">
+                <span>FOR EACH QUESTION</span>
+                <div className="tour-track tour-request-track">
+                  {REQUEST_WALKTHROUGH.map((s, n) => (
+                    <button
+                      type="button"
+                      key={s.short}
+                      aria-pressed={tour.phase === "request" && tour.stage === n}
+                      disabled={
+                        tour.preparedThrough < 3 ||
+                        n > latestEngine(tour).cursor + 1 ||
+                        (requestFinished(tour) && n > latestEngine(tour).cursor)
+                      }
+                      data-done={Boolean(tour.frames[n + 1])}
+                      onClick={() => select("request", n)}
+                    >
+                      <span>{tour.frames[n + 1] ? <Check size={11} /> : n + 1}</span>
+                      {s.short}
+                      {n < 10 && <ArrowRight size={10} aria-hidden />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
         <div
           className="tour-exploration"
           role="progressbar"
@@ -595,51 +661,6 @@ export function RagWalkthrough({
         </div>
       </header>
 
-      <div className="tour-map" data-phase={tour.phase} aria-label="Complete RAG pipeline">
-        <div className="tour-map-row">
-          <span>BEFORE A QUESTION</span>
-          <div className="tour-track tour-knowledge-track">
-            {KNOWLEDGE_WALKTHROUGH.map((s, n) => (
-              <button
-                type="button"
-                key={s.short}
-                aria-pressed={tour.phase === "knowledge" && tour.stage === n}
-                disabled={n > tour.preparedThrough + 1}
-                data-done={n <= tour.preparedThrough}
-                onClick={() => select("knowledge", n)}
-              >
-                <span>{n <= tour.preparedThrough ? <Check size={11} /> : n + 1}</span>
-                {s.short}
-                <ArrowRight size={11} aria-hidden />
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="tour-map-row">
-          <span>FOR EACH QUESTION</span>
-          <div className="tour-track tour-request-track">
-            {REQUEST_WALKTHROUGH.map((s, n) => (
-              <button
-                type="button"
-                key={s.short}
-                aria-pressed={tour.phase === "request" && tour.stage === n}
-                disabled={
-                  tour.preparedThrough < 3 ||
-                  n > latestEngine(tour).cursor + 1 ||
-                  (requestFinished(tour) && n > latestEngine(tour).cursor)
-                }
-                data-done={Boolean(tour.frames[n + 1])}
-                onClick={() => select("request", n)}
-              >
-                <span>{tour.frames[n + 1] ? <Check size={11} /> : n + 1}</span>
-                {s.short}
-                {n < 10 && <ArrowRight size={10} aria-hidden />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
       <div className="tour-stage-heading" aria-live="polite">
         <div>
           <span>
@@ -655,7 +676,20 @@ export function RagWalkthrough({
       </div>
 
       <div className="tour-stage-layout">
-        <RagStageScene tour={tour} record={record} records={records} reduced={reduced} />
+        <RagStageScene
+          tour={tour}
+          record={record}
+          records={records}
+          reduced={reduced}
+          lowEffects={lowEffects}
+          paused={motionPaused}
+          visible={visible}
+          duration={auto ? seconds * 0.72 : 4.2}
+          onPause={() => {
+            setMotionPaused(!motionPaused);
+            setAuto(false);
+          }}
+        />
         <div className="tour-reader">
           <div className="tour-pane-tabs" role="group" aria-label="Step panels">
             {(["input", "work", "output"] as const).map((pane) => (
@@ -719,26 +753,47 @@ export function RagWalkthrough({
                 )}
               </h3>
               <div className="tour-pane-content">
-                <ol className="tour-work-steps">
+                <div className="tour-operation-progress" aria-label="Operations in this stage">
                   {step.work.map((work, n) => (
-                    <li
+                    <span
                       key={work.title}
-                      aria-current={tour.beat === n + 1 ? "step" : undefined}
+                      title={work.title}
+                      data-active={tour.beat === n + 1}
                       data-done={tour.beat > n + 1}
                     >
-                      <span>{tour.beat > n + 1 ? <Check size={13} /> : n + 1}</span>
-                      <div>
-                        <strong>{work.title}</strong>
-                        <p>{work.detail}</p>
-                      </div>
-                      {tour.beat === n + 1 && (
-                        <ArrowLeft className="tour-work-pointer" size={17} aria-hidden />
-                      )}
-                    </li>
+                      {tour.beat > n + 1 ? <Check size={12} /> : n + 1}
+                    </span>
                   ))}
-                </ol>
+                  <small>
+                    {Math.max(1, Math.min(tour.beat, step.work.length))} / {step.work.length}
+                  </small>
+                </div>
+                <div className="tour-active-operation">
+                  <div className="tour-work-glyph">
+                    {tour.phase === "knowledge" ? (
+                      tour.stage === 1 ? (
+                        <Scissors />
+                      ) : tour.stage === 2 ? (
+                        <Binary />
+                      ) : tour.stage === 3 ? (
+                        <Database />
+                      ) : (
+                        <FileText />
+                      )
+                    ) : (
+                      <ScanLine />
+                    )}
+                  </div>
+                  <strong>
+                    {step.work[Math.max(0, Math.min(tour.beat - 1, step.work.length - 1))]!.title}
+                  </strong>
+                  <p>
+                    {step.work[Math.max(0, Math.min(tour.beat - 1, step.work.length - 1))]!.detail}
+                  </p>
+                </div>
                 {tour.phase === "knowledge" && tour.stage === 2 && tour.beat >= 2 && (
-                  <div className="tour-feature-counts">
+                  <details className="tour-feature-counts">
+                    <summary>See the feature calculation</summary>
                     <span>Matched features in this chunk</span>
                     <div>
                       {counts.map((count, n) => (
@@ -748,7 +803,7 @@ export function RagWalkthrough({
                       ))}
                     </div>
                     <small>Normalise by √({counts.map((n) => `${n}²`).join(" + ")})</small>
-                  </div>
+                  </details>
                 )}
                 {tour.phase === "request" && tour.stage === 3 && tour.beat >= 1 && (
                   <div className="tour-feature-counts">
@@ -831,7 +886,17 @@ export function RagWalkthrough({
                   : "Next sub-step"}
             <ArrowRight size={14} />
           </button>
-          <button type="button" onClick={auto ? () => setAuto(false) : play}>
+          <button
+            type="button"
+            onClick={
+              auto
+                ? () => {
+                    setAuto(false);
+                    setMotionPaused(true);
+                  }
+                : play
+            }
+          >
             {auto ? <Pause size={14} /> : <Play size={14} />}
             {auto
               ? "Pause"
