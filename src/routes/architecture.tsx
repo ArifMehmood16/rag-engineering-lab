@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArchitectureMap } from "@/components/learn/ArchitectureMap";
 
-const TITLE = "EvidenceLens architecture map — RAG Simulator · AI Learning Lab";
+const TITLE = "EvidenceLens architecture map — The Intelligence Lab";
 const DESC =
   "Clickable map of the planned EvidenceLens query workflow with caching, routing, tool-call, and evaluation overlays.";
 
