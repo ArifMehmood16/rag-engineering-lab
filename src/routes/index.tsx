@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
 
 export function Lab() {
   const [engine, setEngine] = useState<EngineState>(() => initEngine(DEFAULT_QUESTION));
-  const [prepared, setPrepared] = useState(false);
+  const [stream, setStream] = useState<"knowledge" | "request">("knowledge");
   const [walkthroughKey, setWalkthroughKey] = useState(0);
   const [explored, setExplored] = useState<string[]>([]);
   const [selected, setSelected] = useState(0);
@@ -94,7 +94,7 @@ export function Lab() {
   };
   const reset = () => {
     setEngine(initEngine(DEFAULT_QUESTION));
-    setPrepared(false);
+    setStream("knowledge");
     setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(0);
@@ -126,8 +126,7 @@ export function Lab() {
             See how <span>RAG works.</span>
           </h1>
           <p>
-            First build the knowledge. Then follow a question. Take each transformation at your own
-            pace.
+            Scroll through knowledge building or follow a question. Each stream works independently.
           </p>
         </div>
         <div className="intro-badges">
@@ -141,15 +140,14 @@ export function Lab() {
         key={walkthroughKey}
         engine={engine}
         records={APOLLO_RECORDS}
-        prepared={prepared}
+        stream={stream}
+        onStream={setStream}
         explored={explored}
         onExplore={(id) => setExplored((seen) => (seen.includes(id) ? seen : [...seen, id]))}
-        onPrepared={() => setPrepared(true)}
         onEngine={setEngine}
         onInspect={inspect}
         onKnowledge={setKnowledge}
         onEvidence={setEvidence}
-        onReset={reset}
         reduced={reduced || low}
         lowEffects={low}
         visible={visible && details === null}

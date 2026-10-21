@@ -1,10 +1,11 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
-import { Pause, Play, RotateCcw, Sparkles, Maximize2, Focus } from "lucide-react";
+import { Pause, Play, Sparkles, Maximize2, Focus } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import { KNOWLEDGE_TAKEAWAYS, REQUEST_TAKEAWAYS } from "@/content/rag-walkthrough";
 import { toyEmbedding } from "@/lib/apollo-engine";
 import { atOutput, walkthroughStep, type WalkthroughState } from "@/lib/rag-walkthrough";
 import { scenePlan, type SceneNode } from "@/lib/rag-scene";
+import { flowLabel } from "@/lib/rag-flow-label";
 import { cn } from "@/lib/utils";
 import type { RagWorldProps } from "./RagWorld";
 
@@ -67,7 +68,9 @@ export function RagStageScene(
   const { tour, reduced, paused, onPause, lowEffects } = props;
   const labels = useRef(new Map<SceneNode, HTMLDivElement>());
   const [ready, setReady] = useState(false);
-  const [replay, setReplay] = useState(0);
+  const replay = 0;
+  const flow = useRef<HTMLDivElement>(null);
+  const annotation = flowLabel(tour, props.record, props.records);
   const [overview, setOverview] = useState(false);
   useEffect(() => {
     setReady(typeof window.WebGL2RenderingContext !== "undefined");
@@ -92,7 +95,13 @@ export function RagStageScene(
         <SceneBoundary fallback={fallback}>
           {ready && !lowEffects ? (
             <Suspense fallback={fallback}>
-              <RagWorld {...props} replay={replay} overview={overview} labels={labels} />
+              <RagWorld
+                {...props}
+                replay={replay}
+                overview={overview}
+                labels={labels}
+                flowLabel={flow}
+              />
             </Suspense>
           ) : (
             fallback
@@ -157,6 +166,22 @@ export function RagStageScene(
             })}
           </div>
         )}
+        <div
+          ref={flow}
+          className={`scene-flow-label flow-${annotation.mode}`}
+          aria-label="Flow annotation"
+          style={ready && !lowEffects ? { opacity: 0 } : undefined}
+        >
+          <span>
+            {annotation.mode === "work"
+              ? "TRANSFORMING"
+              : annotation.mode === "input"
+                ? "INPUT"
+                : "OUTPUT"}
+          </span>
+          <strong>{annotation.text}</strong>
+          <i />
+        </div>
         <div className="scene-mode-label">
           {plan.blocked
             ? "RELEASE BLOCKED"
@@ -185,14 +210,6 @@ export function RagStageScene(
             disabled={reduced}
           >
             {paused ? <Play size={13} /> : <Pause size={13} />}
-          </button>
-          <button
-            type="button"
-            aria-label="Replay visual transfer"
-            onClick={() => setReplay((n) => n + 1)}
-            disabled={!plan.moving || reduced || paused}
-          >
-            <RotateCcw size={13} />
           </button>
         </div>
       </div>

@@ -28,17 +28,29 @@ export function storyMoment(phase: StoryStream, stage: number, progress: number)
   const step = (phase === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH)[stage]!;
   const p = Math.max(0, Math.min(1, progress));
   const transfer = Math.max(0, Math.min(1, (p - 0.16) / 0.48));
-  const beat = p < 0.16 ? 0 : p >= 0.64 ? step.work.length + 1
-    : Math.min(step.work.length, Math.floor(transfer * step.work.length) + 1);
+  const beat =
+    p < 0.16
+      ? 0
+      : p >= 0.64
+        ? step.work.length + 1
+        : Math.min(step.work.length, Math.floor(transfer * step.work.length) + 1);
   return { beat, transfer };
 }
 
 export function storyTour(
-  phase: StoryStream, stage: number, beat: number, frames: EngineState[],
+  phase: StoryStream,
+  stage: number,
+  beat: number,
+  frames: EngineState[],
 ): WalkthroughState {
   const work = (phase === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH)[stage]!.work;
   // Never expose a later engine result as the input of an earlier stage.
   const end = phase === "knowledge" ? 1 : stage + (beat > work.length ? 2 : 1);
-  return { phase, stage, beat, preparedThrough: phase === "request" ? 3 : stage - 1,
-    frames: frames.slice(0, end) };
+  return {
+    phase,
+    stage,
+    beat,
+    preparedThrough: phase === "request" ? 3 : stage - 1,
+    frames: frames.slice(0, end),
+  };
 }

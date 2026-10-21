@@ -1,0 +1,90 @@
+import type { EvidenceRecord } from "@/content/apollo";
+import { toyEmbedding } from "./apollo-engine";
+import { buildKnowledgeIndex } from "./knowledge-index";
+import {
+  atOutput,
+  stageInput,
+  stageOutput,
+  walkthroughStep,
+  type WalkthroughState,
+} from "./rag-walkthrough";
+
+/** The annotation travels on the same curve as the visible data packet. */
+export function flowLabel(
+  tour: WalkthroughState,
+  record: EvidenceRecord,
+  records: EvidenceRecord[],
+) {
+  const step = walkthroughStep(tour);
+  const mode = tour.beat === 0 ? "input" : atOutput(tour) ? "output" : "work";
+  const before = stageInput(tour);
+  const after = stageOutput(tour);
+  const vector = toyEmbedding(record.text)
+    .map((v) => v.toFixed(2))
+    .join(" · ");
+  const index = buildKnowledgeIndex(records);
+  let text: string;
+  if (tour.phase === "knowledge") {
+    const inputs = [
+      "2 source pages · prepared text",
+      "Source text + original locator",
+      `${record.id} · passage text`,
+      `${record.id} · vector + metadata`,
+    ];
+    const outputs = [
+      "Readable text + source identity",
+      `${index.chunks.length} bounded chunks · stable IDs`,
+      `[ ${vector} ]`,
+      `${index.chunks.length} searchable passage records`,
+    ];
+    text =
+      mode === "input"
+        ? inputs[tour.stage]!
+        : mode === "output"
+          ? outputs[tour.stage]!
+          : step.work[tour.beat - 1]!.title;
+  } else {
+    const inputs = [
+      before.ctx.question,
+      `Question + ${before.config.scope} scope`,
+      "Validated question + cache contract",
+      "Query + stored passage vectors",
+      `${before.ctx.retrieved.length} ranked candidates`,
+      `${before.ctx.context.length} context passages`,
+      `${before.ctx.context.length} passages + required facts`,
+      `${before.ctx.context.length} passages + instructions + question`,
+      `${before.ctx.claims.length} untrusted claims + citation IDs`,
+      "Verified claims + current source status",
+      "Approved claims + resolved citations",
+    ];
+    const result = after?.results[tour.stage];
+    const outputs = [
+      "Required facts identified",
+      `Access scope: ${before.config.scope}`,
+      `Route: ${after?.ctx.route ?? "pending"}`,
+      `${after?.ctx.retrieved.length ?? 0} ranked passage IDs + scores`,
+      `${after?.ctx.context.length ?? 0} passages · ≈${after?.ctx.tokensUsed ?? 0} tokens`,
+      before.config.tool === "off"
+        ? "No tool call · fixed workflow continues"
+        : "Bounded tool result checked",
+      after?.halted ? "Evidence gap · generation stopped" : "Evidence covers the required facts",
+      `${after?.ctx.claims.length ?? 0} draft claims · still untrusted`,
+      `${after?.ctx.checks.filter((c) => c.resolves && c.supported).length ?? 0} supported claims`,
+      "Current eligibility checked",
+      after?.ctx.released ? "Checked answer + resolvable citations" : "No answer released",
+    ];
+    text =
+      mode === "input"
+        ? inputs[tour.stage]!
+        : mode === "output"
+          ? result?.status === "blocked"
+            ? (result.output[0] ?? "Stopped · no answer released")
+            : result?.status === "skipped"
+              ? "Bypassed · reuse the checked result"
+              : outputs[tour.stage]!
+          : tour.stage === 5 && before.config.tool === "off"
+            ? "Tool disabled · no external action"
+            : step.work[tour.beat - 1]!.title;
+  }
+  return { mode, text };
+}

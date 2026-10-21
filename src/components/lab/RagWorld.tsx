@@ -27,6 +27,8 @@ export interface RagWorldProps {
   visible: boolean;
   duration: number;
   replay: number;
+  scrollProgress?: number;
+  flowLabel?: React.RefObject<HTMLDivElement | null>;
   overview?: boolean;
   labels?: React.RefObject<Map<SceneNode, HTMLDivElement>>;
 }
@@ -441,9 +443,15 @@ function World(props: RagWorldProps) {
   const after = stageOutput(tour);
   useEffect(() => {
     elapsed.current = 0;
-    progress.current = reduced || !plan.moving ? end : begin;
+    progress.current = props.scrollProgress ?? (reduced || !plan.moving ? end : begin);
     invalidate();
   }, [tour.phase, tour.stage, tour.beat, record.id, replay, reduced, plan.moving, invalidate]);
+  useEffect(() => {
+    if (props.scrollProgress !== undefined) {
+      progress.current = props.scrollProgress;
+      invalidate();
+    }
+  }, [props.scrollProgress, invalidate]);
   useEffect(() => {
     invalidate();
   }, [paused, visible, overview, invalidate]);
@@ -451,7 +459,7 @@ function World(props: RagWorldProps) {
     if (!visible || paused || reduced) return;
     const dt = Math.min(delta, 0.08);
     time.current += dt;
-    if (plan.moving && progress.current < end) {
+    if (props.scrollProgress === undefined && plan.moving && progress.current < end) {
       elapsed.current += dt;
       progress.current = begin + (end - begin) * Math.min(1, elapsed.current / duration);
     }
@@ -459,6 +467,16 @@ function World(props: RagWorldProps) {
   }, -2);
   const projected = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
+    if (props.flowLabel?.current) {
+      const from = plan.positions[plan.transfer.from]!;
+      const to = plan.positions[plan.transfer.to]!;
+      const point = travelPoint(from, to, progress.current);
+      projected.set(point[0], point[1] + 0.95, point[2] + 0.1).project(camera);
+      const element = props.flowLabel.current;
+      element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
+      element.style.top = `${(-projected.y * 0.5 + 0.5) * size.height}px`;
+      element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1 ? "1" : "0";
+    }
     props.labels?.current.forEach((element, node) => {
       const point = plan.positions[node];
       if (!point) return;
