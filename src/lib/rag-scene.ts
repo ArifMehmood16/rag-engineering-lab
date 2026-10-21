@@ -108,7 +108,7 @@ const PATH_BENDS: Partial<Record<string, Point3[]>> = {
   ],
   "router:small": [
     [-4.25, -1.15, 0.5],
-    [-3.85, -2, 0.6],
+    [-4, -1.3, 0.6],
   ],
   "router:model": [
     [-2, 0.1, 0.4],
@@ -119,7 +119,7 @@ const PATH_BENDS: Partial<Record<string, Point3[]>> = {
     [-2.9, 0.7, -0.8],
     [-0.5, 1.6, -0.8],
   ],
-  "index:retrieve": [[-2.7, 2.9, -0.4]],
+  "index:retrieve": [[-2.65, 2.65, -0.4]],
   "retrieve:context": [[-1.3, 2.65, 0.55]],
   "context:model": [[0.45, 2.45, 0.5]],
   "context:small": [
@@ -206,7 +206,7 @@ export function flowRoute(
   const port = (center: Point3, toward: Point3, radius: number): Point3 => {
     const length = Math.hypot(...toward.map((v, i) => v - center[i]!));
     return center.map(
-      (v, i) => v + ((toward[i]! - v) / Math.max(0.001, length)) * Math.min(radius, length * 0.75),
+      (v, i) => v + ((toward[i]! - v) / Math.max(0.001, length)) * Math.min(radius, length * 0.98),
     ) as Point3;
   };
   return {

@@ -669,7 +669,22 @@ function World(props: RagWorldProps) {
       element.style.top = `${above ? Math.max(top + labelHeight, Math.min(bottom - 20, y - 34)) : Math.max(top, Math.min(bottom - labelHeight, y + 34))}px`;
       element.style.opacity = !overview && projected.z < 1 ? "1" : "0";
     }
-    props.labels?.current.forEach((element, node) => {
+    const occupied: { x: number; y: number; w: number; h: number }[] = [];
+    const annotation = props.flowLabel?.current;
+    if (annotation && annotation.style.opacity !== "0") {
+      const rect = annotation.getBoundingClientRect();
+      occupied.push({
+        x: rect.x + rect.width / 2,
+        y: rect.y + rect.height / 2,
+        w: rect.width,
+        h: rect.height,
+      });
+    }
+    // Labels follow objects, but never compete with the active annotation or one another.
+    const sorted = Array.from(props.labels?.current ?? []).sort(
+      ([a], [b]) => emphasis(b) - emphasis(a),
+    );
+    sorted.forEach(([node, element]) => {
       const point = plan.positions[node];
       if (!point) return;
       const offset =

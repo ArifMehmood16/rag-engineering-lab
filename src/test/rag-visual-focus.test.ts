@@ -20,6 +20,16 @@ describe("readable routes and scene focus", () => {
   it("keeps the route strokes outside unrelated entities", () => {
     for (const [from, to] of REQUEST_CONNECTIONS) {
       const route = flowRoute(REQUEST_POSITIONS, from, to);
+      for (const [node, port] of [
+        [from, route.from],
+        [to, route.to],
+      ] as const) {
+        const center = REQUEST_POSITIONS[node]!;
+        expect(
+          Math.hypot(...port.map((v, axis) => v - center[axis]!)),
+          `${from} → ${to}: port inside ${node}`,
+        ).toBeGreaterThanOrEqual((NODE_RADIUS[node] ?? 0.5) * 0.95);
+      }
       for (let i = 0; i <= 100; i++) {
         const p = travelPoint(route.from, route.to, i / 100, route.via);
         for (const node of Object.keys(REQUEST_NODE_NAMES) as (keyof typeof REQUEST_NODE_NAMES)[]) {
