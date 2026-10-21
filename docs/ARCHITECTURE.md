@@ -49,7 +49,7 @@ Five concept views are immediately available alongside the streams. [`rag-learni
 
 The request map has a level left-to-right spine: user → input checks → router → retrieval → context → LLM → output checks. Cache, knowledge index, and tools occupy reserved service positions; the small model sits on a lower branch near routing. Cache bypass, source rechecks, tools, model branches, and the return to the original user use separate corridors.
 
-`flowRoute` supplies exterior object ports and shared bends. `travelPoint` trims and rounds each bend within that corridor instead of using a free spline that can overshoot it. The Three.js stroke, arrow, moving packet, projected annotation, and static SVG all use this geometry. A second spline must not be fitted through the sampled route. Arrowheads retain a stable screen size as the camera changes distance. Request close-ups retain neighbouring stations rather than greatly magnifying the background map.
+`flowRoute` supplies exterior object ports and shared bends. `createFlowSampler` trims and rounds each bend once within that corridor; `travelPoint` is its convenience wrapper for occasional snapshots. The Three.js stroke, arrow, moving packet, projected annotation, and static SVG all use this geometry. A second spline must not be fitted through the sampled route. Arrowheads retain a stable screen size as the camera changes distance. Request close-ups retain neighbouring stations rather than greatly magnifying the background map.
 
 The route regression checks cover object clearance for normal and stopping paths, bounded corners, distinct paired lanes, aligned station rows, and camera framing.
 
@@ -60,6 +60,8 @@ The route regression checks cover object clearance for normal and stopping paths
 The prefix scenes distinguish cold prefill, warm prefix reuse with a new draft, and an application answer-cache bypass. The evaluation scenes distinguish reviewed cases, a retrieval miss, unsupported generation with fixed evidence, and a simulated judge comparing source and claim. Evaluation observes completed results rather than becoming an operation in the live request path.
 
 The clock drives only visual replay. It never increments call counts, changes cache state, advances a card, or modifies a score. Pause, reduced motion, a hidden page, and the details drawer freeze it. The LLM sphere and prefix store are schematic; they do not show hidden model reasoning or literal provider memory.
+
+`useSceneFrames` schedules finite demand-rendered transitions, then stops while the visitor reads. Stream cards settle after 2.5 seconds without changes; recorded concept illustrations finish once and retain their result. `useSceneLabelSizes` measures HTML labels outside the frame loop. Balanced graphics caps drawing resolution independently of HTML text. [Performance policy and measured comparison](PERFORMANCE.md).
 
 ## Execution boundaries
 

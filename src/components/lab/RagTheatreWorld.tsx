@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, type RefObject } from "react";
+import { useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Edges, Html, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { useSceneFrames } from "./useSceneFrames";
+import { theatreProgress } from "@/lib/rag-motion";
 import { RagNeuralEntity } from "./RagNeuralEntity";
 import type { LearningTheatre } from "@/lib/rag-theatre";
 import type { Point3 } from "@/lib/rag-scene";
@@ -166,10 +168,11 @@ function Route({
   const signal = useRef<THREE.Group>(null);
   useFrame(() => {
     if (!signal.current) return;
-    const phase = (time.current / 10 + offset) % 1;
+    const phase = theatreProgress(time.current, offset);
     signal.current.position.copy(curve.getPoint(phase));
     // Hand off to the fixed source/result labels before moving IDs overlap them.
-    signal.current.visible = !packetLabel || (phase > 0.19 && phase < 0.8);
+    signal.current.visible =
+      phase > 0 && phase < 1 && (!packetLabel || (phase > 0.19 && phase < 0.8));
   });
   return (
     <group>
@@ -208,13 +211,13 @@ function PrefixFlight({ time, index }: { time: RefObject<number>; index: number 
   const group = useRef<THREE.Group>(null);
   useFrame(() => {
     if (!group.current) return;
-    const t = (time.current / 12 + index * 0.12) % 1;
+    const t = theatreProgress(time.current, index * 0.12);
     const from = new THREE.Vector3(-4.2, 1.7 - index * 0.58, 0);
     const gate = new THREE.Vector3(-2.25, 1.45, 0.3);
     const to = new THREE.Vector3(-0.95 + index * 0.94, 1.6, 0);
     const p = t < 0.5 ? from.lerp(gate, t * 2) : gate.lerp(to, (t - 0.5) * 2);
     group.current.position.copy(p);
-    group.current.visible = t < 0.93;
+    group.current.visible = t > 0 && t < 0.99;
   });
   return (
     <group ref={group}>
@@ -422,8 +425,8 @@ function Arrival({
   const lamp = useRef<THREE.Mesh>(null);
   useFrame(() => {
     if (!lamp.current) return;
-    const phase = (time.current / 10 + offset) % 1;
-    const pulse = Math.max(0, 1 - Math.abs(phase - 0.94) / 0.09);
+    const phase = theatreProgress(time.current, offset);
+    const pulse = phase >= 1 ? 0.6 : Math.max(0, 1 - Math.abs(phase - 0.94) / 0.09);
     lamp.current.scale.setScalar(0.8 + pulse * 0.65);
     (lamp.current.material as THREE.MeshBasicMaterial).opacity = 0.3 + pulse * 0.65;
   });
@@ -685,23 +688,26 @@ export function RagTheatreWorld({
   reduced,
   paused,
   visible,
+  quality,
+  replay,
 }: {
   scene: LearningTheatre;
   reduced: boolean;
   paused: boolean;
   visible: boolean;
+  quality?: "balanced" | "high";
+  replay: number;
 }) {
-  const time = useRef(0);
-  const { invalidate } = useThree();
-  useEffect(() => {
-    time.current = reduced ? 6 : 0;
-    invalidate();
-  }, [scene.mode, reduced, invalidate]);
-  useFrame((_, delta) => {
-    if (!visible || reduced || paused) return;
-    time.current += Math.min(delta, 0.08);
-    invalidate();
-  }, -2);
+  const time = useSceneFrames({
+    wakeKey: `${scene.mode}:${replay}`,
+    resetKey: `${scene.mode}:${replay}`,
+    visible,
+    paused,
+    reduced,
+    fps: quality === "high" ? 60 : 30,
+    settleAfter: 16000,
+    finishAt: 16,
+  });
   const stars = useMemo(
     () =>
       new Float32Array(

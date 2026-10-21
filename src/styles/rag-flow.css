@@ -1,4 +1,14 @@
 /* Route colour communicates the kind of data, brightness the current operation. */
+.scene-labels .world-label,
+.scene-flow-label[data-projected="true"] {
+  left: 0;
+  top: 0;
+}
+.scene-motion-controls .scene-quality {
+  width: auto;
+  padding-inline: 10px;
+  font: 500 12px var(--font-sans);
+}
 .scene-flow-label {
   border-color: color-mix(in srgb, var(--flow-color, #8fc5b8) 55%, transparent);
 }
@@ -56,5 +66,12 @@
 @media (max-width: 599px) {
   .scene-overview .world-label[data-relevance="idle"] {
     opacity: 0 !important;
+  }
+}
+
+/* Leave space for the graphics control and replay alongside the camera controls. */
+@media (min-width: 1000px) {
+  .scene-mode-label {
+    left: 210px;
   }
 }

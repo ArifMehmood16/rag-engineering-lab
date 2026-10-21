@@ -9,7 +9,7 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react";
-import { Pause, Play, Sparkles, Maximize2, Focus } from "lucide-react";
+import { Pause, Play, Sparkles, Maximize2, Focus, RotateCcw } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import { KNOWLEDGE_TAKEAWAYS, REQUEST_TAKEAWAYS } from "@/content/rag-walkthrough";
 import { toyEmbedding } from "@/lib/apollo-engine";
@@ -173,7 +173,8 @@ export function RagStageScene(
   const { tour, reduced, paused, onPause, lowEffects } = props;
   const labels = useRef(new Map<SceneNode, HTMLDivElement>());
   const [ready, setReady] = useState(false);
-  const replay = 0;
+  const [replay, setReplay] = useState(0);
+  const [quality, setQuality] = useState<"balanced" | "high">("balanced");
   const flow = useRef<HTMLDivElement>(null);
   const annotation = {
     ...flowLabel(tour, props.record, props.records),
@@ -220,6 +221,7 @@ export function RagStageScene(
               <RagWorld
                 {...props}
                 replay={replay}
+                quality={quality}
                 overview={overview}
                 labels={labels}
                 flowLabel={flow}
@@ -344,7 +346,7 @@ export function RagStageScene(
         {props.theatre && <RagTheatreOverlay scene={props.theatre} />}
         <div className="scene-mode-label">
           {props.theatre
-            ? "RECORDED VISUAL REPLAY"
+            ? "RECORDED EXAMPLE · PLAYS ONCE"
             : plan.blocked
               ? "RELEASE BLOCKED"
               : plan.skipped
@@ -356,9 +358,35 @@ export function RagStageScene(
                     : plan.transfer.from === plan.transfer.to
                       ? "PROCESSING THIS STEP"
                       : "DATA IN MOTION"}
-          <span>{reduced ? "Motion reduced" : paused ? "Motion paused" : "Neon / depth view"}</span>
+          <span>
+            {reduced
+              ? "Motion reduced"
+              : paused
+                ? "Motion paused"
+                : "Scroll to continue · scene rests while you read"}
+          </span>
         </div>
         <div className="scene-motion-controls">
+          <button
+            type="button"
+            className="scene-quality"
+            aria-label="High detail graphics"
+            aria-pressed={quality === "high"}
+            title="Balanced uses less power. High detail increases resolution and frame rate."
+            onClick={() => setQuality(quality === "high" ? "balanced" : "high")}
+          >
+            {quality === "high" ? "High detail" : "Balanced"}
+          </button>
+          {props.theatre && (
+            <button
+              type="button"
+              aria-label="Replay visual example"
+              disabled={reduced || paused}
+              onClick={() => setReplay((n) => n + 1)}
+            >
+              <RotateCcw size={14} />
+            </button>
+          )}
           <button
             type="button"
             aria-label={overview ? "Focus active stage" : "Show whole system"}

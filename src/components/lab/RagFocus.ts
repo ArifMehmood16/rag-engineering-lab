@@ -8,7 +8,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 
 /** Only HDR transfer strokes receive a restrained halo. The full route map stays sharp. */
 export function RagFocus({ active, reduced }: { active: boolean; reduced: boolean }) {
-  const { gl, scene, camera, size, invalidate } = useThree();
+  const { gl, scene, camera, size, viewport, invalidate } = useThree();
   const effect = useMemo(() => {
     const composer = new EffectComposer(gl);
     const render = new RenderPass(scene, camera);
@@ -20,10 +20,10 @@ export function RagFocus({ active, reduced }: { active: boolean; reduced: boolea
     return { composer, bloom, render, output };
   }, [gl, scene, camera]);
   useEffect(() => {
-    effect.composer.setPixelRatio(gl.getPixelRatio());
+    effect.composer.setPixelRatio(viewport.dpr);
     effect.composer.setSize(size.width, size.height);
     invalidate();
-  }, [effect, gl, size.width, size.height, invalidate]);
+  }, [effect, viewport.dpr, size.width, size.height, invalidate]);
   useEffect(
     () => () => {
       effect.composer.dispose();
@@ -35,7 +35,8 @@ export function RagFocus({ active, reduced }: { active: boolean; reduced: boolea
   );
   useFrame((_, delta) => {
     effect.bloom.enabled = active && !reduced;
-    effect.composer.render(delta);
+    if (effect.bloom.enabled) effect.composer.render(delta);
+    else gl.render(scene, camera);
   }, 1);
   return null;
 }

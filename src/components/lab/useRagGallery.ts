@@ -3,6 +3,7 @@ import {
   galleryScrollTarget,
   gallerySelection,
   galleryReadingSelection,
+  galleryEntryTarget,
   type StoryCard,
 } from "@/lib/rag-gallery";
 import type { StoryStream } from "@/lib/rag-scroll-story";
@@ -20,7 +21,7 @@ export function useRagGallery(
   const elements = useRef(new Map<string, HTMLElement>());
   const centers = useRef<number[]>([]);
   const bounds = useRef<{ top: number; height: number }[]>([]);
-  const measured = useRef(false);
+  const measured = useRef(new Set<StoryStream>());
   const places = useRef<Record<StoryStream, Omit<Focus, "stream">>>({
     knowledge: { index: 0, offset: 0, transfer: 0 },
     request: { index: 0, offset: 0, transfer: 0 },
@@ -61,12 +62,12 @@ export function useRagGallery(
           ((centers.current[index] ?? middle) - middle) / Math.max(1, list.clientHeight * 0.62);
         const depth =
           readLongCardsFromStart && index === next.index ? 0 : Math.min(Math.abs(distance), 1.4);
-        el.style.setProperty("--gallery-scale", String(1 - Math.min(depth, 1) * 0.09));
+        el.style.setProperty("--gallery-scale", String(1 - Math.min(depth, 1) * 0.04));
         el.style.setProperty(
           "--gallery-tilt",
-          `${reduced || (readLongCardsFromStart && index === next.index) ? 0 : Math.max(-11, Math.min(11, distance * -8))}deg`,
+          `${reduced || (readLongCardsFromStart && index === next.index) ? 0 : Math.max(-4, Math.min(4, distance * -3))}deg`,
         );
-        el.style.setProperty("--gallery-depth", `${reduced ? 0 : -depth * 32}px`);
+        el.style.setProperty("--gallery-depth", `${reduced ? 0 : -depth * 12}px`);
         el.style.setProperty("--gallery-opacity", String(1 - Math.min(depth, 1) * 0.2));
       });
       list.style.setProperty(
@@ -91,12 +92,12 @@ export function useRagGallery(
       centers.current = bounds.current.map((card) => card.top + card.height / 2);
       list.scrollTo({
         top:
-          readLongCardsFromStart && !measured.current
+          readLongCardsFromStart && !measured.current.has(stream)
             ? 0
             : galleryScrollTarget(saved, centers.current, list.clientHeight),
         behavior: "instant",
       });
-      measured.current = true;
+      measured.current.add(stream);
       paintAndMeasure();
     };
     measureNow.current = paintAndMeasure;
@@ -121,7 +122,7 @@ export function useRagGallery(
       const place = { index, offset: 0, transfer: 0 };
       places.current[stream] = place;
       list.scrollTo({
-        top: galleryScrollTarget(place, centers.current, list.clientHeight),
+        top: galleryEntryTarget(index, centers.current, bounds.current, list.clientHeight),
         behavior: smooth && !reduced ? "smooth" : "instant",
       });
       if (!smooth || reduced) measureNow.current();

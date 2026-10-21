@@ -30,7 +30,7 @@ Build a knowledge index, follow a question to its checked answer, and inspect th
 3. Open **Context**, **Caching**, **Evals**, **Guardrails**, or **Tools** for controlled examples. **Back to flow** restores your place in the current stream.
 4. Use **Explore details** for configuration and comparisons, or **Inspect run** for the execution report and citations.
 
-Pause freezes ambient motion; deliberate scrolling still changes the selected step. Reduced-motion and static low-effects views are supported. Exploration progress counts what you have viewed during this visit and resets on a fresh load.
+Each step shows **Input → Change → Result**. Scenes settle while you read; scrolling continues the story. Balanced graphics uses less rendering work, with optional High detail. Caching and evaluation illustrations play once and can be replayed. Pause, reduced-motion, and static low-effects views are supported. Exploration progress counts what you have viewed during this visit and resets on a fresh load. [Performance changes and browser verification](docs/PERFORMANCE.md).
 
 ### One complete question flow
 
