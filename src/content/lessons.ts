@@ -28,7 +28,7 @@ export const LESSONS: LessonMeta[] = [
     concept: "Prompt caching and model routing",
     summary: "Embedding, retrieval, answer, prompt, and semantic caches — and conservative routing.",
     status: "available",
-      },
+  },
   {
     number: 3,
     slug: "evaluation",
