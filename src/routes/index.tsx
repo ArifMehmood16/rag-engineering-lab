@@ -6,33 +6,20 @@ import {
   ArrowUpRight,
   Check,
   ChevronDown,
-  Expand,
   GitCompareArrows,
   Layers,
-  Pause,
-  Play,
-  RotateCcw,
-  SkipForward,
   SlidersHorizontal,
-  Square,
   X,
-  Zap,
 } from "lucide-react";
 import { APOLLO_RECORDS, APOLLO_QUESTIONS, DEFAULT_QUESTION } from "@/content/apollo";
-import {
-  DEFAULT_LEARNING_PATH,
-  EXPERIMENTS,
-  KNOWLEDGE_STAGES,
-  STAGE_EXPLANATIONS,
-  type ExperimentId,
-} from "@/content/rag-lab";
+import { DEFAULT_LEARNING_PATH, EXPERIMENTS, type ExperimentId } from "@/content/rag-lab";
 import { LabControls } from "@/components/lab/LabControls";
 import { RagFlow } from "@/components/lab/RagFlow";
+import { RagWalkthrough } from "@/components/lab/RagWalkthrough";
 import { EvidenceCard, RunInspector } from "@/components/lab/RunInspector";
 import { CompareRuns, OUTCOMES, RunReport } from "@/components/lab/RunReport";
 import { Badge, CopyButton, ToggleChip, btnVariants } from "@/components/learn/ui";
 import {
-  advance,
   DEFAULT_CONFIG,
   ENGINE_STAGES,
   initEngine,
@@ -57,16 +44,13 @@ export const Route = createFileRoute("/")({
   }),
   component: Lab,
 });
-const SPEEDS = [0.5, 1, 2] as const;
 
 export function Lab() {
   const [engine, setEngine] = useState<EngineState>(() => initEngine(DEFAULT_QUESTION));
-  const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
+  const [prepared, setPrepared] = useState(false);
+  const [walkthroughKey, setWalkthroughKey] = useState(0);
   const [selected, setSelected] = useState(0);
-  const [knowledge, setKnowledge] = useState<number | null>(null);
-  const [knowledgeStep, setKnowledgeStep] = useState(3);
-  const [indexing, setIndexing] = useState(false);
+  const [knowledge, setKnowledge] = useState<number | null>(0);
   const [experiment, setExperiment] = useState<ExperimentId>("retrieval");
   const [evidence, setEvidence] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
@@ -74,8 +58,6 @@ export function Lab() {
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [focus, setFocus] = useState(false);
-  const finished = engine.halted || engine.cursor >= ENGINE_STAGES.length - 1;
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
   const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
 
@@ -92,81 +74,34 @@ export function Lab() {
       document.removeEventListener("visibilitychange", visibility);
     };
   }, []);
-  useEffect(() => {
-    if (!playing || finished || !visible) return;
-    const timer = setTimeout(() => {
-      const next = advance(engine, APOLLO_RECORDS);
-      setEngine(next);
-      setSelected(next.cursor);
-      setKnowledge(null);
-      if (next.halted || next.cursor === ENGINE_STAGES.length - 1) setPlaying(false);
-    }, 1200 / speed);
-    return () => clearTimeout(timer);
-  }, [playing, finished, visible, engine, speed]);
-  useEffect(() => {
-    if (!indexing || !visible) return;
-    if (knowledgeStep >= 3) {
-      setIndexing(false);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setKnowledgeStep((n) => n + 1);
-      setKnowledge((n) => (n ?? 0) + 1);
-    }, 1000 / speed);
-    return () => clearTimeout(timer);
-  }, [indexing, knowledgeStep, visible, speed]);
-
   const inspect = (n: number) => {
     setSelected(n);
     setKnowledge(null);
   };
   const configure = (patch: Partial<ApolloConfig>) => {
-    setPlaying(false);
-    setIndexing(false);
+    setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(null);
     setEngine((s) => initEngine(s.ctx.question, { ...s.config, ...patch }, s.memory));
   };
   const chooseQuestion = (id: string) => {
-    setPlaying(false);
+    setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(null);
     setEngine((s) =>
       initEngine(APOLLO_QUESTIONS.find((q) => q.id === id)!.text, s.config, s.memory),
     );
   };
-  const start = () => {
-    setIndexing(false);
-    setKnowledge(null);
-    if (finished) setEngine((s) => initEngine(s.ctx.question, s.config, s.memory));
-    setPlaying(true);
-  };
-  const step = () => {
-    setPlaying(false);
-    setIndexing(false);
-    const next = advance(engine, APOLLO_RECORDS);
-    setEngine(next);
-    inspect(next.cursor >= 0 ? next.cursor : 0);
-  };
-  const complete = () => {
-    setPlaying(false);
-    setIndexing(false);
-    setKnowledge(null);
-    let next = finished ? initEngine(engine.ctx.question, engine.config, engine.memory) : engine;
-    for (let n = 0; n < ENGINE_STAGES.length; n++) next = advance(next, APOLLO_RECORDS);
-    setEngine(next);
-    setSelected(next.cursor);
-  };
   const reset = () => {
     setEngine(initEngine(DEFAULT_QUESTION));
-    setPlaying(false);
-    setIndexing(false);
-    setKnowledgeStep(3);
+    setPrepared(false);
+    setWalkthroughKey((key) => key + 1);
     setSelected(0);
-    setKnowledge(null);
+    setKnowledge(0);
     setCompare(false);
   };
   const applyPath = (path: (typeof DEFAULT_LEARNING_PATH)[number]) => {
+    setWalkthroughKey((key) => key + 1);
     setEngine(
       initEngine(APOLLO_QUESTIONS.find((q) => q.id === (path.questionId ?? "crew"))!.text, {
         ...DEFAULT_CONFIG,
@@ -174,28 +109,14 @@ export function Lab() {
       }),
     );
     setExperiment(path.experiment);
-    setPlaying(false);
-    setIndexing(false);
     setKnowledge(null);
     setSelected(0);
   };
   const selectedRecord = APOLLO_RECORDS.find((r) => r.id === evidence);
-  const runLabel = finished
-    ? OUTCOMES[engine.ctx.outcome]
-    : playing
-      ? "Following the request"
-      : engine.cursor === -1
-        ? "Ready to explore"
-        : "Paused";
-  const narratedStage = ENGINE_STAGES[playing && !finished ? engine.cursor + 1 : selected]!;
-  const narration =
-    knowledge !== null
-      ? KNOWLEDGE_STAGES[knowledge]!
-      : { title: narratedStage.name, detail: STAGE_EXPLANATIONS[narratedStage.id]!.why };
   const outline = `# ${current.subtitle}: a lab observation\n\n1. Misconception: [What did you expect?]\n2. Concept: ${current.title}.\n3. Observation: This local simulation ended with ${OUTCOMES[engine.ctx.outcome].toLowerCase()}. It selected ${engine.ctx.context.length} passages, used approximately ${engine.ctx.tokensUsed} context tokens, and made ${engine.ctx.usage.generationCalls} fixture-generation calls.\n4. Trade-off: [Which change helped, hurt, or made no difference?]\n5. Proposed EvidenceLens experiment: ${current.transfer}\n6. Unknown: No real model or production benchmark ran. [What would you measure next?]\n`;
 
   return (
-    <div className={cn("rag-lab", (reduced || low) && "lab-low-motion", focus && "lab-focus")}>
+    <div className={cn("rag-lab guided-lab", (reduced || low) && "lab-low-motion")}>
       <header className="lab-intro">
         <div>
           <p className="eyebrow">
@@ -205,8 +126,8 @@ export function Lab() {
             See how <span>RAG works.</span>
           </h1>
           <p>
-            Follow the evidence. Build the context. Inspect what the model receives—and what reaches
-            the user.
+            First build the knowledge. Then follow a question. Take each transformation at your own
+            pace.
           </p>
         </div>
         <div className="intro-badges">
@@ -215,6 +136,25 @@ export function Lab() {
           <span>Example data: 2 NASA pages</span>
         </div>
       </header>
+
+      <RagWalkthrough
+        key={walkthroughKey}
+        engine={engine}
+        records={APOLLO_RECORDS}
+        prepared={prepared}
+        onPrepared={() => setPrepared(true)}
+        onEngine={setEngine}
+        onInspect={inspect}
+        onKnowledge={setKnowledge}
+        onEvidence={setEvidence}
+        onReset={reset}
+        reduced={reduced || low}
+        visible={visible}
+      />
+      <div className="lab-experiments-heading">
+        <p className="eyebrow">Explore after the walkthrough</p>
+        <h2>Change one setting. Repeat the same system.</h2>
+      </div>
 
       <nav className="experiment-nav" aria-label="Five AI engineering experiments">
         {EXPERIMENTS.map((e) => (
@@ -279,115 +219,25 @@ export function Lab() {
           </details>
         </section>
 
-        <section className="lab-main" aria-label="Working RAG pipeline">
-          <div className="run-toolbar" role="group" aria-label="Run controls">
-            <button
-              type="button"
-              onClick={start}
-              disabled={playing}
-              className={btnVariants({ variant: "primary", size: "sm" })}
-            >
-              <Play size={14} aria-hidden />
-              {finished ? "Repeat request" : engine.cursor >= 0 ? "Resume" : "Run the pipeline"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPlaying(false)}
-              disabled={!playing}
-              className={btnVariants({ size: "sm" })}
-            >
-              <Pause size={14} aria-hidden />
-              Pause
-            </button>
-            <button
-              type="button"
-              onClick={step}
-              disabled={finished || playing}
-              className={btnVariants({ size: "sm" })}
-            >
-              <SkipForward size={14} aria-hidden />
-              Step
-            </button>
-            <button
-              type="button"
-              onClick={complete}
-              disabled={playing}
-              className={btnVariants({ size: "sm" })}
-            >
-              <Zap size={14} aria-hidden />
-              {finished ? "Repeat instantly" : "Run to result"}
-            </button>
-            <button
-              type="button"
-              onClick={reset}
-              className={btnVariants({ variant: "ghost", size: "sm" })}
-              title="Clear run and in-memory caches"
-            >
-              <Square size={13} aria-hidden />
-              Reset
-            </button>
-            <div className="speed-controls" role="group" aria-label="Playback speed">
-              {SPEEDS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  aria-pressed={s === speed}
-                  onClick={() => setSpeed(s)}
-                >
-                  {s}×
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="pipeline-status" aria-live="polite">
-            <span className={cn("status-lamp", playing && "running", engine.halted && "stopped")} />
-            <strong>{runLabel}</strong>
-            <span>
-              {engine.results.length} / {ENGINE_STAGES.length} request stages
-            </span>
-            <button type="button" aria-pressed={focus} onClick={() => setFocus(!focus)}>
-              <Expand size={12} aria-hidden />
-              {focus ? "Exit focus" : "Focus on flow"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setPlaying(false);
-                setKnowledgeStep(0);
-                setKnowledge(0);
-                setIndexing(true);
-              }}
-            >
-              <RotateCcw size={12} aria-hidden />
-              Replay knowledge preparation
-            </button>
-          </div>
-          <div className="flow-narration" aria-live="polite">
-            <span>
-              {indexing
-                ? "Preparing knowledge"
-                : playing
-                  ? "Now processing"
-                  : "Understand the stage"}
-            </span>
-            <strong>{narration.title}</strong>
-            <p>{narration.detail}</p>
-          </div>
-          <RagFlow
-            engine={engine}
-            records={APOLLO_RECORDS}
-            playing={playing && visible}
-            reduced={reduced || low}
-            selected={selected}
-            onSelect={inspect}
-            onKnowledge={setKnowledge}
-            knowledgeStep={knowledgeStep}
-            indexing={indexing && visible}
-          />
+        <section className="lab-main" aria-label="Experiment results and details">
+          <details className="expanded-flow">
+            <summary>Open the expanded system diagram</summary>
+            <RagFlow
+              engine={engine}
+              records={APOLLO_RECORDS}
+              playing={false}
+              reduced={reduced || low}
+              selected={selected}
+              onSelect={inspect}
+              onKnowledge={setKnowledge}
+              knowledgeStep={prepared ? 3 : (knowledge ?? 0)}
+              indexing={false}
+            />
+          </details>
           <p className="diagram-instruction">
             <Layers size={14} aria-hidden />
-            Click a stage to inspect its data. The upper path prepares knowledge; the lower path
-            answers a question. Retrieval adds evidence to the prompt—it does not retrain the LLM.
+            Detailed results and evidence stay available here. The guided frame above shows each
+            transformation together.
           </p>
           <nav className="execution-timeline" aria-label="Detailed execution trace">
             {ENGINE_STAGES.map((stage, i) => (
@@ -396,10 +246,7 @@ export function Lab() {
                 type="button"
                 aria-pressed={knowledge === null && selected === i}
                 onClick={() => inspect(i)}
-                data-state={
-                  engine.results[i]?.status ??
-                  (playing && i === engine.cursor + 1 ? "active" : "waiting")
-                }
+                data-state={engine.results[i]?.status ?? "waiting"}
               >
                 <span>
                   {String(i + 1).padStart(2, "0")}

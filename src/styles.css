@@ -2,6 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 @import "./styles/rag-lab.css";
+@import "./styles/rag-walkthrough.css";
 
 @custom-variant dark (&:is(.dark *));
 
