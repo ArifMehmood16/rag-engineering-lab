@@ -77,7 +77,17 @@ function Dust({ animate }: { animate: boolean }) {
   );
 }
 
-function Core({ animate, active, speed, progress }: { animate: boolean; active: boolean; speed: number; progress: number }) {
+function Core({
+  animate,
+  active,
+  speed,
+  progress,
+}: {
+  animate: boolean;
+  active: boolean;
+  speed: number;
+  progress: number;
+}) {
   const outer = useRef<THREE.Mesh>(null);
   const inner = useRef<THREE.Mesh>(null);
   const rings = useRef<THREE.Group>(null);
@@ -149,7 +159,12 @@ function Core({ animate, active, speed, progress }: { animate: boolean; active: 
 }
 
 export type NodeState = "idle" | "done" | "blocked" | "active";
-const NODE_COLOR: Record<NodeState, string> = { idle: "#5f73a8", done: CYAN, blocked: "#ff7a7a", active: "#ffffff" };
+const NODE_COLOR: Record<NodeState, string> = {
+  idle: "#5f73a8",
+  done: CYAN,
+  blocked: "#ff7a7a",
+  active: "#ffffff",
+};
 
 function Pulse({ to, animate, speed }: { to: THREE.Vector3; animate: boolean; speed: number }) {
   const ref = useRef<THREE.Mesh>(null);
@@ -166,7 +181,19 @@ function Pulse({ to, animate, speed }: { to: THREE.Vector3; animate: boolean; sp
   );
 }
 
-function StageNodes({ states, selected, onSelect, animate, speed }: { states: NodeState[]; selected: number; onSelect: (i: number) => void; animate: boolean; speed: number }) {
+function StageNodes({
+  states,
+  selected,
+  onSelect,
+  animate,
+  speed,
+}: {
+  states: NodeState[];
+  selected: number;
+  onSelect: (i: number) => void;
+  animate: boolean;
+  speed: number;
+}) {
   const count = states.length;
   const pts = useMemo(
     () =>
@@ -185,15 +212,38 @@ function StageNodes({ states, selected, onSelect, animate, speed }: { states: No
         const lit = st !== "idle";
         return (
           <group key={i}>
-            <Line points={[[0, 0, 0], p]} color={NODE_COLOR[st]} lineWidth={lit ? 1.4 : 0.5} transparent opacity={lit ? 0.85 : 0.15} />
-            <mesh position={p} onClick={(e) => { e.stopPropagation(); onSelect(i); }}>
+            <Line
+              points={[[0, 0, 0], p]}
+              color={NODE_COLOR[st]}
+              lineWidth={lit ? 1.4 : 0.5}
+              transparent
+              opacity={lit ? 0.85 : 0.15}
+            />
+            <mesh
+              position={p}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(i);
+              }}
+            >
               <sphereGeometry args={[st === "active" ? 0.15 : lit ? 0.1 : 0.065, 20, 20]} />
-              <meshBasicMaterial color={NODE_COLOR[st]} blending={THREE.AdditiveBlending} transparent opacity={lit ? 1 : 0.7} />
+              <meshBasicMaterial
+                color={NODE_COLOR[st]}
+                blending={THREE.AdditiveBlending}
+                transparent
+                opacity={lit ? 1 : 0.7}
+              />
             </mesh>
             {(i === selected || st === "active") && (
               <mesh position={p}>
                 <sphereGeometry args={[0.34, 20, 20]} />
-                <meshBasicMaterial color={NODE_COLOR[st === "idle" ? "done" : st]} transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
+                <meshBasicMaterial
+                  color={NODE_COLOR[st === "idle" ? "done" : st]}
+                  transparent
+                  opacity={0.12}
+                  blending={THREE.AdditiveBlending}
+                  depthWrite={false}
+                />
               </mesh>
             )}
           </group>
@@ -226,7 +276,13 @@ export default function OrbitScene({
       <Stars count={900} animate={animate} />
       <Dust animate={animate} />
       <Core animate={animate} active={progress > 0} speed={speed} progress={progress} />
-      <StageNodes states={states} selected={selected} onSelect={onSelect} animate={animate} speed={speed} />
+      <StageNodes
+        states={states}
+        selected={selected}
+        onSelect={onSelect}
+        animate={animate}
+        speed={speed}
+      />
     </Canvas>
   );
 }

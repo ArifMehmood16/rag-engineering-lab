@@ -1,5 +1,11 @@
 /** Low-effects ORBIT: a static vector rendering with no WebGL and no animation. */
-export function OrbitStatic({ states, selected }: { states: ("idle" | "done" | "blocked" | "active")[]; selected: number }) {
+export function OrbitStatic({
+  states,
+  selected,
+}: {
+  states: ("idle" | "done" | "blocked" | "active")[];
+  selected: number;
+}) {
   const count = states.length;
   const nodes = Array.from({ length: count }, (_, i) => {
     const t = (i / count) * Math.PI * 2 - Math.PI / 2;
