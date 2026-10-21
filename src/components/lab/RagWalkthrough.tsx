@@ -374,6 +374,7 @@ export function RagWalkthrough(props: Props) {
         visible={visible}
         duration={4.2}
         scrollProgress={learningScene?.progress ?? gallery.selected.transfer}
+        autoOverview={!learningScene && card.kind === "intro"}
         {...(learningScene?.theatre ? { theatre: learningScene.theatre } : {})}
         {...(learningScene
           ? {
