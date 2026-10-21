@@ -3,7 +3,7 @@ import { AlertTriangle, ArrowDown, CheckCircle2, MinusCircle, Sparkles, XCircle 
 import { APPROVED_ANSWER, CACHE_TYPES, ROUTING_REQUESTS } from "@/content/lesson-cost";
 import { CHANGES, buildPrompt, evaluateAnswerReuse, reusablePrefixLength, routeRequest, type ChangeKey, type RequestKind, type Sufficiency } from "@/lib/caching";
 import { cn } from "@/lib/utils";
-import { Badge, SyntheticNotice } from "./ui";
+import { Badge, SyntheticNotice, ToggleChip } from "./ui";
 
 const statusTone = { planned: "planned", experiment: "proposed", deferred: "neutral" } as const;
 const statusLabel = { planned: "Planned", experiment: "Possible experiment", deferred: "Deferred" };
@@ -195,10 +195,7 @@ export function RoutingSim() {
               ))}
             </div>
           </fieldset>
-          <label className={cn("flex cursor-pointer items-start gap-3 rounded-md border border-border bg-card p-3 text-sm", kind !== "extract" && "opacity-50")}>
-            <input type="checkbox" disabled={kind !== "extract"} className="mt-1 size-4 accent-[var(--color-primary)]" checked={validated} onChange={(e) => setValidated(e.target.checked)} />
-            <span><span className="block font-semibold">Smaller model passed a separate evaluation</span><span className="text-xs text-muted-foreground">Applies to bounded extraction only (hypothetical)</span></span>
-          </label>
+          <ToggleChip label="Smaller model passed a separate evaluation" desc="Applies to bounded extraction only (hypothetical)" pressed={validated} disabled={kind !== "extract"} onChange={setValidated} />
         </div>
       </div>
       <div role="status" className="rounded-lg border border-border bg-card p-4">

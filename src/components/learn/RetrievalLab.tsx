@@ -3,25 +3,13 @@ import { AlertTriangle, CheckCircle2, MinusCircle, XCircle } from "lucide-react"
 import { LAB_QUESTION, PASSAGES, type Passage } from "@/content/lesson-context";
 import { runLab, type LabSettings, type RankedPassage, type RetrievalMode, CANDIDATES_PER_RETRIEVER } from "@/lib/retrieval";
 import { cn } from "@/lib/utils";
-import { Badge, SyntheticNotice } from "./ui";
+import { Badge, SyntheticNotice, ToggleChip } from "./ui";
 
 const MODES: { value: RetrievalMode; label: string; hint: string }[] = [
   { value: "keyword", label: "Keyword", hint: "Counts exact query words" },
   { value: "semantic", label: "Semantic", hint: "Curated toy similarity" },
   { value: "hybrid", label: "Hybrid (RRF)", hint: "Fuses both rankings" },
 ];
-
-function Toggle({ id, label, desc, checked, onChange }: { id: string; label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <label htmlFor={id} className="flex cursor-pointer items-start gap-3 rounded-md border border-border bg-card p-3">
-      <input id={id} type="checkbox" className="mt-1 size-4 accent-[var(--color-primary)]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-      <span>
-        <span className="block text-sm font-semibold">{label}</span>
-        <span className="block text-xs text-muted-foreground">{desc}</span>
-      </span>
-    </label>
-  );
-}
 
 function QualifierRow({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
@@ -117,8 +105,8 @@ export function RetrievalLab() {
           />
         </fieldset>
         <div className="grid gap-2">
-          <Toggle id="dedupe" label="Study deduplication" desc="Keep one passage per underlying study" checked={settings.dedupe} onChange={(v) => set("dedupe", v)} />
-          <Toggle id="rerank" label="Reranking" desc="Toy reranker rewarding qualifier matches; penalises commentary" checked={settings.rerank} onChange={(v) => set("rerank", v)} />
+          <ToggleChip label="Study deduplication" desc="Keep one passage per underlying study" pressed={settings.dedupe} onChange={(v) => set("dedupe", v)} />
+          <ToggleChip label="Reranking" desc="Toy reranker rewarding qualifier matches; penalises commentary" pressed={settings.rerank} onChange={(v) => set("rerank", v)} />
         </div>
       </div>
 
