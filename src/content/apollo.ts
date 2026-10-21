@@ -1,9 +1,10 @@
 // Apollo 11 fixtures for the lab's local execution engine.
-// Source-backed records are verbatim excerpts from two NASA pages, retrieved 2026-10-21.
+// Excerpts/paraphrases checked against NASA on 2026-10-21. Fixture annotations are reviewed labels.
 // Synthetic distractors and adversarial fixtures are invented for teaching and labelled as such.
 
 export type RecordKind = "source" | "synthetic-distractor" | "adversarial";
 export type Eligibility = "eligible" | "not_admitted" | "superseded";
+export type ApolloFact = "moonwalkers" | "orbiter" | "craft" | "crew" | "breakfast";
 
 export interface EvidenceRecord {
   id: string;
@@ -15,6 +16,9 @@ export interface EvidenceRecord {
   locator: string;
   eligibility: Eligibility;
   eligibilityReason: string;
+  facts?: ApolloFact[];
+  duplicateOf?: string;
+  representation?: "excerpt" | "paraphrase" | "synthetic";
 }
 
 const OVERVIEW = {
@@ -25,7 +29,7 @@ const OVERVIEW = {
 const LAUNCH = {
   title: "Apollo 11 Launch",
   publisher: "NASA",
-  url: "https://www.nasa.gov/image-article/apollo-11-launch/",
+  url: "https://science.nasa.gov/resource/apollo-11-launch/",
 };
 const SYNTH = { title: "Synthetic fixture (not a real source)", publisher: "Lab fixture", url: "" };
 const MISSION = { name: "Apollo 11", launch: "1969-07-16", splashdown: "1969-07-24" };
@@ -43,6 +47,8 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     mission: MISSION,
     version: V,
     locator: "Section “Crew” (list)",
+    facts: ["crew"],
+    representation: "paraphrase",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -53,7 +59,7 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     source: OVERVIEW,
     mission: MISSION,
     version: V,
-    locator: "Section “Mission Highlights”, paragraph 1",
+    locator: "Mission Highlights · opening launch paragraph",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -64,7 +70,7 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     source: OVERVIEW,
     mission: MISSION,
     version: V,
-    locator: "Section “Mission Highlights”, paragraph 2",
+    locator: "Mission Highlights · translunar injection and spacecraft separation",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -75,7 +81,7 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     source: OVERVIEW,
     mission: MISSION,
     version: V,
-    locator: "Section “Mission Highlights”, paragraph 5",
+    locator: "Mission Highlights · July 19 lunar orbit insertion",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -86,7 +92,8 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     source: OVERVIEW,
     mission: MISSION,
     version: V,
-    locator: "Section “Mission Highlights”, paragraph 8",
+    locator: "Mission Highlights · first EVA, Armstrong steps onto the Moon",
+    facts: ["moonwalkers"],
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -97,7 +104,7 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     source: OVERVIEW,
     mission: MISSION,
     version: V,
-    locator: "Section “Mission Highlights”, paragraph 11",
+    locator: "Mission Highlights · docking on Columbia’s 27th revolution",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
@@ -115,24 +122,29 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
   {
     id: "A11-LA-CAP",
     kind: "source",
-    text: "Four days later, on July 20, Armstrong and Aldrin landed on the Moon’s surface while Collins orbited overhead in the Command Module.",
+    text: "Armstrong and Aldrin descended in Eagle to explore the Sea of Tranquility. Collins remained in lunar orbit with the command and service modules Columbia.",
     source: LAUNCH,
     mission: MISSION,
     version: V,
-    locator: "Image caption (full caption)",
+    locator: "Apollo 11 Launch · descriptive text, second paragraph",
+    facts: ["orbiter", "craft"],
+    representation: "paraphrase",
     eligibility: "eligible",
     eligibilityReason: "Public NASA page; admitted to corpus.",
   },
   {
     id: "A11-LA-CAP-SHORT",
     kind: "source",
-    text: "Four days later, on July 20, Armstrong and Aldrin landed on the Moon's surface.",
+    text: "Armstrong and Aldrin descended in Eagle to explore the Sea of Tranquility. Collins remained in lunar orbit with the command and service modules Columbia.",
     source: LAUNCH,
     mission: MISSION,
     version: V,
-    locator: "Image caption (short variant shown on the same page)",
+    locator: "Same source paragraph · intentionally repeated lab record",
+    facts: ["orbiter", "craft"],
+    duplicateOf: "A11-LA-CAP",
+    representation: "paraphrase",
     eligibility: "eligible",
-    eligibilityReason: "Admitted; overlaps A11-LA-CAP and is removed as a duplicate.",
+    eligibilityReason: "Intentional duplicate fixture of A11-LA-CAP; not independent evidence.",
   },
   {
     id: "SYN-DISTRACT-01",
@@ -155,5 +167,76 @@ export const APOLLO_RECORDS: EvidenceRecord[] = [
     locator: "n/a — synthetic",
     eligibility: "eligible",
     eligibilityReason: "Deliberately admitted to test that embedded instructions stay data.",
+  },
+];
+
+export interface ApolloQuestion {
+  id: string;
+  label: string;
+  text: string;
+  required: ApolloFact[];
+  answerable: boolean;
+  kind: "answer" | "metadata";
+  note: string;
+}
+export const APOLLO_QUESTIONS: ApolloQuestion[] = [
+  {
+    id: "crew",
+    label: "Multi-part question",
+    text: DEFAULT_QUESTION,
+    required: ["moonwalkers", "orbiter", "craft"],
+    answerable: true,
+    kind: "answer",
+    note: "Needs evidence for each part, rather than a topically similar passage.",
+  },
+  {
+    id: "paraphrase",
+    label: "Paraphrased question",
+    text: "Which astronaut stayed in the spacecraft while the others explored the lunar surface?",
+    required: ["orbiter", "craft"],
+    answerable: true,
+    kind: "answer",
+    note: "Same concept, different wording: compare keyword and toy semantic retrieval.",
+  },
+  {
+    id: "metadata",
+    label: "Metadata lookup",
+    text: "Show the Apollo 11 crew manifest and its source.",
+    required: ["crew"],
+    answerable: true,
+    kind: "metadata",
+    note: "A known-record lookup needs application logic, without generation.",
+  },
+  {
+    id: "unknown",
+    label: "Missing evidence",
+    text: "What did the Apollo 11 astronauts eat for breakfast on launch day?",
+    required: ["breakfast"],
+    answerable: false,
+    kind: "answer",
+    note: "Not covered by this corpus. A gap here does not mean the fact is unknowable.",
+  },
+];
+export function getApolloQuestion(text: string): ApolloQuestion {
+  return (
+    APOLLO_QUESTIONS.find((q) => q.text === text) ?? {
+      id: "unrecognised",
+      label: "Unspecified question",
+      text,
+      required: ["breakfast"],
+      answerable: false,
+      kind: "answer",
+      note: "This preset-only lab has no annotated answer for this question.",
+    }
+  );
+}
+export const APOLLO_CLAIMS: { id: string; fact: ApolloFact; text: string }[] = [
+  { id: "C1", fact: "moonwalkers", text: "Neil Armstrong and Buzz Aldrin walked on the Moon." },
+  { id: "C2", fact: "orbiter", text: "Michael Collins remained in lunar orbit." },
+  { id: "C3", fact: "craft", text: "He was aboard the command and service module Columbia." },
+  {
+    id: "C4",
+    fact: "crew",
+    text: "The crew were Neil Armstrong (commander), Buzz Aldrin (lunar module pilot), and Michael Collins (command module pilot).",
   },
 ];

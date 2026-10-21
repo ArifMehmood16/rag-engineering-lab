@@ -16,7 +16,7 @@ describe("Apollo 11 engine", () => {
       for (const id of c.cites) {
         const r = APOLLO_RECORDS.find((x) => x.id === id)!;
         expect(r.kind).toBe("source");
-        expect(r.source.url).toMatch(/^https:\/\/www\.nasa\.gov\//);
+        expect(r.source.url).toMatch(/^https:\/\/(www|science)\.nasa\.gov\//);
       }
     }
   });
