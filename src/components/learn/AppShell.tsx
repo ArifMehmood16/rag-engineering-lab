@@ -3,6 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { Circle, Clock, Menu, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { LESSONS } from "@/content/lessons";
+import { AppBrand } from "./AppBrand";
 import { btnVariants } from "./ui";
 import { cn } from "@/lib/utils";
 
@@ -14,15 +15,21 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
         to="/"
         onClick={onNavigate}
         aria-current={path === "/" ? "page" : undefined}
-        className={cn("rounded-md px-3 py-2 font-mono text-xs uppercase tracking-widest hover:bg-muted", path === "/" && "bg-card text-primary")}
+        className={cn(
+          "rounded-md px-3 py-2 font-mono text-xs uppercase tracking-widest hover:bg-muted",
+          path === "/" && "bg-card text-primary",
+        )}
       >
-        ◎ The Lab · ORBIT
+        The RAG lab
       </Link>
       <Link
         to="/overview"
         onClick={onNavigate}
         aria-current={path === "/overview" ? "page" : undefined}
-        className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === "/overview" && "bg-card font-semibold shadow-sm")}
+        className={cn(
+          "rounded-md px-3 py-2 text-sm hover:bg-muted",
+          path === "/overview" && "bg-card font-semibold shadow-sm",
+        )}
       >
         Overview
       </Link>
@@ -84,17 +91,6 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function Brand() {
-  return (
-    <Link to="/" className="block px-3">
-      <span className="block font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
-        The
-      </span>
-      <span className="block font-serif text-xl leading-tight tracking-wide">INTELLIGENCE LAB</span>
-    </Link>
-  );
-}
-
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const lab = useRouterState({ select: (st) => st.location.pathname }) === "/";
@@ -112,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           !lab && "lg:block",
         )}
       >
-        <Brand />
+        <AppBrand className="mx-3" />
         <div className="mt-8">
           <NavList />
         </div>
@@ -124,12 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           !lab && "lg:hidden",
         )}
       >
-        <Link to="/" className="font-serif text-lg tracking-wide">
-          <span className="mr-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
-            The
-          </span>
-          INTELLIGENCE LAB
-        </Link>
+        <AppBrand />
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger
             className={btnVariants({ variant: "outline", size: "sm" })}
@@ -143,7 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="flex items-start justify-between">
                 <Dialog.Title asChild>
                   <div>
-                    <Brand />
+                    <AppBrand className="mx-3" />
                   </div>
                 </Dialog.Title>
                 <Dialog.Close
