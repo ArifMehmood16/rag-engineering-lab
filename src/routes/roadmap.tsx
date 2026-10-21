@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { DEFERRED, PHASES } from "@/content/roadmap";
 import { Badge } from "@/components/learn/ui";
 
-const TITLE = "Implementation priorities — AI Engineering, Made Practical";
+const TITLE = "Implementation priorities — The Intelligence Lab";
 const DESC =
   "A qualitative, phased roadmap for the design-phase EvidenceLens project, plus what to defer until evidence justifies it.";
 

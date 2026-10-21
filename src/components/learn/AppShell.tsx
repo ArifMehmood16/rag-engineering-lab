@@ -13,10 +13,16 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         to="/"
         onClick={onNavigate}
-        className={cn(
-          "rounded-md px-3 py-2 text-sm hover:bg-muted",
-          path === "/" && "bg-card font-semibold shadow-sm",
-        )}
+        aria-current={path === "/" ? "page" : undefined}
+        className={cn("rounded-md px-3 py-2 font-mono text-xs uppercase tracking-widest hover:bg-muted", path === "/" && "bg-card text-primary")}
+      >
+        ◎ The Lab · ORBIT
+      </Link>
+      <Link
+        to="/overview"
+        onClick={onNavigate}
+        aria-current={path === "/overview" ? "page" : undefined}
+        className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === "/overview" && "bg-card font-semibold shadow-sm")}
       >
         Overview
       </Link>
@@ -81,34 +87,48 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 function Brand() {
   return (
     <Link to="/" className="block px-3">
-      <span className="block font-serif text-xl leading-tight">AI Engineering,</span>
-      <span className="block font-serif text-xl italic leading-tight text-primary">
-        Made Practical
+      <span className="block font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
+        The
       </span>
+      <span className="block font-serif text-xl leading-tight tracking-wide">INTELLIGENCE LAB</span>
     </Link>
   );
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const lab = useRouterState({ select: (st) => st.location.pathname }) === "/";
   return (
-    <div className="min-h-screen lg:grid lg:grid-cols-[17rem_1fr]">
+    <div className={cn("min-h-screen", !lab && "lg:grid lg:grid-cols-[17rem_1fr]")}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-card focus:p-2"
       >
         Skip to content
       </a>
-      <aside className="sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6 lg:block">
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6",
+          !lab && "lg:block",
+        )}
+      >
         <Brand />
         <div className="mt-8">
           <NavList />
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/95 px-4 py-3 backdrop-blur lg:hidden">
-        <Link to="/" className="font-serif text-lg">
-          AI Engineering, <em className="text-primary">Made Practical</em>
+      <header
+        className={cn(
+          "sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur",
+          !lab && "lg:hidden",
+        )}
+      >
+        <Link to="/" className="font-serif text-lg tracking-wide">
+          <span className="mr-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
+            The
+          </span>
+          INTELLIGENCE LAB
         </Link>
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger

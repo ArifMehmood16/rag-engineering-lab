@@ -14,3 +14,4 @@
 - Lab logic is pure and deterministic in `src/lib/` with tests in `src/test/` — demonstrations must be reproducible, no model calls.
 - The site is static and read-only: no notes, progress, quiz answers, or stored visitor input; lab controls are aria-pressed toggle buttons — the user wants thinking points instead of input-taking.
 - Cross-lesson pages (/architecture, /roadmap, /writing) are separate routes fed from `src/content/`; lesson prev/next comes from the shared `LessonPager` in the lesson route — keeps navigation consistent as lessons change.
+- The home route `/` is THE INTELLIGENCE LAB (ORBIT, full-bleed, no sidebar); ORBIT 3D is React Three Fiber, lazy-loaded behind ClientOnly with a static SVG fallback for low-effects mode; the lesson overview lives at /overview — one WebGL stack keeps the bundle and behaviour coherent.

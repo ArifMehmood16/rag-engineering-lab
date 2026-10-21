@@ -22,7 +22,7 @@ export function LessonPager({ slug }: { slug: string }) {
           <ArrowLeft className="size-4" aria-hidden /> Lesson {prev.number}: {prev.concept}
         </Link>
       ) : (
-        <Link to="/" className={btnVariants({ variant: "outline" })}>
+        <Link to="/overview" className={btnVariants({ variant: "outline" })}>
           <ArrowLeft className="size-4" aria-hidden /> Overview
         </Link>
       )}

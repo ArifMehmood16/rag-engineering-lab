@@ -3,7 +3,7 @@ import { ALL_TAKEAWAYS } from "@/content/writing";
 import { getLesson } from "@/content/lessons";
 import { Takeaways } from "@/components/learn/Takeaways";
 
-const TITLE = "Writing exercises and post outlines — AI Engineering, Made Practical";
+const TITLE = "Writing exercises and post outlines — The Intelligence Lab";
 const DESC =
   "Reflection prompts and six-part post outlines for each of the five concepts, copyable as Markdown.";
 
