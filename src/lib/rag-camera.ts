@@ -48,11 +48,16 @@ export function cameraPose(tour: WalkthroughState, overview = false): CameraPose
     top = Math.max(...ys),
     bottom = Math.min(...ys);
   const padding = overview ? 2 : tour.beat === 0 ? 2.4 : atOutput(tour) ? 1.3 : 1.8;
+  // Leave neighbouring stations in view on the request spine. A short handoff
+  // should not magnify the entire background map or its arrowheads.
+  const requestFocus = tour.phase === "request" && !overview;
+  const output = atOutput(tour) && !overview;
+  const minimum = requestFocus ? (output ? [8, 5.6] : [9, 6.2]) : output ? [5.5, 4] : [6.2, 4.6];
   return {
     target: [(left + right) / 2, (top + bottom) / 2, 0],
     span: [
-      Math.max(atOutput(tour) && !overview ? 5.5 : 6.2, right - left + padding),
-      Math.max(atOutput(tour) && !overview ? 4 : 4.6, top - bottom + padding),
+      Math.max(minimum[0]!, right - left + padding),
+      Math.max(minimum[1]!, top - bottom + padding),
     ],
   };
 }

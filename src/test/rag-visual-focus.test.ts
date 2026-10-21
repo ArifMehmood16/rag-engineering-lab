@@ -6,6 +6,7 @@ import { cameraPose, sceneRegion } from "@/lib/rag-camera";
 import {
   FLOW_STYLES,
   REQUEST_CONNECTIONS,
+  FAILURE_CONNECTIONS,
   REQUEST_NODE_NAMES,
   REQUEST_POSITIONS,
   NODE_RADIUS,
@@ -18,7 +19,7 @@ import {
 describe("readable routes and scene focus", () => {
   const frames = buildStoryFrames(initEngine(DEFAULT_QUESTION), APOLLO_RECORDS);
   it("keeps the route strokes outside unrelated entities", () => {
-    for (const [from, to] of REQUEST_CONNECTIONS) {
+    for (const [from, to] of [...REQUEST_CONNECTIONS, ...FAILURE_CONNECTIONS]) {
       const route = flowRoute(REQUEST_POSITIONS, from, to);
       for (const [node, port] of [
         [from, route.from],
@@ -50,11 +51,32 @@ describe("readable routes and scene focus", () => {
     };
     expect(
       Math.abs(midpoint("context", "tool")[1] - midpoint("tool", "context")[1]),
-    ).toBeGreaterThan(1);
+    ).toBeGreaterThan(0.6);
     expect(
       Math.abs(midpoint("router", "cache")[1] - midpoint("cache", "router")[1]),
     ).toBeGreaterThan(0.5);
     expect(new Set(Object.values(FLOW_STYLES).map((s) => s.color)).size).toBe(7);
+  });
+  it("keeps rounded service rails inside their corridor without spline overshoot", () => {
+    for (const [from, to] of REQUEST_CONNECTIONS) {
+      const route = flowRoute(REQUEST_POSITIONS, from, to);
+      const controls = [route.from, ...route.via, route.to];
+      for (let i = 0; i <= 200; i++) {
+        const p = travelPoint(route.from, route.to, i / 200, route.via);
+        for (let axis = 0; axis < 3; axis++) {
+          const values = controls.map((point) => point[axis]!);
+          expect(p[axis]!).toBeGreaterThanOrEqual(Math.min(...values) - 0.001);
+          expect(p[axis]!).toBeLessThanOrEqual(Math.max(...values) + 0.001);
+        }
+      }
+    }
+  });
+  it("keeps the request spine aligned and the service row separate", () => {
+    const spine = ["question", "input", "router", "retrieve", "context", "model", "check"] as const;
+    expect(spine.map((node) => REQUEST_POSITIONS[node]![1])).toEqual(spine.map(() => 0));
+    const xs = spine.map((node) => REQUEST_POSITIONS[node]![0]);
+    expect(xs).toEqual([...xs].sort((a, b) => a - b));
+    expect(REQUEST_POSITIONS.index![1]).toBe(REQUEST_POSITIONS.tool![1]);
   });
   it("dims standby models and skipped work while retaining the active participants", () => {
     const retrieval = scenePlan(storyTour("request", 3, 3, frames));

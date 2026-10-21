@@ -377,17 +377,24 @@ function Connection({
   time: React.RefObject<number>;
   color?: string;
 }) {
+  const { camera, size } = useThree();
   const geometry = useMemo(() => {
-    const curve = new THREE.CatmullRomCurve3(
-      Array.from(
-        { length: 25 },
-        (_, i) => new THREE.Vector3(...travelPoint(from, to, i / 24, via)),
-      ),
-    );
+    // Use the very same bounded route for the stroke, arrow, packet and label.
+    // A second spline through samples would reintroduce corner overshoot.
+    class FlowCurve extends THREE.Curve<THREE.Vector3> {
+      constructor() {
+        super();
+      }
+      override getPoint(t: number, target = new THREE.Vector3()) {
+        return target.set(...travelPoint(from, to, t, via));
+      }
+    }
+    const curve = new FlowCurve();
+    const segments = Math.max(48, Math.min(640, Math.ceil(curve.getLength() / 0.08)));
     return {
       curve,
-      tube: new THREE.TubeGeometry(curve, 72, 0.026, 6, false),
-      points: curve.getSpacedPoints(80),
+      tube: new THREE.TubeGeometry(curve, segments, 0.026, 6, false),
+      points: curve.getSpacedPoints(segments),
     };
   }, [from, to, via]);
   useEffect(() => () => geometry.tube.dispose(), [geometry]);
@@ -403,6 +410,13 @@ function Connection({
       geometry.curve.getPointAt(0.965, arrow.current.position);
       geometry.curve.getTangentAt(0.965, tangent);
       arrow.current.quaternion.setFromUnitVectors(axis, tangent);
+      // Arrowheads stay readable at a consistent pixel size through camera zoom.
+      const pixel =
+        (2 *
+          camera.position.distanceTo(arrow.current.position) *
+          Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2))) /
+        size.height;
+      arrow.current.scale.setScalar((pixel * (active ? 11 : 8)) / 0.3);
     }
     packets.current.forEach((mesh, i) => {
       mesh.visible = moving;
@@ -425,9 +439,9 @@ function Connection({
       <Line
         points={geometry.points}
         color={color}
-        lineWidth={active ? 2.2 : 1.5}
+        lineWidth={active ? 2.2 : 1.15}
         transparent
-        opacity={0.3 + emphasis * 0.65}
+        opacity={0.08 + emphasis * 0.7}
         toneMapped={false}
         depthWrite={false}
       />
@@ -449,7 +463,7 @@ function Connection({
         <meshBasicMaterial
           color={active ? signal : color}
           transparent
-          opacity={0.35 + emphasis * 0.6}
+          opacity={0.12 + emphasis * 0.65}
           toneMapped={false}
         />
       </mesh>
@@ -775,7 +789,7 @@ function World(props: RagWorldProps) {
         key={`${from}-${to}`}
         {...routes[`${from}:${to}`]!}
         color={focused && plan.transfer.kind === "notice" ? "#e9a0a0" : flowStyle(from, to).color}
-        emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.3 : 0.06}
+        emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.18 : 0}
         active={plan.moving && focused}
         moving={plan.moving && focused}
         time={time}

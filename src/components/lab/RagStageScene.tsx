@@ -39,7 +39,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
     return (
       <div className="world-fallback request-fallback">
         <svg
-          viewBox="-9 -9 18 15"
+          viewBox="-11 -8 22 15"
           role="img"
           aria-label="Question flow: user, input checks, router, cache, model branches, tools, output checks, and return to user"
         >
@@ -107,7 +107,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
                     strokeDasharray=".1 .1"
                   />
                 )}
-                <text y={radius + 0.45} textAnchor="middle" fill="#c4e5ef" fontSize="0.32">
+                <text y={radius + 0.45} textAnchor="middle" fill="#c4e5ef" fontSize="0.4">
                   {title}
                 </text>
               </g>
@@ -294,6 +294,7 @@ export function RagStageScene(
                     else labels.current.delete(node);
                   }}
                   className={cn("world-label", plan.active === node && "world-label-active")}
+                  data-node={node}
                   data-relevance={nodeEmphasis(plan, node) > 0.5 ? "current" : "idle"}
                   style={{ opacity: 0 }}
                 >

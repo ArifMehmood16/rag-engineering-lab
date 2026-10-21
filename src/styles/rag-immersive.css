@@ -1031,3 +1031,14 @@
     padding: 175px 12px 50vh;
   }
 }
+
+/* Keep compact spine labels distinct when the complete question map is framed. */
+.scene-overview .world-label[data-node="input"] strong,
+.scene-overview .world-label[data-node="context"] strong,
+.scene-overview .world-label[data-node="check"] strong {
+  display: block;
+  max-width: 64px;
+  white-space: normal;
+  line-height: 1.35;
+  margin-inline: auto;
+}
