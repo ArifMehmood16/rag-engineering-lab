@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
-import { QUIZ, RRF_CODE, STAGES, WRITING_TOPIC } from "@/content/lesson-context";
+import { ArrowRight } from "lucide-react";
+import { QUIZ, RRF_CODE, STAGES, TAKEAWAY_CONTEXT } from "@/content/lesson-context";
 import { getLesson } from "@/content/lessons";
-import { useProgress } from "@/lib/storage";
 import { cn } from "@/lib/utils";
-import { NotesPanel } from "./NotesPanel";
-import { Quiz } from "./Quiz";
+import { Takeaways } from "./Takeaways";
+import { ThinkingCheck } from "./ThinkingCheck";
 import { RetrievalLab } from "./RetrievalLab";
 import { Badge, Callout, CodeBlock, Section, btnVariants } from "./ui";
 
@@ -34,8 +33,6 @@ function Detail({ summary, children }: { summary: string; children: React.ReactN
 
 export function LessonContext() {
   const lesson = getLesson("context")!;
-  const { completed, toggle, available } = useProgress();
-  const done = completed.includes(lesson.slug);
 
   return (
     <article className="mx-auto max-w-4xl px-5 py-10 lg:px-10">
@@ -232,26 +229,17 @@ export function LessonContext() {
           </ul>
         </Section>
 
-        <Section id="quiz" step="8 · Check understanding" title="Quiz">
-          <Quiz lessonSlug={lesson.slug} questions={QUIZ} />
+        <Section id="quiz" step="8 · Check understanding" title="Check your thinking">
+          <ThinkingCheck questions={QUIZ} />
         </Section>
 
-        <Section id="notes" step="9 · Capture a takeaway" title="Notes and writing">
-          <NotesPanel lessonSlug={lesson.slug} lessonTitle={`Lesson 1: ${lesson.title}`} topic={WRITING_TOPIC} />
+        <Section id="notes" step="9 · Capture a takeaway" title="Thinking points">
+          <Takeaways data={TAKEAWAY_CONTEXT} />
         </Section>
 
         <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-semibold">{done ? "Lesson marked complete" : "Finished this lesson?"}</p>
-            <p className="text-sm text-muted-foreground">
-              {available ? "Completion is stored in this browser only." : "Browser storage is unavailable; completion won’t persist."}
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" aria-pressed={done} className={btnVariants({ variant: done ? "outline" : "primary" })} onClick={() => toggle(lesson.slug, !done)}>
-              <CheckCircle2 className="size-4" aria-hidden />
-              {done ? "Mark as not complete" : "Mark lesson complete"}
-            </button>
             <Link to="/lessons/$slug" params={{ slug: "cost-latency" }} className={btnVariants({ variant: "ghost" })}>
               Next: Lesson 2 <ArrowRight className="size-4" aria-hidden />
             </Link>

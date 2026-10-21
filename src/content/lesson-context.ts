@@ -292,3 +292,22 @@ export const QUIZ: QuizQuestion[] = [
 ];
 
 export const WRITING_TOPIC = "Why retrieval similarity is not answer confidence";
+
+export const TAKEAWAY_CONTEXT = {
+  topic: "Why retrieval similarity is not answer confidence",
+  points: [
+    { prompt: "Explain it in your own words", tip: "Try one sentence: retrieval finds nearby text; something else must decide whether that text answers the question." },
+    { prompt: "What might surprise you", tip: "The most keyword-dense passage in the lab (P6) is commentary, and the most useful paraphrase (P7) shares no query words." },
+    { prompt: "Where it fits in EvidenceLens", tip: "Between pinning an index release and generation: retrieve, fuse, deduplicate, rerank, assemble, then assess sufficiency." },
+    { prompt: "An experiment worth running", tip: "Compare lexical, dense, and hybrid retrieval on the same labelled questions, measuring Recall@k and study diversity separately." },
+    { prompt: "A result that would change the plan", tip: "If dense-only retrieval matched hybrid on identifiers and units, the lexical path might not justify its cost." },
+  ],
+  outline: [
+    { label: "The misconception", guidance: "A high similarity score means the answer is probably right." },
+    { label: "The concept", guidance: "Embeddings measure closeness in one model’s space; support is a separate property of a claim and its evidence." },
+    { label: "An EvidenceLens design example", guidance: "A glycinate question retrieving oxide, adolescent, and commentary passages — and how the planned stages handle each." },
+    { label: "A trade-off", guidance: "More passages improve recall but add duplication, latency, and contradiction-handling difficulty." },
+    { label: "An experiment to validate it", guidance: "Separate retrieval baselines evaluated on labelled development questions." },
+    { label: "What remains unknown", guidance: "Model choice, chunk sizes, budgets, and real retrieval quality — none measured yet." },
+  ],
+};

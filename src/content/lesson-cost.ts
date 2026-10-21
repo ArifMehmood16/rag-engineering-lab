@@ -164,3 +164,22 @@ export const QUIZ_COST: QuizQuestion[] = [
 ];
 
 export const WRITING_TOPIC_COST = "Why prompt caching differs from answer caching";
+
+export const TAKEAWAY_COST = {
+  topic: "Why prompt caching differs from answer caching",
+  points: [
+    { prompt: "Explain it in your own words", tip: "A prompt cache saves reading the same instructions twice; an answer cache saves writing the same answer twice — and is far riskier." },
+    { prompt: "What might surprise you", tip: "Retracting a source leaves the cache key unchanged. Only dependency invalidation and the eligibility recheck catch it." },
+    { prompt: "Where it fits in EvidenceLens", tip: "Every cache lookup sits after authentication and scope resolution; every hit still passes release checks." },
+    { prompt: "An experiment worth running", tip: "Cold versus warm requests on identical questions once a provider is chosen, holding task quality fixed." },
+    { prompt: "A result that would change the plan", tip: "If retries and escalations from a smaller model cost more than the baseline, routing isn’t worth it for that task." },
+  ],
+  outline: [
+    { label: "The misconception", guidance: "A cache hit means no model call and no checks." },
+    { label: "The concept", guidance: "Five caches reuse five different things, each valid under its own conditions." },
+    { label: "An EvidenceLens design example", guidance: "An approved answer blocked by a retracted source despite a matching key." },
+    { label: "A trade-off", guidance: "Broader reuse saves more but raises the risk of stale or unauthorized answers." },
+    { label: "An experiment to validate it", guidance: "Measure prefix reuse and end-to-end cost, counting verification and retries." },
+    { label: "What remains unknown", guidance: "Provider, prices, prefix behaviour, and whether any routing is justified." },
+  ],
+};

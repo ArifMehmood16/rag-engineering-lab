@@ -1,12 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { ANSWER_EXTRA_FIELDS, CACHE_KEY_CODE, QUIZ_COST, RETRIEVAL_CONTRACT_FIELDS, ROUTING_PROGRESSION, WRITING_TOPIC_COST } from "@/content/lesson-cost";
+import { ANSWER_EXTRA_FIELDS, CACHE_KEY_CODE, QUIZ_COST, RETRIEVAL_CONTRACT_FIELDS, ROUTING_PROGRESSION, TAKEAWAY_COST } from "@/content/lesson-cost";
 import { getLesson } from "@/content/lessons";
-import { useProgress } from "@/lib/storage";
 import { CacheComparison, InvalidationLab, PrefixDemo, RoutingSim } from "./CostLabs";
-import { NotesPanel } from "./NotesPanel";
-import { Quiz } from "./Quiz";
+import { Takeaways } from "./Takeaways";
+import { ThinkingCheck } from "./ThinkingCheck";
 import { Callout, CodeBlock, Section, btnVariants } from "./ui";
 
 const TOC = [
@@ -32,8 +31,6 @@ function Detail({ summary, children }: { summary: string; children: ReactNode })
 
 export function LessonCost() {
   const lesson = getLesson("cost-latency")!;
-  const { completed, toggle, available } = useProgress();
-  const done = completed.includes(lesson.slug);
 
   return (
     <article className="mx-auto max-w-4xl px-5 py-10 lg:px-10">
@@ -215,23 +212,17 @@ export function LessonCost() {
           </ul>
         </Section>
 
-        <Section id="quiz" step="8 · Check understanding" title="Quiz">
-          <Quiz lessonSlug={lesson.slug} questions={QUIZ_COST} />
+        <Section id="quiz" step="8 · Check understanding" title="Check your thinking">
+          <ThinkingCheck questions={QUIZ_COST} />
         </Section>
 
-        <Section id="notes" step="9 · Capture a takeaway" title="Notes and writing">
-          <NotesPanel lessonSlug={lesson.slug} lessonTitle={`Lesson 2: ${lesson.title}`} topic={WRITING_TOPIC_COST} />
+        <Section id="notes" step="9 · Capture a takeaway" title="Thinking points">
+          <Takeaways data={TAKEAWAY_COST} />
         </Section>
 
         <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-semibold">{done ? "Lesson marked complete" : "Finished this lesson?"}</p>
-            <p className="text-sm text-muted-foreground">{available ? "Completion is stored in this browser only." : "Browser storage is unavailable; completion won’t persist."}</p>
-          </div>
+          <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
           <div className="flex flex-wrap gap-2">
-            <button type="button" aria-pressed={done} className={btnVariants({ variant: done ? "outline" : "primary" })} onClick={() => toggle(lesson.slug, !done)}>
-              <CheckCircle2 className="size-4" aria-hidden /> {done ? "Mark as not complete" : "Mark lesson complete"}
-            </button>
             <Link to="/lessons/$slug" params={{ slug: "evaluation" }} className={btnVariants({ variant: "ghost" })}>
               Next: Lesson 3 (planned) <ArrowRight className="size-4" aria-hidden />
             </Link>
