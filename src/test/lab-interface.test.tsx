@@ -20,13 +20,32 @@ vi.mock("@tanstack/react-router", async (original) => ({
   ),
 }));
 import { Lab } from "@/routes/index";
+let galleryHeight = 500;
 beforeEach(() => {
   vi.useFakeTimers();
-  Object.defineProperty(window, "innerHeight", { configurable: true, writable: true, value: 768 });
-  Object.defineProperty(window, "scrollY", { configurable: true, writable: true, value: 0 });
-  vi.spyOn(window, "scrollTo").mockImplementation((options: number | ScrollToOptions) => {
-    if (typeof options === "object")
-      Object.defineProperty(window, "scrollY", { value: options.top ?? 0 });
+  galleryHeight = 500;
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return this.classList.contains("story-gallery") ? galleryHeight : 0;
+  });
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    return this.classList.contains("gallery-card") ? 300 : 0;
+  });
+  vi.spyOn(HTMLElement.prototype, "offsetTop", "get").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    if (!this.classList.contains("gallery-card")) return 0;
+    const siblings = [...this.parentElement!.children];
+    return parseFloat(this.parentElement!.style.paddingTop) + siblings.indexOf(this) * 324;
+  });
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+    configurable: true,
+    value(this: HTMLElement, options: ScrollToOptions) {
+      this.scrollTop = options.top ?? 0;
+    },
   });
   vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) =>
     window.setTimeout(() => callback(0), 0),
@@ -38,12 +57,16 @@ afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
 });
-function scrollTo(stage: number, progress: number) {
+const current = () => screen.getByRole("article", { name: "Current story step" });
+const currentRegion = (name: string) => within(current()).getByRole("region", { name });
+function focusCard(stage: number, kind: "input" | "work" | "output", beat?: number) {
+  const list = screen.getByRole("region", { name: "Scrollable learning cards" });
+  const card = list.querySelector<HTMLElement>(
+    `[data-card-stage="${stage}"][data-card-kind="${kind}"]${beat ? `[data-card-beat="${beat}"]` : ""}`,
+  )!;
   act(() => {
-    Object.defineProperty(window, "scrollY", {
-      value: (stage + progress) * 2.4 * window.innerHeight,
-    });
-    fireEvent.scroll(window);
+    list.scrollTop = card.offsetTop + card.offsetHeight / 2 - list.clientHeight / 2;
+    fireEvent.scroll(list);
     vi.runOnlyPendingTimers();
   });
 }
@@ -61,7 +84,7 @@ function inspectRun() {
 }
 const progress = () => screen.getByRole("progressbar", { name: "Stages explored this visit" });
 
-describe("RAG scroll lab", () => {
+describe("RAG card gallery", () => {
   it("keeps the request topology understandable without WebGL", () => {
     render(<Lab />);
     answerStream();
@@ -82,13 +105,17 @@ describe("RAG scroll lab", () => {
     render(<Lab />);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next sub-step" })).not.toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent(
-      "No question has been asked",
+    expect(current()).toHaveTextContent("Scroll the cards.");
+    expect(screen.getByRole("region", { name: "Scrollable learning cards" })).toHaveAttribute(
+      "tabindex",
+      "0",
     );
+    focusCard(0, "input");
+    expect(currentRegion("Step input")).toHaveTextContent("No question has been asked");
     answerStream();
-    expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent(
-      "Who walked on the Moon",
-    );
+    expect(current()).toHaveTextContent("Scroll the cards.");
+    focusCard(0, "input");
+    expect(currentRegion("Step input")).toHaveTextContent("Who walked on the Moon");
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
     openSettings();
     expect(screen.getByRole("button", { name: "35 tokens" })).toBeInTheDocument();
@@ -97,69 +124,55 @@ describe("RAG scroll lab", () => {
   });
   it("scrolls through operations and output, with annotations on the data path", () => {
     render(<Lab />);
-    scrollTo(1, 0.2);
-    expect(screen.getByRole("region", { name: "Step work" })).toHaveTextContent(
-      "Choose a useful boundary",
-    );
+    focusCard(1, "work", 1);
+    expect(current()).toHaveTextContent("Choose a useful boundary");
     expect(screen.getByLabelText("Flow annotation")).toHaveTextContent("TRANSFORMING");
-    scrollTo(1, 0.4);
+    focusCard(1, "work", 2);
     expect(screen.getByLabelText("Flow annotation")).toHaveTextContent("Measure the passage");
-    scrollTo(1, 0.8);
-    expect(screen.getByRole("region", { name: "Step output" })).toHaveTextContent(
-      "10 curated chunks",
-    );
+    focusCard(1, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("10 curated chunks");
     expect(screen.getByLabelText("Flow annotation")).toHaveTextContent("10 bounded chunks");
-    fireEvent.click(screen.getByRole("button", { name: "Passage 2: A11-OV-HL1" }));
-    expect(screen.getByRole("region", { name: "Step output" })).toHaveTextContent("Cape Kennedy");
-    scrollTo(2, 0);
-    expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent("A11-OV-HL1");
+    fireEvent.click(within(current()).getByRole("button", { name: "Passage 2: A11-OV-HL1" }));
+    expect(currentRegion("Step output")).toHaveTextContent("Cape Kennedy");
+    focusCard(2, "input");
+    expect(currentRegion("Step input")).toHaveTextContent("A11-OV-HL1");
   });
   it("preserves the place in each independent stream and never advances on a timer", () => {
     render(<Lab />);
-    scrollTo(2, 0.8);
+    focusCard(2, "output");
     answerStream();
-    expect(
-      screen.getByRole("heading", { name: "Understand what the question needs" }),
-    ).toBeInTheDocument();
-    scrollTo(3, 0.8);
+    expect(current()).toHaveTextContent("Scroll the cards.");
+    focusCard(3, "output");
     fireEvent.click(screen.getByRole("button", { name: /Build knowledge Documents/ }));
-    expect(
-      screen.getByRole("heading", { name: "Encode each chunk as a numeric vector" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Step output" })).toBeInTheDocument();
+    expect(current()).toHaveTextContent("Embeddings · the result");
+    expect(currentRegion("Step output")).toBeInTheDocument();
     act(() => vi.advanceTimersByTime(120000));
-    expect(
-      screen.getByRole("heading", { name: "Encode each chunk as a numeric vector" }),
-    ).toBeInTheDocument();
+    expect(current()).toHaveTextContent("Embeddings · the result");
     answerStream();
-    expect(
-      screen.getByRole("heading", { name: "Retrieve passages that match the question" }),
-    ).toBeInTheDocument();
+    expect(current()).toHaveTextContent("Retrieve · the result");
   });
   it("keeps the same story moment when the viewport height changes", () => {
     render(<Lab />);
-    scrollTo(2, 0.8);
+    focusCard(2, "output");
     act(() => {
-      Object.defineProperty(window, "innerHeight", { value: 1024 });
+      galleryHeight = 700;
       fireEvent.resize(window);
       vi.runOnlyPendingTimers();
     });
-    expect(
-      screen.getByRole("heading", { name: "Encode each chunk as a numeric vector" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "Step output" })).toBeInTheDocument();
+    expect(current()).toHaveTextContent("Embeddings · the result");
+    expect(currentRegion("Step output")).toBeInTheDocument();
     expect(progress()).toHaveAttribute("aria-valuenow", "1");
   });
   it("counts only viewed outputs, deduplicates reverse scroll, and resets on a new load", () => {
     render(<Lab />);
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
-    scrollTo(1, 0.8);
+    focusCard(1, "output");
     expect(progress()).toHaveAttribute("aria-valuenow", "1");
-    scrollTo(1, 0.1);
-    scrollTo(1, 0.8);
+    focusCard(1, "input");
+    focusCard(1, "output");
     expect(progress()).toHaveAttribute("aria-valuenow", "1");
     answerStream();
-    scrollTo(10, 0.8);
+    focusCard(10, "output");
     expect(progress()).toHaveAttribute("aria-valuenow", "2");
     cleanup();
     render(<Lab />);
@@ -168,14 +181,10 @@ describe("RAG scroll lab", () => {
   it("releases a grounded answer and exposes citations without future data in earlier steps", () => {
     render(<Lab />);
     answerStream();
-    scrollTo(3, 0);
-    expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent(
-      "Return IDs and scores, not an answer",
-    );
-    scrollTo(10, 0.8);
-    expect(screen.getByRole("region", { name: "Step output" })).toHaveTextContent(
-      "Checked answer released",
-    );
+    focusCard(3, "input");
+    expect(currentRegion("Step input")).toHaveTextContent("Return IDs and scores, not an answer");
+    focusCard(10, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Checked answer released");
     inspectRun();
     const report = screen.getByRole("region", { name: "What reached the user?" });
     expect(report).toHaveTextContent("Supported answer");
@@ -188,8 +197,8 @@ describe("RAG scroll lab", () => {
     openSettings();
     fireEvent.click(screen.getByRole("button", { name: "35 tokens" }));
     closeDetails();
-    scrollTo(6, 0.8);
-    expect(screen.getByRole("region", { name: "Step output" })).toHaveTextContent("Stopped here");
+    focusCard(6, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Stopped here");
     expect(screen.queryByRole("link", { name: "Jump to Draft" })).not.toBeInTheDocument();
     inspectRun();
     expect(screen.getByRole("region", { name: "What reached the user?" })).toHaveTextContent(
@@ -203,9 +212,9 @@ describe("RAG scroll lab", () => {
     fireEvent.click(screen.getByRole("button", { name: /02 Spend less work/ }));
     fireEvent.click(screen.getByRole("button", { name: /Prompt-prefix cache/ }));
     closeDetails();
-    scrollTo(10, 0.8);
+    focusCard(10, "output");
     fireEvent.click(screen.getByRole("button", { name: "Replay with warm caches" }));
-    scrollTo(10, 0.8);
+    focusCard(10, "output");
     inspectRun();
     fireEvent.click(screen.getByRole("button", { name: /08 Draft generation done/ }));
     expect(
@@ -219,7 +228,7 @@ describe("RAG scroll lab", () => {
     fireEvent.click(screen.getByRole("button", { name: /04 Control the boundary/ }));
     fireEvent.click(screen.getByRole("button", { name: "Invent a citation ID" }));
     closeDetails();
-    scrollTo(8, 0.8);
+    focusCard(8, "output");
     inspectRun();
     const report = screen.getByRole("region", { name: "What reached the user?" });
     expect(report).toHaveTextContent("Withheld by a check");

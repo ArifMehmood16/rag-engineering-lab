@@ -6,6 +6,7 @@
 @import "./styles/rag-scene.css";
 @import "./styles/rag-drawer.css";
 @import "./styles/rag-immersive.css";
+@import "./styles/rag-gallery.css";
 
 @custom-variant dark (&:is(.dark *));
 

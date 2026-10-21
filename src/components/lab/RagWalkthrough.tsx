@@ -1,5 +1,18 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { ArrowDown, ArrowRight, Check, Database, MessageSquare, RotateCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowDownUp,
+  Check,
+  Database,
+  MessageSquare,
+  RotateCcw,
+  Mouse,
+  ScanLine,
+  Binary,
+  FileText,
+  Scissors,
+} from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import {
   KNOWLEDGE_WALKTHROUGH,
@@ -8,15 +21,9 @@ import {
   REQUEST_TAKEAWAYS,
 } from "@/content/rag-walkthrough";
 import { initEngine, toyEmbedding, type EngineState } from "@/lib/apollo-engine";
-import { atOutput, stageInput, stageOutput, walkthroughStep } from "@/lib/rag-walkthrough";
-import {
-  buildStoryFrames,
-  CHAPTER_VIEWPORTS,
-  storyMoment,
-  storyPosition,
-  storyTour,
-  type StoryStream,
-} from "@/lib/rag-scroll-story";
+import { stageInput, stageOutput, walkthroughStep } from "@/lib/rag-walkthrough";
+import { buildStoryFrames, storyTour, type StoryStream } from "@/lib/rag-scroll-story";
+import { storyCards } from "@/lib/rag-gallery";
 import { cn } from "@/lib/utils";
 import { RagStageScene } from "./RagStageScene";
 import {
@@ -26,6 +33,7 @@ import {
   RequestOutput,
   Vector,
 } from "./RagStoryData";
+import { useRagGallery } from "./useRagGallery";
 
 type Props = {
   engine: EngineState;
@@ -45,78 +53,24 @@ type Props = {
 
 export function RagWalkthrough(props: Props) {
   const { records, stream, onStream, explored, reduced, lowEffects = false, visible } = props;
-  // Parent updates the inspector while we scroll. It must not become a new request seed.
   const [frames, setFrames] = useState(() => buildStoryFrames(props.engine, records));
-  const [position, setPosition] = useState({ stream, stage: 0, progress: 0 });
   const [chunkId, setChunkId] = useState("A11-LA-CAP");
   const [motionPaused, setMotionPaused] = useState(false);
-  const places = useRef<Record<StoryStream, number>>({ knowledge: 0, request: 0 });
   const highestFrame = useRef(0);
-  const viewportHeight = useRef(typeof window === "undefined" ? 720 : window.innerHeight);
   const callbacks = useRef(props);
   callbacks.current = props;
   const steps = stream === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH;
   const count = stream === "knowledge" ? 4 : frames.length - 1;
-  const currentPosition =
-    position.stream === stream
-      ? position
-      : storyPosition(
-          places.current[stream],
-          typeof window === "undefined" ? 720 : window.innerHeight,
-          count,
-        );
-  const stage = Math.min(currentPosition.stage, count - 1);
-  const { beat, transfer } = storyMoment(stream, stage, currentPosition.progress);
+  const cards = useMemo(() => storyCards(stream, count), [stream, count]);
+  const gallery = useRagGallery(cards, stream, visible, reduced);
+  const selected = Math.min(gallery.selected.index, cards.length - 1);
+  const card = cards[selected]!;
+  const { stage, beat } = card;
   const tour = useMemo(() => storyTour(stream, stage, beat, frames), [stream, stage, beat, frames]);
-  const step = walkthroughStep(tour);
-  const output = atOutput(tour);
-  const mode = beat === 0 ? "input" : output ? "output" : "work";
+  const output = card.kind === "output";
   const record = records.find((r) => r.id === chunkId) ?? records[0]!;
-  const values = toyEmbedding(record.text);
-  const result = stageOutput(tour)?.results[stage];
-  const final = stage === count - 1 && output;
-  const next = steps[stage + 1];
   const seen = explored.filter((id) => id.startsWith(`${stream}:`)).length;
 
-  useLayoutEffect(() => {
-    window.scrollTo({ top: places.current[stream], behavior: "instant" });
-    setPosition({ stream, ...storyPosition(places.current[stream], window.innerHeight, count) });
-  }, [stream, count]);
-  useEffect(() => {
-    let frame = 0;
-    const measure = () => {
-      frame = 0;
-      if (!callbacks.current.visible) return;
-      places.current[stream] = window.scrollY;
-      const next = storyPosition(window.scrollY, window.innerHeight, count);
-      next.progress = Math.round(next.progress * 500) / 500;
-      setPosition((prev) =>
-        prev.stream === stream && prev.stage === next.stage && prev.progress === next.progress
-          ? prev
-          : { stream, ...next },
-      );
-    };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
-    };
-    const resize = () => {
-      const scale = window.innerHeight / viewportHeight.current;
-      const offset = places.current[stream] * scale;
-      places.current.knowledge *= scale;
-      places.current.request *= scale;
-      viewportHeight.current = window.innerHeight;
-      window.scrollTo({ top: offset, behavior: "instant" });
-      schedule();
-    };
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", resize);
-    measure();
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(frame);
-    };
-  }, [stream, count, visible]);
   useEffect(() => {
     if (stream === "knowledge") callbacks.current.onKnowledge(stage);
     else callbacks.current.onInspect(stage);
@@ -132,19 +86,172 @@ export function RagWalkthrough(props: Props) {
       }
     }
   }, [stream, stage, output, frames, visible]);
-
-  const repeat = () => {
+  const repeat = useCallback(() => {
     const last = frames.at(-1)!;
-    setFrames(buildStoryFrames(initEngine(last.ctx.question, last.config, last.memory), records));
     highestFrame.current = 0;
-    places.current.request = 0;
-    setPosition({ stream, stage: 0, progress: 0 });
-    window.scrollTo({ top: 0, behavior: "instant" });
-  };
+    gallery.goTo(0);
+    setFrames(buildStoryFrames(initEngine(last.ctx.question, last.config, last.memory), records));
+  }, [frames, records, gallery.goTo]);
+
+  // The reading content is stable while scrolling changes only focus and scene progress.
+  const cardContent = useMemo(
+    () =>
+      cards.map((item) => {
+        const snapshot = storyTour(stream, item.stage, item.beat, frames);
+        const step = walkthroughStep(snapshot);
+        const final = item.stage === count - 1 && item.kind === "output";
+        const Icon =
+          stream === "knowledge" ? [FileText, Scissors, Binary, Database][item.stage]! : ScanLine;
+        if (item.kind === "intro")
+          return (
+            <>
+              <header className="story-card-heading gallery-intro-heading">
+                <span className="gallery-start">
+                  <Mouse size={14} /> START HERE
+                </span>
+                <h2>
+                  Scroll the cards.
+                  <br />
+                  Watch the system move.
+                </h2>
+              </header>
+              <div className="story-card-body gallery-intro-body">
+                <p>Read down this column. The card in the middle controls the scene beside it.</p>
+                <p className="gallery-intro-context">
+                  {stream === "knowledge"
+                    ? "Follow source documents into chunks, vectors, and a searchable index."
+                    : "Start with a prepared index. Follow one question to its checked answer."}
+                </p>
+              </div>
+              <footer className="story-card-footer">
+                <div>
+                  <ArrowDown size={14} />
+                  <span>Scroll here or use ↓ / Page Down</span>
+                </div>
+              </footer>
+            </>
+          );
+        return (
+          <>
+            <header className="story-card-heading">
+              <div className="story-kicker">
+                <span>
+                  {String(item.stage + 1).padStart(2, "0")} / {count} · {step.short}
+                </span>
+                <span className={`gallery-kind kind-${item.kind}`}>
+                  {item.kind === "work" ? `Work ${item.beat}/${step.work.length}` : item.kind}
+                </span>
+              </div>
+              <h2>{item.title}</h2>
+            </header>
+            <div className="story-card-body">
+              {item.kind === "input" ? (
+                <section aria-label="Step input">
+                  {stream === "knowledge" ? (
+                    <KnowledgeInput
+                      stage={item.stage}
+                      beat={item.beat}
+                      record={record}
+                      records={records}
+                      onSelect={setChunkId}
+                    />
+                  ) : (
+                    <RequestInput
+                      tour={snapshot}
+                      records={records}
+                      selected={chunkId}
+                      onSelect={setChunkId}
+                    />
+                  )}
+                </section>
+              ) : item.kind === "work" ? (
+                <section aria-label="Step work" className="gallery-operation">
+                  <Icon size={25} aria-hidden />
+                  <p>{step.work[item.beat - 1]!.detail}</p>
+                  {stream === "knowledge" && item.stage === 2 && item.beat === 3 && (
+                    <Vector values={toyEmbedding(record.text)} />
+                  )}
+                  {stream === "request" && item.stage === 3 && item.beat === 2 && (
+                    <Vector values={toyEmbedding(stageInput(snapshot).ctx.question)} />
+                  )}
+                  <small>
+                    {stream === "knowledge"
+                      ? "Prepared local data · no LLM call"
+                      : "Deterministic replay · no live model"}
+                  </small>
+                </section>
+              ) : (
+                <section aria-label="Step output">
+                  {stream === "knowledge" ? (
+                    <KnowledgeOutput
+                      stage={item.stage}
+                      record={record}
+                      selected={chunkId}
+                      onSelect={setChunkId}
+                      records={records}
+                    />
+                  ) : (
+                    <RequestOutput
+                      tour={snapshot}
+                      records={records}
+                      selected={chunkId}
+                      onSelect={setChunkId}
+                      onEvidence={props.onEvidence}
+                    />
+                  )}
+                </section>
+              )}
+            </div>
+            <footer className="story-card-footer">
+              {item.kind === "output" ? (
+                <p>
+                  {(stream === "knowledge" ? KNOWLEDGE_TAKEAWAYS : REQUEST_TAKEAWAYS)[item.stage]}
+                </p>
+              ) : (
+                <div>
+                  <ArrowDown size={12} />
+                  <span>
+                    {item.kind === "input"
+                      ? "Scroll into the work"
+                      : "Keep reading down the gallery"}
+                  </span>
+                </div>
+              )}
+              {final && (
+                <>
+                  <div>
+                    <Check size={13} />
+                    <span>
+                      {stageOutput(snapshot)?.halted ? "Request stopped here" : "Stream complete"}
+                    </span>
+                  </div>
+                  <div className="story-end-actions">
+                    {stream === "request" && (
+                      <button type="button" onClick={repeat}>
+                        <RotateCcw size={12} />
+                        Replay with warm caches
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => onStream(stream === "knowledge" ? "request" : "knowledge")}
+                    >
+                      Explore {stream === "knowledge" ? "answering" : "knowledge building"}
+                      <ArrowRight size={12} />
+                    </button>
+                  </div>
+                </>
+              )}
+            </footer>
+          </>
+        );
+      }),
+    [cards, stream, frames, record, chunkId, records, count, props.onEvidence, onStream, repeat],
+  );
   return (
     <section
       id="rag-stage"
-      className={cn("rag-scroll-story", reduced && "tour-reduced")}
+      className={cn("rag-scroll-story gallery-story", reduced && "tour-reduced")}
       aria-label="Scroll through the RAG system"
       data-stream={stream}
       data-stage={stage}
@@ -159,7 +266,7 @@ export function RagWalkthrough(props: Props) {
         paused={motionPaused}
         visible={visible}
         duration={4.2}
-        scrollProgress={transfer}
+        scrollProgress={gallery.selected.transfer}
         onPause={() => setMotionPaused(!motionPaused)}
       />
       <header className="story-navigation">
@@ -200,147 +307,62 @@ export function RagWalkthrough(props: Props) {
           <i style={{ transform: `scaleX(${explored.length / 15})` }} />
         </div>
       </header>
-      <div className="story-chapters" aria-hidden>
-        {Array.from({ length: count }, (_, n) => (
-          <div
-            key={n}
-            id={`story-${stream}-${n}`}
-            data-story-chapter={n}
-            style={{ height: `${CHAPTER_VIEWPORTS * 100}svh` }}
-          />
-        ))}
-        <div className="story-end-space" />
-      </div>
-      <aside className="story-card" aria-label="Current story step">
-        <div className="story-card-heading">
-          <div className="story-kicker">
-            <span>{stream === "knowledge" ? "BUILD KNOWLEDGE" : "ANSWER A QUESTION"}</span>
+      <div className="story-gallery-shell">
+        <header className="gallery-header">
+          <div>
+            <ArrowDownUp size={15} />
             <span>
-              {String(stage + 1).padStart(2, "0")} / {count}
+              Scroll the story<small>The centred card moves the system</small>
             </span>
           </div>
-          <h2>{step.title}</h2>
-          <div className="story-beats" aria-label={`Current focus: ${mode}`}>
-            {(["input", "work", "output"] as const).map((part, n) => (
-              <span key={part} data-active={mode === part}>
-                <b>{n + 1}</b>
-                {part}
-                <i />
-              </span>
+          <span>
+            {String(selected + 1).padStart(2, "0")} <b>/ {cards.length}</b>
+          </span>
+        </header>
+        <div
+          ref={gallery.viewport}
+          className="story-gallery"
+          role="region"
+          aria-label="Scrollable learning cards"
+          aria-describedby="gallery-instructions"
+          tabIndex={0}
+        >
+          <p id="gallery-instructions" className="sr-only">
+            Scroll vertically, swipe, or use the arrow and Page Down keys. The card nearest the
+            middle controls the animation. Previous and next cards stay visible at a smaller size.
+          </p>
+          <div ref={gallery.track} className="story-gallery-track">
+            {cards.map((item, i) => (
+              <article
+                key={item.id}
+                id={item.kind === "input" ? `story-${stream}-${item.stage}` : undefined}
+                ref={(el) => {
+                  if (el) gallery.elements.current.set(item.id, el);
+                  else gallery.elements.current.delete(item.id);
+                }}
+                className={cn(
+                  "story-card gallery-card",
+                  item.kind === "intro" && "gallery-intro-card",
+                )}
+                aria-label={i === selected ? "Current story step" : `${item.title} · ${item.kind}`}
+                aria-current={i === selected ? "step" : undefined}
+                data-focused={i === selected}
+                data-card-id={item.id}
+                data-card-stage={item.stage}
+                data-card-beat={item.beat}
+                data-card-kind={item.kind}
+              >
+                {cardContent[i]}
+              </article>
             ))}
           </div>
         </div>
-        <div className="story-card-body" key={`${stream}:${stage}:${mode}`}>
-          {mode === "input" ? (
-            <section aria-label="Step input">
-              <span className="story-focus-label">
-                <ArrowDown size={12} /> Incoming data
-              </span>
-              {stream === "knowledge" ? (
-                <KnowledgeInput
-                  stage={stage}
-                  beat={beat}
-                  record={record}
-                  records={records}
-                  onSelect={setChunkId}
-                />
-              ) : (
-                <RequestInput
-                  tour={tour}
-                  records={records}
-                  selected={chunkId}
-                  onSelect={setChunkId}
-                />
-              )}
-            </section>
-          ) : mode === "work" ? (
-            <section aria-label="Step work">
-              <span className="story-focus-label">
-                <ArrowDown size={12} /> Watch the glowing path
-              </span>
-              <ol className="story-operations">
-                {step.work.map((work, i) => (
-                  <li key={work.title} data-active={beat === i + 1} data-done={beat > i + 1}>
-                    <span>{beat > i + 1 ? <Check size={12} /> : i + 1}</span>
-                    <div>
-                      <strong>{work.title}</strong>
-                      {beat === i + 1 && <p>{work.detail}</p>}
-                    </div>
-                  </li>
-                ))}
-              </ol>
-              {stream === "knowledge" && stage === 2 && <Vector values={values} />}
-              {stream === "request" && stage === 3 && (
-                <Vector values={toyEmbedding(stageInput(tour).ctx.question)} />
-              )}
-              <p className="story-work-note">
-                {stream === "knowledge"
-                  ? "Prepared local data · no LLM call"
-                  : "Deterministic replay · no live model"}
-              </p>
-            </section>
-          ) : (
-            <section aria-label="Step output">
-              {stream === "knowledge" ? (
-                <KnowledgeOutput
-                  stage={stage}
-                  record={record}
-                  selected={chunkId}
-                  onSelect={setChunkId}
-                  records={records}
-                />
-              ) : (
-                <RequestOutput
-                  tour={tour}
-                  records={records}
-                  selected={chunkId}
-                  onSelect={setChunkId}
-                  onEvidence={props.onEvidence}
-                />
-              )}
-            </section>
-          )}
+        <div className="gallery-scroll-cue" aria-hidden>
+          <Mouse size={13} />
+          <span>SCROLL THE CARDS</span>
+          <ArrowDown size={13} />
         </div>
-        <footer className="story-card-footer">
-          <p>
-            {output
-              ? (stream === "knowledge" ? KNOWLEDGE_TAKEAWAYS : REQUEST_TAKEAWAYS)[stage]
-              : mode === "input"
-                ? "Scroll to see what the system does with this input."
-                : "The label follows the data along its curved path."}
-          </p>
-          <div>
-            <ArrowDown size={14} />
-            <span>
-              {final
-                ? result?.status === "blocked"
-                  ? "Request stopped here"
-                  : "Stream complete"
-                : output
-                  ? `Next: ${next?.short ?? "stream complete"}`
-                  : mode === "input"
-                    ? `Next: ${step.work[0]!.title}`
-                    : "Keep scrolling to reveal the output"}
-            </span>
-          </div>
-          {final && (
-            <div className="story-end-actions">
-              {stream === "request" && (
-                <button type="button" onClick={repeat}>
-                  <RotateCcw size={12} /> Replay with warm caches
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => onStream(stream === "knowledge" ? "request" : "knowledge")}
-              >
-                Explore {stream === "knowledge" ? "answering" : "knowledge building"}
-                <ArrowRight size={12} />
-              </button>
-            </div>
-          )}
-        </footer>
-      </aside>
+      </div>
       <nav className="story-ruler" aria-label="Stream chapters">
         <div>
           <span>{stream === "knowledge" ? "KNOWLEDGE" : "REQUEST"} STREAM</span>
@@ -361,10 +383,9 @@ export function RagWalkthrough(props: Props) {
                 aria-label={`Jump to ${s.short}`}
                 onClick={(event) => {
                   event.preventDefault();
-                  window.scrollTo({
-                    top: n * CHAPTER_VIEWPORTS * window.innerHeight,
-                    behavior: "instant",
-                  });
+                  gallery.goTo(
+                    cards.findIndex((item) => item.stage === n && item.kind === "input"),
+                  );
                 }}
               >
                 <span>
@@ -380,7 +401,8 @@ export function RagWalkthrough(props: Props) {
           ))}
         </ol>
         <p>
-          <ArrowDown size={14} /> Scroll to explore · scroll back to review
+          <ArrowDown size={14} />
+          Follow the cards. The system follows you.
         </p>
       </nav>
     </section>
