@@ -40,16 +40,10 @@ export const LESSONS: LessonMeta[] = [
   {
     number: 4,
     slug: "guardrails",
-    title: "Draw the Trust Boundaries",
+    title: "Add Guardrails",
     concept: "Guardrails and application permissions",
     summary: "Untrusted retrieved text, output validation, citation verification, and enforced permissions.",
-    status: "planned",
-    nextUp: [
-      "Trust-boundary lab: direct and indirect injection, fabricated citation",
-      "Schema-valid but unsupported text",
-      "Unauthorized evidence and a source revoked mid-query",
-      "Illustrative typed output contract",
-    ],
+    status: "available",
   },
   {
     number: 5,
