@@ -66,7 +66,9 @@
   overflow-y: scroll;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
-  scroll-snap-type: y proximity;
+  /* Focus follows native scrolling; snapping/anchoring must not jump between cards on resize. */
+  scroll-snap-type: none;
+  overflow-anchor: none;
   scrollbar-width: thin;
   scrollbar-color: #779b9b #0b1422;
   scrollbar-gutter: stable;
@@ -111,7 +113,6 @@
   transform: translateZ(var(--gallery-depth, -32px)) rotateX(var(--gallery-tilt, 0deg))
     scale(var(--gallery-scale, 0.91));
   transform-origin: center;
-  scroll-snap-align: center;
   backface-visibility: hidden;
 }
 .story-card.gallery-card[data-focused="true"] {
