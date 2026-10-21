@@ -81,7 +81,9 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
 function Brand() {
   return (
     <Link to="/" className="block px-3">
-      <span className="block font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">The</span>
+      <span className="block font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
+        The
+      </span>
       <span className="block font-serif text-xl leading-tight tracking-wide">INTELLIGENCE LAB</span>
     </Link>
   );
@@ -98,16 +100,29 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <aside className={cn("sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6", !lab && "lg:block")}>
+      <aside
+        className={cn(
+          "sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6",
+          !lab && "lg:block",
+        )}
+      >
         <Brand />
         <div className="mt-8">
           <NavList />
         </div>
       </aside>
 
-      <header className={cn("sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur", !lab && "lg:hidden")}>
+      <header
+        className={cn(
+          "sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur",
+          !lab && "lg:hidden",
+        )}
+      >
         <Link to="/" className="font-serif text-lg tracking-wide">
-          <span className="mr-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">The</span>INTELLIGENCE LAB
+          <span className="mr-2 font-mono text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
+            The
+          </span>
+          INTELLIGENCE LAB
         </Link>
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger

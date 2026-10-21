@@ -22,7 +22,10 @@ function Stars({ count, animate }: { count: number; animate: boolean }) {
       const rad = 8 + r() * 30;
       const t = r() * Math.PI * 2;
       const p = Math.acos(2 * r() - 1);
-      a.set([rad * Math.sin(p) * Math.cos(t), rad * Math.sin(p) * Math.sin(t), rad * Math.cos(p)], i * 3);
+      a.set(
+        [rad * Math.sin(p) * Math.cos(t), rad * Math.sin(p) * Math.sin(t), rad * Math.cos(p)],
+        i * 3,
+      );
     }
     return a;
   }, [count]);
@@ -34,7 +37,14 @@ function Stars({ count, animate }: { count: number; animate: boolean }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.05} color="#cfe6ff" transparent opacity={0.7} sizeAttenuation depthWrite={false} />
+      <pointsMaterial
+        size={0.05}
+        color="#cfe6ff"
+        transparent
+        opacity={0.7}
+        sizeAttenuation
+        depthWrite={false}
+      />
     </points>
   );
 }
@@ -55,7 +65,14 @@ function Dust({ animate }: { animate: boolean }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color={VIOLET} transparent opacity={0.55} blending={THREE.AdditiveBlending} depthWrite={false} />
+      <pointsMaterial
+        size={0.025}
+        color={VIOLET}
+        transparent
+        opacity={0.55}
+        blending={THREE.AdditiveBlending}
+        depthWrite={false}
+      />
     </points>
   );
 }
@@ -75,27 +92,55 @@ function Core({ animate, active }: { animate: boolean; active: boolean }) {
       const s = 1 + Math.sin(state.clock.elapsedTime * 1.4) * 0.04;
       inner.current.scale.setScalar(s);
     }
-    if (rings.current) rings.current.children.forEach((c, i) => (c.rotation.z += d * (0.08 + i * 0.05) * (i % 2 ? -1 : 1)));
+    if (rings.current)
+      rings.current.children.forEach(
+        (c, i) => (c.rotation.z += d * (0.08 + i * 0.05) * (i % 2 ? -1 : 1)),
+      );
   });
   return (
     <group>
       <mesh ref={outer}>
         <icosahedronGeometry args={[1.1, 1]} />
-        <meshBasicMaterial color={CYAN} wireframe transparent opacity={0.45} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial
+          color={CYAN}
+          wireframe
+          transparent
+          opacity={0.45}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
       <mesh ref={inner}>
         <icosahedronGeometry args={[0.55, 3]} />
-        <meshBasicMaterial color={active ? CYAN : BLUE} transparent opacity={0.5} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial
+          color={active ? CYAN : BLUE}
+          transparent
+          opacity={0.5}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
       <mesh>
         <sphereGeometry args={[0.9, 32, 32]} />
-        <meshBasicMaterial color={VIOLET} transparent opacity={0.08} blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial
+          color={VIOLET}
+          transparent
+          opacity={0.08}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
       <group ref={rings}>
         {[1.55, 1.85, 2.15].map((r, i) => (
           <mesh key={r} rotation={[Math.PI / 2 + (i - 1) * 0.35, i * 0.4, 0]}>
             <torusGeometry args={[r, 0.006, 8, 160]} />
-            <meshBasicMaterial color={i === 1 ? VIOLET : BLUE} transparent opacity={0.6} blending={THREE.AdditiveBlending} depthWrite={false} />
+            <meshBasicMaterial
+              color={i === 1 ? VIOLET : BLUE}
+              transparent
+              opacity={0.6}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
           </mesh>
         ))}
       </group>
@@ -103,7 +148,15 @@ function Core({ animate, active }: { animate: boolean; active: boolean }) {
   );
 }
 
-function StageNodes({ count, selected, onSelect }: { count: number; selected: number; onSelect: (i: number) => void }) {
+function StageNodes({
+  count,
+  selected,
+  onSelect,
+}: {
+  count: number;
+  selected: number;
+  onSelect: (i: number) => void;
+}) {
   const pts = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => {
@@ -117,7 +170,13 @@ function StageNodes({ count, selected, onSelect }: { count: number; selected: nu
       <Line points={[...pts, pts[0]!]} color={BLUE} lineWidth={1} transparent opacity={0.35} />
       {pts.map((p, i) => (
         <group key={i}>
-          <Line points={[[0, 0, 0], p]} color={i === selected ? CYAN : BLUE} lineWidth={i === selected ? 1.6 : 0.6} transparent opacity={i === selected ? 0.9 : 0.18} />
+          <Line
+            points={[[0, 0, 0], p]}
+            color={i === selected ? CYAN : BLUE}
+            lineWidth={i === selected ? 1.6 : 0.6}
+            transparent
+            opacity={i === selected ? 0.9 : 0.18}
+          />
           <mesh
             position={p}
             onClick={(e) => {
@@ -126,12 +185,23 @@ function StageNodes({ count, selected, onSelect }: { count: number; selected: nu
             }}
           >
             <sphereGeometry args={[i === selected ? 0.13 : 0.07, 20, 20]} />
-            <meshBasicMaterial color={i === selected ? CYAN : "#9fb7ff"} blending={THREE.AdditiveBlending} transparent opacity={i === selected ? 1 : 0.75} />
+            <meshBasicMaterial
+              color={i === selected ? CYAN : "#9fb7ff"}
+              blending={THREE.AdditiveBlending}
+              transparent
+              opacity={i === selected ? 1 : 0.75}
+            />
           </mesh>
           {i === selected && (
             <mesh position={p}>
               <sphereGeometry args={[0.32, 20, 20]} />
-              <meshBasicMaterial color={CYAN} transparent opacity={0.12} blending={THREE.AdditiveBlending} depthWrite={false} />
+              <meshBasicMaterial
+                color={CYAN}
+                transparent
+                opacity={0.12}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
             </mesh>
           )}
         </group>
@@ -140,9 +210,24 @@ function StageNodes({ count, selected, onSelect }: { count: number; selected: nu
   );
 }
 
-export default function OrbitScene({ count, selected, animate, onSelect }: { count: number; selected: number; animate: boolean; onSelect: (i: number) => void }) {
+export default function OrbitScene({
+  count,
+  selected,
+  animate,
+  onSelect,
+}: {
+  count: number;
+  selected: number;
+  animate: boolean;
+  onSelect: (i: number) => void;
+}) {
   return (
-    <Canvas frameloop={animate ? "always" : "demand"} dpr={[1, 1.75]} camera={{ position: [0, 0.6, 6.2], fov: 50 }} gl={{ antialias: true, alpha: true }}>
+    <Canvas
+      frameloop={animate ? "always" : "demand"}
+      dpr={[1, 1.75]}
+      camera={{ position: [0, 0.6, 6.2], fov: 50 }}
+      gl={{ antialias: true, alpha: true }}
+    >
       <fog attach="fog" args={["#05060c", 6, 30]} />
       <Stars count={900} animate={animate} />
       <Dust animate={animate} />

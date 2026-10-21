@@ -28,7 +28,10 @@ function Overview() {
     <div className="mx-auto max-w-4xl px-5 py-12 lg:px-10 lg:py-16">
       <p className="eyebrow">A personal learning resource</p>
       <h1 className="mt-3 text-5xl font-medium leading-[1.05] sm:text-6xl">
-        AI Engineering, <em className="text-primary">Made Practical</em>
+        THE INTELLIGENCE LAB{" "}
+        <span className="block text-2xl font-normal text-muted-foreground">
+          Overview of the five lessons
+        </span>
       </h1>
       <p className="mt-3 font-serif text-2xl text-muted-foreground">
         Five concepts. One real project. Learn how the pieces fit.
