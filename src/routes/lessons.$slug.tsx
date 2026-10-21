@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { getLesson } from "@/content/lessons";
+import { LessonPager } from "@/components/learn/LessonPager";
 import { LessonContext } from "@/components/learn/LessonContext";
 import { LessonCost } from "@/components/learn/LessonCost";
 import { LessonEval } from "@/components/learn/LessonEval";
@@ -36,11 +37,8 @@ export const Route = createFileRoute("/lessons/$slug")({
 function LessonPage() {
   const { slug } = Route.useLoaderData();
   const lesson = getLesson(slug)!;
-  if (lesson.slug === "context") return <LessonContext />;
-  if (lesson.slug === "cost-latency") return <LessonCost />;
-  if (lesson.slug === "evaluation") return <LessonEval />;
-  if (lesson.slug === "guardrails") return <LessonGuard />;
-  if (lesson.slug === "tools-agents") return <LessonAgents />;
+  const Body = { context: LessonContext, "cost-latency": LessonCost, evaluation: LessonEval, guardrails: LessonGuard, "tools-agents": LessonAgents }[lesson.slug];
+  if (Body) return (<><Body /><LessonPager slug={lesson.slug} /></>);
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-14 lg:px-10">

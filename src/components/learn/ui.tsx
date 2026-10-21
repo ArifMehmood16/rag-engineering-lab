@@ -57,7 +57,7 @@ export function SyntheticNotice({ children }: { children?: ReactNode }) {
   return (
     <p className="flex items-start gap-2 rounded-md border border-info/30 bg-info-soft px-3 py-2 text-sm text-info">
       <FlaskConical className="mt-0.5 size-4 shrink-0" aria-hidden />
-      <span>{children ?? "Synthetic learning simulation. No live embedding model or EvidenceLens retrieval service is running."}</span>
+      <span>{children ?? "Synthetic learning simulation. No live embedding model or EvidenceLens retrieval service is running."} <strong>Learning fixture. Not a measured project result.</strong></span>
     </p>
   );
 }
@@ -89,6 +89,7 @@ export function CodeBlock({ code, label, language = "python" }: { code: string; 
         </span>
         <CopyButton text={code} label="Copy code" />
       </figcaption>
+      <p className="border-b border-border bg-accent-soft px-3 py-1.5 text-xs font-medium">Proposed implementation sketch. Not existing EvidenceLens code.</p>
       <pre className="overflow-x-auto bg-code p-4 font-mono text-[0.82rem] leading-relaxed text-code-foreground" tabIndex={0}>
         <code>{code}</code>
       </pre>

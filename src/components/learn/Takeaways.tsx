@@ -1,4 +1,6 @@
 import { Lightbulb, PenLine } from "lucide-react";
+import { outlineToMarkdown } from "@/lib/architecture";
+import { CopyButton } from "./ui";
 
 export interface Takeaway {
   topic: string;
@@ -21,9 +23,12 @@ export function Takeaways({ data }: { data: Takeaway }) {
         ))}
       </ul>
       <div className="rounded-lg border border-border bg-muted/50 p-5">
-        <p className="eyebrow flex items-center gap-2">
-          <PenLine className="size-3.5" aria-hidden /> Writing it up
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="eyebrow flex items-center gap-2">
+            <PenLine className="size-3.5" aria-hidden /> Writing it up
+          </p>
+          <CopyButton text={outlineToMarkdown(data)} label="Copy outline as Markdown" />
+        </div>
         <h3 className="mt-1 text-2xl">{data.topic}</h3>
         <p className="mt-1 text-sm text-muted-foreground">A suggested outline. Write from what you learned and designed, not from results that don’t exist yet.</p>
         <ol className="mt-4 space-y-3">

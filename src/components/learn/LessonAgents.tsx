@@ -135,11 +135,6 @@ export function LessonAgents() {
         <Section id="notes" step="9 · Capture a takeaway" title="Thinking points">
           <Takeaways data={TAKEAWAY_AGENTS} />
         </Section>
-
-        <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">That completes the five lessons.</p>
-          <Link to="/" className={btnVariants({ variant: "ghost" })}><ArrowLeft className="size-4" aria-hidden /> Back to overview</Link>
-        </footer>
       </div>
     </article>
   );

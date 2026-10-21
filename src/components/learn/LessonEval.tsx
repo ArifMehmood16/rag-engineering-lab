@@ -242,13 +242,6 @@ export function LessonEval() {
         <Section id="notes" step="9 · Capture a takeaway" title="Thinking points">
           <Takeaways data={TAKEAWAY_EVAL} />
         </Section>
-
-        <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
-          <Link to="/lessons/$slug" params={{ slug: "guardrails" }} className={btnVariants({ variant: "ghost" })}>
-            Next: Lesson 4 <ArrowRight className="size-4" aria-hidden />
-          </Link>
-        </footer>
       </div>
     </article>
   );

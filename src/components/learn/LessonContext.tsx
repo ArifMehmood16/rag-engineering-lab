@@ -236,15 +236,6 @@ export function LessonContext() {
         <Section id="notes" step="9 · Capture a takeaway" title="Thinking points">
           <Takeaways data={TAKEAWAY_CONTEXT} />
         </Section>
-
-        <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/lessons/$slug" params={{ slug: "cost-latency" }} className={btnVariants({ variant: "ghost" })}>
-              Next: Lesson 2 <ArrowRight className="size-4" aria-hidden />
-            </Link>
-          </div>
-        </footer>
       </div>
     </article>
   );
