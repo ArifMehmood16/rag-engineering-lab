@@ -237,11 +237,11 @@ export const QUIZ_GUARD: QuizQuestion[] = [
 export const TAKEAWAY_GUARD = {
   topic: "Why prompt instructions cannot enforce database permissions",
   points: [
-    { prompt: "Explain it in your own words", tip: "The model can be persuaded; the permission check in code cannot." },
-    { prompt: "What might surprise you", tip: "The correct, well-supported claim in the unauthorized-evidence case is still removed." },
-    { prompt: "Where it fits in EvidenceLens", tip: "Verification and eligibility sit between the draft and release — the brief is never streamed unverified." },
-    { prompt: "An experiment worth running", tip: "Seed fixtures with paraphrased injections and confirm outcomes don’t depend on detection." },
-    { prompt: "A result that would change the plan", tip: "If verification misses many unit or qualifier changes, it needs its own evaluation before release gating relies on it." },
+    { prompt: "Explain it in your own words.", tip: "The model can be persuaded; the permission check in code cannot." },
+    { prompt: "What surprised you?", tip: "The correct, well-supported claim in the unauthorized-evidence case is still removed." },
+    { prompt: "Where does it fit in EvidenceLens?", tip: "Verification and eligibility sit between the draft and release — the brief is never streamed unverified." },
+    { prompt: "What experiment would you run?", tip: "Seed fixtures with paraphrased injections and confirm outcomes don’t depend on detection." },
+    { prompt: "What result would change your mind?", tip: "If verification misses many unit or qualifier changes, it needs its own evaluation before release gating relies on it." },
   ],
   outline: [
     { label: "The misconception", guidance: "A strong system prompt and an injection filter make a RAG system safe." },

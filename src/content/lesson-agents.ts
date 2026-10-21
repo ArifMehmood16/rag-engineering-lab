@@ -101,17 +101,20 @@ export const QUIZ_AGENTS: QuizQuestion[] = [
 ];
 
 export const TAKEAWAY_AGENTS: Takeaway = {
-  topic: "Why my RAG design starts without an agent",
+  topic: "Why a RAG workflow may not need an agent",
   points: [
-    { prompt: "Name the decision-maker for each step.", tip: "If code decides, it is a workflow. Only call it an agent where the model chooses the next action." },
-    { prompt: "Which tool failures look like ‘no evidence’?", tip: "Timeouts and denials can masquerade as empty results. Keep them distinct in logs and metrics." },
-    { prompt: "What must a summary never replace?", tip: "Original evidence with its provenance. Summaries can compact intent, not support." },
-    { prompt: "What would justify an agent?", tip: "A specific task the workflow fails on, shown on held-out questions — not a general wish for flexibility." },
+    { prompt: "Explain it in your own words.", tip: "If code decides each step, it is a workflow. It is only an agent where the model chooses the next action." },
+    { prompt: "What surprised you?", tip: "Timeouts and denials can look exactly like empty results unless they are kept distinct." },
+    { prompt: "Where does it fit in EvidenceLens?", tip: "Sufficiency assessment can trigger one targeted follow-up retrieval — orchestrated by application code." },
+    { prompt: "What experiment would you run?", tip: "Compare the bounded workflow with a candidate agent on the same held-out questions, recording steps, cost, and outcomes." },
+    { prompt: "What result would change your mind?", tip: "A specific task class the workflow repeatedly fails on, where an agent with strict limits succeeds." },
   ],
   outline: [
-    { label: "The distinction", guidance: "Tool, tool call, workflow, agent — in one sentence each." },
-    { label: "The loop", guidance: "Walk through propose → validate → permit → execute → result → release, and the four failure cases." },
-    { label: "Context choices", guidance: "What you retain, filter, and compact — and what you never compact." },
-    { label: "The decision", guidance: "Bounded workflow first; one follow-up in code; the conditions any future agent must meet." },
+    { label: "The misconception", guidance: "Any app containing an LLM is an agent, and agents are the more capable choice." },
+    { label: "The concept", guidance: "Tools, tool calling, workflows, and agents differ in who decides the next step." },
+    { label: "An EvidenceLens design example", guidance: "One targeted follow-up retrieval, capped and orchestrated by code." },
+    { label: "A trade-off", guidance: "A fixed workflow is predictable and testable but may miss unforeseen steps." },
+    { label: "An experiment to validate it", guidance: "Run the six tool-call fixtures and the context-budget cases; then compare workflow and agent on held-out questions." },
+    { label: "What remains unknown", guidance: "Whether any EvidenceLens task needs dynamic action selection at all." },
   ],
 };

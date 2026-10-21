@@ -296,11 +296,11 @@ export const WRITING_TOPIC = "Why retrieval similarity is not answer confidence"
 export const TAKEAWAY_CONTEXT = {
   topic: "Why retrieval similarity is not answer confidence",
   points: [
-    { prompt: "Explain it in your own words", tip: "Try one sentence: retrieval finds nearby text; something else must decide whether that text answers the question." },
-    { prompt: "What might surprise you", tip: "The most keyword-dense passage in the lab (P6) is commentary, and the most useful paraphrase (P7) shares no query words." },
-    { prompt: "Where it fits in EvidenceLens", tip: "Between pinning an index release and generation: retrieve, fuse, deduplicate, rerank, assemble, then assess sufficiency." },
-    { prompt: "An experiment worth running", tip: "Compare lexical, dense, and hybrid retrieval on the same labelled questions, measuring Recall@k and study diversity separately." },
-    { prompt: "A result that would change the plan", tip: "If dense-only retrieval matched hybrid on identifiers and units, the lexical path might not justify its cost." },
+    { prompt: "Explain it in your own words.", tip: "Try one sentence: retrieval finds nearby text; something else must decide whether that text answers the question." },
+    { prompt: "What surprised you?", tip: "The most keyword-dense passage in the lab (P6) is commentary, and the most useful paraphrase (P7) shares no query words." },
+    { prompt: "Where does it fit in EvidenceLens?", tip: "Between pinning an index release and generation: retrieve, fuse, deduplicate, rerank, assemble, then assess sufficiency." },
+    { prompt: "What experiment would you run?", tip: "Compare lexical, dense, and hybrid retrieval on the same labelled questions, measuring Recall@k and study diversity separately." },
+    { prompt: "What result would change your mind?", tip: "If dense-only retrieval matched hybrid on identifiers and units, the lexical path might not justify its cost." },
   ],
   outline: [
     { label: "The misconception", guidance: "A high similarity score means the answer is probably right." },

@@ -10,11 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ArchitectureRouteImport } from './routes/architecture'
+import { Route as RoadmapRouteImport } from './routes/roadmap'
+import { Route as WritingRouteImport } from './routes/writing'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArchitectureRoute = ArchitectureRouteImport.update({
+  id: '/architecture',
+  path: '/architecture',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapRoute = RoadmapRouteImport.update({
+  id: '/roadmap',
+  path: '/roadmap',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WritingRoute = WritingRouteImport.update({
+  id: '/writing',
+  path: '/writing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LessonsSlugRoute = LessonsSlugRouteImport.update({
@@ -25,27 +43,45 @@ const LessonsSlugRoute = LessonsSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
+  '/roadmap': typeof RoadmapRoute
+  '/writing': typeof WritingRoute
   '/lessons/$slug': typeof LessonsSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
+  '/roadmap': typeof RoadmapRoute
+  '/writing': typeof WritingRoute
   '/lessons/$slug': typeof LessonsSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/architecture': typeof ArchitectureRoute
+  '/roadmap': typeof RoadmapRoute
+  '/writing': typeof WritingRoute
   '/lessons/$slug': typeof LessonsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/lessons/$slug'
+  fullPaths: '/' | '/architecture' | '/roadmap' | '/writing' | '/lessons/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/lessons/$slug'
-  id: '__root__' | '/' | '/lessons/$slug'
+  to: '/' | '/architecture' | '/roadmap' | '/writing' | '/lessons/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/architecture'
+    | '/roadmap'
+    | '/writing'
+    | '/lessons/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ArchitectureRoute: typeof ArchitectureRoute
+  RoadmapRoute: typeof RoadmapRoute
+  WritingRoute: typeof WritingRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
 }
 
@@ -56,6 +92,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/architecture': {
+      id: '/architecture'
+      path: '/architecture'
+      fullPath: '/architecture'
+      preLoaderRoute: typeof ArchitectureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmap': {
+      id: '/roadmap'
+      path: '/roadmap'
+      fullPath: '/roadmap'
+      preLoaderRoute: typeof RoadmapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/writing': {
+      id: '/writing'
+      path: '/writing'
+      fullPath: '/writing'
+      preLoaderRoute: typeof WritingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lessons/$slug': {
@@ -70,6 +127,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ArchitectureRoute: ArchitectureRoute,
+  RoadmapRoute: RoadmapRoute,
+  WritingRoute: WritingRoute,
   LessonsSlugRoute: LessonsSlugRoute,
 }
 export const routeTree = rootRouteImport

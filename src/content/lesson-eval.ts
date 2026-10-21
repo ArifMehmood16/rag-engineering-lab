@@ -130,11 +130,11 @@ export const QUIZ_EVAL: QuizQuestion[] = [
 export const TAKEAWAY_EVAL = {
   topic: "Why retrieval and generation need separate evaluations",
   points: [
-    { prompt: "Explain it in your own words", tip: "A wrong answer can come from missing evidence or from misusing good evidence; one score cannot tell you which." },
-    { prompt: "What might surprise you", tip: "A wrong citation leaves the unsupported-claim rate untouched; only citation correctness moves." },
-    { prompt: "Where it fits in EvidenceLens", tip: "Evaluation spans the system offline; it is not a synchronous step in every request." },
-    { prompt: "An experiment worth running", tip: "Measure judge agreement with reviewed labels on a development slice before using it to compare configurations." },
-    { prompt: "A result that would change the plan", tip: "If judge–human disagreement concentrates on qualifier cases, the rubric needs revision before any comparison." },
+    { prompt: "Explain it in your own words.", tip: "A wrong answer can come from missing evidence or from misusing good evidence; one score cannot tell you which." },
+    { prompt: "What surprised you?", tip: "A wrong citation leaves the unsupported-claim rate untouched; only citation correctness moves." },
+    { prompt: "Where does it fit in EvidenceLens?", tip: "Evaluation spans the system offline; it is not a synchronous step in every request." },
+    { prompt: "What experiment would you run?", tip: "Measure judge agreement with reviewed labels on a development slice before using it to compare configurations." },
+    { prompt: "What result would change your mind?", tip: "If judge–human disagreement concentrates on qualifier cases, the rubric needs revision before any comparison." },
   ],
   outline: [
     { label: "The misconception", guidance: "One accuracy score tells you whether a RAG system works." },
