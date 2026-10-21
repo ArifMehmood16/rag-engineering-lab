@@ -19,7 +19,8 @@
 .theatre-overlay {
   pointer-events: none;
 }
-.scene-theatre .scene-motion-controls button:first-child {
+.scene-theatre .scene-motion-controls button[aria-label="Show whole system"],
+.scene-theatre .scene-motion-controls button[aria-label="Focus active stage"] {
   display: none;
 }
 .theatre-caption {

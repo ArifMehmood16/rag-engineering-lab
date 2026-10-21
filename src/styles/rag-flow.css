@@ -68,3 +68,10 @@
     opacity: 0 !important;
   }
 }
+
+/* Leave space for the graphics control and replay alongside the camera controls. */
+@media (min-width: 1000px) {
+  .scene-mode-label {
+    left: 210px;
+  }
+}

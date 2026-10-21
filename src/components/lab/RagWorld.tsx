@@ -747,18 +747,25 @@ function World(props: RagWorldProps) {
                     : -0.9;
       projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
       const region = sceneRegion(size.width, size.height, tour.phase === "request");
-      const x = (projected.x * 0.5 + 0.5) * size.width;
-      const rawY = (-projected.y * 0.5 + 0.5) * size.height;
+      const rawX = (projected.x * 0.5 + 0.5) * size.width;
       const dimensions = labelSizes.current.get(element) ?? { width: 120, height: 30 };
+      const halfWidth = dimensions.width / 2 + 4;
+      const x = overview
+        ? THREE.MathUtils.clamp(
+            rawX,
+            region.x - region.width / 2 + halfWidth + 1,
+            region.x + region.width / 2 - halfWidth - 1,
+          )
+        : rawX;
+      const rawY = (-projected.y * 0.5 + 0.5) * size.height;
       const y =
-        !overview && nodeEmphasis(plan, node) > 0.5
+        overview || nodeEmphasis(plan, node) > 0.5
           ? THREE.MathUtils.clamp(
               rawY,
               region.y - region.height / 2 + dimensions.height / 2 + 6,
               region.y + region.height / 2 - dimensions.height / 2 - 6,
             )
           : rawY;
-      const halfWidth = dimensions.width / 2 + 4;
       const inArea =
         x > region.x - region.width / 2 + halfWidth &&
         x < region.x + region.width / 2 - halfWidth &&
