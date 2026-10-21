@@ -4,6 +4,7 @@ import { getLesson } from "@/content/lessons";
 import { LessonContext } from "@/components/learn/LessonContext";
 import { LessonCost } from "@/components/learn/LessonCost";
 import { LessonEval } from "@/components/learn/LessonEval";
+import { LessonGuard } from "@/components/learn/LessonGuard";
 import { Badge, btnVariants } from "@/components/learn/ui";
 
 export const Route = createFileRoute("/lessons/$slug")({
@@ -37,6 +38,7 @@ function LessonPage() {
   if (lesson.slug === "context") return <LessonContext />;
   if (lesson.slug === "cost-latency") return <LessonCost />;
   if (lesson.slug === "evaluation") return <LessonEval />;
+  if (lesson.slug === "guardrails") return <LessonGuard />;
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-14 lg:px-10">
