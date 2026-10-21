@@ -1,0 +1,341 @@
+/* Shared reading scale. Monospace is reserved for IDs and numeric data. */
+.guided-lab {
+  --reader-width: 480px;
+}
+.gallery-card h2 {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.gallery-card .story-card-body {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #d4dfef;
+}
+.gallery-operation > p,
+.gallery-intro-body > p,
+.story-card .tour-source-preview p,
+.story-card .tour-source-text > p,
+.story-card .tour-passage > p,
+.story-card .tour-question p,
+.story-card .tour-answer > p,
+.story-card .tour-claims p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: #d4dfef;
+}
+.gallery-card .gallery-intro-heading h2 {
+  font-size: 29px;
+}
+.gallery-card .story-kicker {
+  font: 500 12px/1.5 var(--font-sans);
+  letter-spacing: 0.025em;
+  color: #b5cbe1;
+}
+.gallery-kind {
+  font-size: 12px;
+}
+.gallery-intro-body .gallery-intro-context,
+.gallery-operation > small,
+.gallery-card .story-card-footer > p,
+.gallery-card .story-card-footer > div:not(.story-end-actions) {
+  font: 400 13px/1.6 var(--font-sans);
+  color: #b2c6de;
+}
+.gallery-header span {
+  font-size: 14px;
+  font-weight: 500;
+}
+.gallery-header small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #b2c4da;
+}
+.gallery-header > span {
+  font-size: 13px;
+}
+.gallery-header b {
+  font-size: 12px;
+  color: #a5b9d0;
+}
+.gallery-start,
+.gallery-scroll-cue {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.story-card .tour-data-note,
+.story-card .tour-result-summary,
+.story-card .tour-result-lines,
+.story-card .tour-source-list button {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #c2d3e7;
+}
+.story-card .tour-key-values,
+.story-card .tour-source-text > a,
+.story-card .tour-passage footer {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.story-card .tour-vector {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+.story-card .tour-vector > span {
+  padding: 7px;
+}
+.story-card .tour-vector code {
+  font-size: 14px;
+}
+.story-card .tour-vector small {
+  font-size: 12px;
+}
+.story-card .tour-chunk-picker {
+  flex-wrap: wrap;
+}
+.story-card .tour-chunk-picker button {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+.story-streams button {
+  font-size: 15px;
+  font-weight: 500;
+  padding: 9px 13px;
+}
+.story-streams button small {
+  font: 400 12px/1.4 var(--font-sans);
+  color: #a4bad2;
+}
+.story-streams button[aria-pressed="true"] small {
+  color: #b1d7d2;
+}
+.story-visit-progress {
+  font-size: 13px;
+  padding: 9px 12px;
+  color: #c3d3e4;
+}
+.story-visit-progress strong {
+  font-size: 18px;
+}
+.story-visit-progress small {
+  font: 12px/1.4 var(--font-sans);
+  color: #a6bbd2;
+}
+.gallery-story .story-ruler > div {
+  font: 500 12px/1.5 var(--font-sans);
+  letter-spacing: 0.04em;
+}
+.gallery-story .story-ruler a {
+  font: 500 12px/1.4 var(--font-sans);
+}
+.gallery-story .story-ruler small {
+  color: #a9bfd7;
+}
+.gallery-story .story-ruler > p {
+  font-size: 13px;
+  color: #a9bfd7;
+}
+.scene-labels .world-label {
+  font: 500 14px/1.4 var(--font-sans);
+  letter-spacing: 0;
+  color: #d0e0ef;
+}
+.world-label small {
+  font: 400 12px/1.45 var(--font-sans);
+  color: #b2c8df;
+  max-width: 180px;
+}
+.scene-flow-label > span {
+  font: 500 12px/1.5 var(--font-sans);
+  letter-spacing: 0.06em;
+}
+.scene-flow-label > strong {
+  font: 500 15px/1.45 var(--font-sans);
+  color: #e0eaf7;
+}
+.gallery-story .story-ruler {
+  padding: 12px 15px;
+}
+.gallery-story .story-ruler > p {
+  display: none;
+}
+.drawer-header p,
+.drawer-tabs button {
+  font-size: 14px;
+  color: #b9cde3;
+}
+.drawer-content {
+  font-size: 15px;
+  line-height: 1.65;
+}
+.drawer-content .hud-label {
+  font-size: 13px;
+  color: #b3cce1;
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .guided-lab {
+    --reader-width: 440px;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1100px) {
+  .guided-lab {
+    --reader-width: 390px;
+  }
+  .story-streams button {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+  .story-streams button small {
+    display: none;
+  }
+  .gallery-story .story-visit-progress {
+    font-size: 12px;
+  }
+}
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .story-visit-progress small {
+    display: none;
+  }
+}
+@media (max-width: 999px) {
+  .guided-lab {
+    --reader-width: 100%;
+  }
+  .story-gallery-shell {
+    top: 45svh;
+    bottom: 65px;
+  }
+  .story-navigation {
+    top: 74px;
+  }
+  .story-streams button {
+    font-size: 14px;
+    padding: 9px 7px;
+    gap: 6px;
+  }
+  .story-streams button small {
+    display: none;
+  }
+  .story-visit-progress {
+    top: 132px;
+    font-size: 12px;
+  }
+  .story-visit-progress strong {
+    font-size: 13px;
+  }
+  .gallery-story .story-ruler {
+    top: 158px;
+    padding: 0;
+  }
+  .gallery-story .story-ruler > div {
+    display: none;
+  }
+  .story-ruler ol {
+    margin-top: 0;
+  }
+  .gallery-story .story-ruler a {
+    font-size: 12px;
+  }
+  .story-ruler a > span {
+    width: 23px;
+    height: 23px;
+  }
+  .story-ruler a > small {
+    display: none;
+  }
+  .route-key {
+    display: none;
+  }
+  .scene-motion-controls {
+    top: 184px;
+  }
+  .scene-flow-label > strong {
+    font-size: 14px;
+  }
+  .scene-labels .world-label {
+    font-size: 13px;
+  }
+  .gallery-card h2 {
+    font-size: 22px;
+  }
+  .gallery-card .gallery-intro-heading h2 {
+    font-size: 25px;
+  }
+  .gallery-card .story-kicker {
+    font-size: 12px;
+  }
+  .gallery-header span {
+    font-size: 13px;
+  }
+  .gallery-header small {
+    display: none;
+  }
+  .gallery-scroll-cue {
+    font-size: 12px;
+  }
+  .gallery-operation > svg {
+    margin-bottom: 8px;
+    width: 25px;
+    height: 25px;
+  }
+  .lab-utility-bar {
+    bottom: 8px;
+    padding: 0;
+    font-size: 13px;
+    gap: 12px;
+  }
+  .lab-utility-bar > div {
+    gap: 13px;
+    padding: 10px 12px;
+  }
+  .lab-utility-bar button {
+    white-space: nowrap;
+  }
+  .lab-utility-bar button svg {
+    flex-shrink: 0;
+  }
+  .lab-utility-bar > div > a {
+    display: none;
+  }
+  .immersive-shell > header {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 999px) {
+  .scene-flow-label > strong {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}
+
+.scene-mode-label,
+.lab-utility-bar {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: #a8bfd7;
+}
+.lab-utility-bar button,
+.lab-utility-bar a {
+  color: #c2d4e9;
+}
+
+@media (max-width: 999px) {
+  .scene-labels .world-label {
+    max-width: 98px;
+    text-align: center;
+  }
+}
+
+.story-ruler a small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}

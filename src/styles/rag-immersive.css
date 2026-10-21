@@ -81,7 +81,7 @@
   display: block;
   margin-top: 3px;
   color: #7891b2;
-  font-size: 9px;
+  font-size: 12px;
 }
 .story-streams button[aria-pressed="true"] {
   background: #143d456e;
@@ -101,7 +101,7 @@
   border-radius: 9px;
   background: #091322b8;
   backdrop-filter: blur(18px);
-  font: 10px var(--font-mono);
+  font: 12px var(--font-mono);
   color: #9eb2cd;
   overflow: hidden;
 }
@@ -110,7 +110,7 @@
   font-size: 15px;
 }
 .story-visit-progress small {
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   color: #8196b5;
 }
 .story-visit-progress i {
@@ -152,7 +152,7 @@
   display: flex;
   justify-content: space-between;
   color: #90b4d5;
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   letter-spacing: 0.12em;
 }
 .story-kicker > span:last-child {
@@ -168,7 +168,7 @@
 .story-beats {
   display: flex;
   gap: 10px;
-  font: 9px var(--font-mono);
+  font: 12px var(--font-mono);
   text-transform: uppercase;
   color: #7188a7;
 }
@@ -211,12 +211,12 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font: 9px var(--font-mono);
+  font: 12px var(--font-mono);
   color: #90e1d9;
   margin-bottom: 13px;
 }
 .story-card .tour-data-note {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .story-card .tour-source-list {
@@ -224,7 +224,7 @@
 }
 .story-card .tour-source-list button {
   padding: 8px 9px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .story-card .tour-source-preview {
   padding: 9px;
@@ -237,18 +237,18 @@
   line-height: 1.6;
 }
 .story-card .tour-source-text > span {
-  font-size: 8px;
+  font-size: 12px;
 }
 .story-card .tour-key-values {
-  font-size: 10px;
+  font-size: 12px;
   gap: 5px 9px;
   margin-top: 10px;
 }
 .story-card .tour-source-text > a {
-  font-size: 10px;
+  font-size: 12px;
 }
 .story-card .tour-result-summary {
-  font-size: 11px;
+  font-size: 12px;
   margin-bottom: 11px;
 }
 .story-card .tour-chunk-browser {
@@ -258,19 +258,19 @@
   min-width: 23px;
   height: 23px;
   padding: 2px;
-  font-size: 9px;
+  font-size: 12px;
 }
 .story-card .tour-passage {
   padding: 9px;
 }
 .story-card .tour-passage-id {
-  font-size: 8px;
+  font-size: 12px;
   margin-bottom: 8px;
 }
 .story-card .tour-passage footer {
   margin-top: 9px;
   padding-top: 7px;
-  font-size: 8px;
+  font-size: 12px;
   gap: 3px;
 }
 .story-card .tour-vector {
@@ -281,10 +281,10 @@
   padding: 5px 3px;
 }
 .story-card .tour-vector small {
-  font-size: 6px;
+  font-size: 12px;
 }
 .story-card .tour-vector code {
-  font-size: 9px;
+  font-size: 12px;
 }
 .story-card .tour-question p {
   font-size: 13px;
@@ -303,7 +303,7 @@
   line-height: 1.7;
 }
 .story-card .tour-result-lines {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 .story-operations {
@@ -325,7 +325,7 @@
   place-items: center;
   flex-shrink: 0;
   border-radius: 50%;
-  font: 9px var(--font-mono);
+  font: 12px var(--font-mono);
 }
 .story-operations strong {
   display: block;
@@ -353,7 +353,7 @@
 }
 .story-work-note {
   color: #7e95b5;
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   margin-top: 18px;
 }
 .story-card-footer {
@@ -365,14 +365,14 @@
 }
 .story-card-footer > p {
   color: #99b0ce;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 .story-card-footer > div:not(.story-end-actions) {
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 10px;
+  font-size: 12px;
   color: #b3ffec;
   margin-top: 10px;
 }
@@ -389,7 +389,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
+  font-size: 12px;
   border: 1px solid #6bbdb066;
   padding: 6px 8px;
   border-radius: 6px;
@@ -410,7 +410,7 @@
 .story-ruler > div {
   display: flex;
   justify-content: space-between;
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   color: #89aec9;
   letter-spacing: 0.1em;
 }
@@ -444,7 +444,7 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   text-decoration: none;
 }
 .story-ruler a > span {
@@ -474,7 +474,7 @@
   gap: 8px;
   align-items: center;
   margin-top: 13px;
-  font-size: 10px;
+  font-size: 12px;
   color: #7d9dbb;
 }
 .lab-utility-bar {
@@ -529,7 +529,7 @@
 .scene-labels .world-label {
   position: absolute;
   transform: translate(-50%, -50%);
-  font: 10px var(--font-mono);
+  font: 12px var(--font-mono);
   color: #9cb5d5;
   background: transparent;
   border: 0;
@@ -544,7 +544,7 @@
 }
 .world-label small {
   color: #7992b5;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0;
 }
 .scene-labels .world-label-active {
@@ -562,7 +562,7 @@
   position: fixed;
   left: 111px;
   bottom: 31px;
-  font-size: 7px;
+  font-size: 12px;
   z-index: 3;
   color: #699bb6;
 }
@@ -607,7 +607,7 @@
 .scene-flow-label > span {
   display: block;
   color: #81e1d5;
-  font: 8px var(--font-mono);
+  font: 12px var(--font-mono);
   letter-spacing: 0.16em;
   margin-bottom: 5px;
 }
@@ -692,7 +692,7 @@
     padding: 10px 16px 12px;
   }
   .story-card-footer > p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .story-focus-label {
     margin-bottom: 10px;
@@ -728,14 +728,14 @@
     flex: 1;
     padding: 8px;
     gap: 7px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .story-streams button svg {
     width: 13px;
     flex-shrink: 0;
   }
   .story-streams button small {
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-visit-progress {
     position: fixed;
@@ -744,11 +744,11 @@
     border: 0;
     background: transparent;
     padding: 5px;
-    font-size: 8px;
+    font-size: 12px;
     backdrop-filter: none;
   }
   .story-visit-progress strong {
-    font-size: 10px;
+    font-size: 12px;
   }
   .story-visit-progress small,
   .story-visit-progress i {
@@ -771,10 +771,10 @@
     margin: 8px 0 10px;
   }
   .story-kicker {
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-beats {
-    font-size: 8px;
+    font-size: 12px;
   }
   .story-beats > span {
     padding-bottom: 8px;
@@ -783,7 +783,7 @@
     padding: 10px 13px;
   }
   .story-focus-label {
-    font-size: 8px;
+    font-size: 12px;
     margin-bottom: 8px;
   }
   .story-card-footer {
@@ -791,20 +791,20 @@
     border-radius: 0 0 13px 13px;
   }
   .story-card-footer > p {
-    font-size: 10px;
+    font-size: 12px;
   }
   .story-card-footer > div:not(.story-end-actions) {
-    font-size: 9px;
+    font-size: 12px;
     margin-top: 7px;
   }
   .story-card .tour-source-list button {
     padding: 6px 8px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .story-card .tour-source-preview p,
   .story-card .tour-source-text > p,
   .story-card .tour-passage > p {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
   .story-card .tour-source-preview {
@@ -812,17 +812,17 @@
     padding: 7px;
   }
   .story-card .tour-source-text > span {
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-card .tour-passage footer {
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-card .tour-claims p {
     padding: 6px 8px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .story-card .tour-key-values {
-    font-size: 9px;
+    font-size: 12px;
     gap: 3px 6px;
     margin-top: 7px;
   }
@@ -833,7 +833,7 @@
     font-size: 12px;
   }
   .story-operations p {
-    font-size: 11px;
+    font-size: 12px;
   }
   .story-ruler {
     left: 12px;
@@ -847,7 +847,7 @@
     backdrop-filter: none;
   }
   .story-ruler > div {
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-ruler ol {
     margin-top: 7px;
@@ -855,7 +855,7 @@
   .story-ruler a > span {
     width: 18px;
     height: 18px;
-    font-size: 6px;
+    font-size: 12px;
   }
   .story-ruler li::after {
     top: 8px;
@@ -880,7 +880,7 @@
     height: 23px;
   }
   .scene-labels .world-label {
-    font-size: 7px;
+    font-size: 12px;
   }
   .world-label small {
     display: none;
@@ -894,11 +894,11 @@
     padding: 7px 9px;
   }
   .scene-flow-label > span {
-    font-size: 6px;
+    font-size: 12px;
     margin-bottom: 4px;
   }
   .scene-flow-label strong {
-    font-size: 10px;
+    font-size: 12px;
   }
   .scene-flow-label i {
     height: 22px;
@@ -916,7 +916,7 @@
   }
   .lab-utility-bar a,
   .lab-utility-bar button {
-    font-size: 9px;
+    font-size: 12px;
   }
   .world-fallback {
     padding: 0 10px 43vh;
@@ -943,10 +943,10 @@
     top: 125px;
     right: 12px;
     padding: 0;
-    font-size: 7px;
+    font-size: 12px;
   }
   .story-visit-progress strong {
-    font-size: 8px;
+    font-size: 12px;
   }
   .story-ruler > div > small {
     visibility: hidden;
@@ -957,7 +957,7 @@
   .story-card .tour-chunk-picker button {
     width: 22px;
     height: 22px;
-    font-size: 9px;
+    font-size: 12px;
   }
   .story-card .tour-chunk-picker {
     margin-bottom: 7px;
@@ -990,12 +990,12 @@
     padding-bottom: 8px;
   }
   .story-card-footer > p {
-    font-size: 9px;
+    font-size: 12px;
   }
   .story-card .tour-source-preview p,
   .story-card .tour-source-text > p,
   .story-card .tour-passage > p {
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.4;
   }
 }

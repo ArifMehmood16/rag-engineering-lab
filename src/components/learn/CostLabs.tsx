@@ -144,7 +144,7 @@ export function PrefixDemo() {
                         </span>
                       )}
                     </span>
-                    <span className="font-mono text-[0.68rem] uppercase">
+                    <span className="font-mono text-[0.75rem] uppercase">
                       {reused ? (r === "Request A" ? "written" : "reused") : "processed"}
                     </span>
                   </li>
@@ -229,7 +229,7 @@ export function InvalidationLab() {
                 >
                   <span className="flex items-center gap-2 font-medium">
                     <Icon className="size-4 shrink-0" aria-hidden /> {s.name}{" "}
-                    <span className="ml-auto font-mono text-[0.68rem] uppercase">{s.outcome}</span>
+                    <span className="ml-auto font-mono text-[0.75rem] uppercase">{s.outcome}</span>
                   </span>
                   <span className="mt-0.5 block text-xs">{s.note}</span>
                 </li>
@@ -354,7 +354,7 @@ export function RoutingSim() {
                 )}
               >
                 <span>{s.label}</span>
-                <span className="font-mono text-[0.68rem] uppercase">{toneLbl[s.tone]}</span>
+                <span className="font-mono text-[0.75rem] uppercase">{toneLbl[s.tone]}</span>
               </div>
               {i < r.steps.length - 1 && (
                 <ArrowDown className="mx-auto my-0.5 size-3 text-muted-foreground" aria-hidden />

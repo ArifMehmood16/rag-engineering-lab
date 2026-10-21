@@ -107,7 +107,7 @@ export function LessonAgents() {
               <div key={t.name} className="rounded-md border border-border bg-card p-3 text-sm">
                 <p className="font-mono text-xs font-semibold">{t.name}</p>
                 <p className="mt-1 text-muted-foreground">{t.description}</p>
-                <p className="mt-1 font-mono text-[0.7rem]">
+                <p className="mt-1 font-mono text-[0.75rem]">
                   scope {t.scope} · ≤{t.maxResults} results · {t.timeoutMs} ms
                 </p>
                 <Badge tone="proposed" className="mt-2">

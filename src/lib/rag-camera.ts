@@ -64,7 +64,7 @@ export function sceneRegion(width: number, height: number) {
   const left = wide ? 30 : 18;
   const right = wide ? width - reader - 45 : width - 18;
   const top = wide ? 166 : 190;
-  const bottom = wide ? height - 190 : height * 0.45 - 18;
+  const bottom = wide ? height - (width < 1200 ? 230 : 210) : height * 0.45 - 18;
   return {
     width: Math.max(140, right - left),
     height: Math.max(85, bottom - top),

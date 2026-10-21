@@ -50,7 +50,7 @@ export function useRagGallery(
           `${reduced ? 0 : Math.max(-11, Math.min(11, distance * -8))}deg`,
         );
         el.style.setProperty("--gallery-depth", `${reduced ? 0 : -depth * 32}px`);
-        el.style.setProperty("--gallery-opacity", String(1 - Math.min(depth, 1) * 0.3));
+        el.style.setProperty("--gallery-opacity", String(1 - Math.min(depth, 1) * 0.2));
       });
       list.style.setProperty(
         "--gallery-progress",

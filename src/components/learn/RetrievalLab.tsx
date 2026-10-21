@@ -153,7 +153,7 @@ export function RetrievalLab() {
                 )}
               >
                 <span className="block font-medium">{m.label}</span>
-                <span className="block text-[0.68rem] opacity-80">{m.hint}</span>
+                <span className="block text-[0.75rem] opacity-80">{m.hint}</span>
               </button>
             ))}
           </div>
@@ -235,7 +235,7 @@ export function RetrievalLab() {
                         {sel ? "Selected" : "Rejected"}
                       </Badge>
                     </span>
-                    <span className="mt-1 block font-mono text-[0.7rem] text-muted-foreground">
+                    <span className="mt-1 block font-mono text-[0.75rem] text-muted-foreground">
                       keyword hits {c.keywordScore} · toy similarity {c.semanticScore.toFixed(2)}
                       {c.fusionScore !== null && ` · RRF ${c.fusionScore.toFixed(4)}`}
                       {c.rerankScore !== null && ` · rerank ${c.rerankScore.toFixed(2)}`}

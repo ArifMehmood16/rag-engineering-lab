@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { copyText } from "@/lib/storage";
 
 export const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[0.68rem] uppercase tracking-wider",
+  "inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[0.75rem] uppercase tracking-wider",
   {
     variants: {
       tone: {
@@ -195,7 +195,7 @@ export function ToggleChip({
       </span>
       <span
         className={cn(
-          "shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.65rem] uppercase",
+          "shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.75rem] uppercase",
           pressed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
         )}
       >

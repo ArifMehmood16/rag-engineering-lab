@@ -704,7 +704,15 @@ function World(props: RagWorldProps) {
       projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
       const region = sceneRegion(size.width, size.height);
       const x = (projected.x * 0.5 + 0.5) * size.width;
-      const y = (-projected.y * 0.5 + 0.5) * size.height;
+      const rawY = (-projected.y * 0.5 + 0.5) * size.height;
+      const y =
+        !overview && nodeEmphasis(plan, node) > 0.5
+          ? THREE.MathUtils.clamp(
+              rawY,
+              region.y - region.height / 2 + element.offsetHeight / 2 + 6,
+              region.y + region.height / 2 - element.offsetHeight / 2 - 6,
+            )
+          : rawY;
       const halfWidth = element.offsetWidth / 2 + 4;
       const inArea =
         x > region.x - region.width / 2 + halfWidth &&
@@ -719,13 +727,26 @@ function World(props: RagWorldProps) {
   const active = (n: SceneNode) => plan.active === n;
   const emphasis = (n: SceneNode) => nodeEmphasis(plan, n, overview);
   const positions = plan.positions;
+  // Scrolling changes brightness and packet position, not the 21 route geometries.
+  const routes = useMemo(() => {
+    const edges: [SceneNode, SceneNode][] = prep
+      ? [
+          ["source", "chunks"],
+          ["chunks", "vectors"],
+          ["vectors", "index"],
+        ]
+      : REQUEST_CONNECTIONS;
+    return Object.fromEntries(
+      edges.map(([from, to]) => [`${from}:${to}`, flowRoute(positions, from, to)]),
+    );
+  }, [positions, prep]);
   const connection = (from: SceneNode, to: SceneNode) => {
     const focused = plan.transfer.from === from && plan.transfer.to === to;
     const nearby = from === plan.active || to === plan.active;
     return (
       <Connection
         key={`${from}-${to}`}
-        {...flowRoute(positions, from, to)}
+        {...routes[`${from}:${to}`]!}
         color={flowStyle(from, to).color}
         emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.3 : 0.06}
         active={plan.moving && focused}

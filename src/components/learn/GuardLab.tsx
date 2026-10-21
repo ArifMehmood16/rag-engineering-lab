@@ -81,10 +81,10 @@ export function GuardLab() {
                 <div className="flex flex-wrap items-center gap-2">
                   <R.Icon className="size-4 shrink-0" aria-hidden />
                   <span className="font-semibold">{control.name}</span>
-                  <span className="font-mono text-[0.68rem] text-muted-foreground">
+                  <span className="font-mono text-[0.75rem] text-muted-foreground">
                     Layer {control.layer}
                   </span>
-                  <span className="ml-auto font-mono text-[0.68rem] uppercase">{R.label}</span>
+                  <span className="ml-auto font-mono text-[0.75rem] uppercase">{R.label}</span>
                 </div>
                 <p className="mt-1">{note}</p>
                 {(result === "caught" || result === "contained") && (

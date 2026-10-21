@@ -165,7 +165,7 @@ export function LessonCost() {
               <li key={t} className="rounded-lg border border-border bg-card p-4">
                 <p className="font-semibold">{t}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{d}</p>
-                <p className="mt-2 font-mono text-[0.68rem] uppercase text-accent-foreground">
+                <p className="mt-2 font-mono text-[0.75rem] uppercase text-accent-foreground">
                   Planned / proposed — not implemented
                 </p>
               </li>

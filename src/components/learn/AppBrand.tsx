@@ -10,10 +10,10 @@ export function AppBrand({ className }: { className?: string }) {
     >
       <img src="/logo.svg" alt="" width={36} height={36} className="size-9 shrink-0" />
       <span className="min-w-0">
-        <span className="block font-mono text-[8px] leading-3 tracking-[0.3em] text-muted-foreground">
+        <span className="block font-mono text-[12px] leading-4 tracking-[0.16em] text-muted-foreground">
           THE
         </span>
-        <span className="block whitespace-nowrap font-display text-[13px] font-semibold leading-5 tracking-[0.03em]">
+        <span className="block whitespace-nowrap font-display text-[15px] font-semibold leading-5 tracking-[0.03em]">
           INTELLIGENCE LAB
         </span>
       </span>
