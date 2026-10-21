@@ -28,8 +28,12 @@ The existing Lovable/TanStack build emits its client and server output under `.o
 
 ## Explore the lab
 
-- **Run / pause / step:** follow a request through each application stage, or run directly to its result. Playback speed affects the presentation, not measured performance.
-- **Knowledge preparation:** inspect documents, curated chunks, seven-dimensional toy vectors, and their ID-to-source index. Replay the preparation sequence independently of a request.
+- **Build knowledge first:** begin with source text, then inspect curated chunk boundaries, toy encoding, and index storage before a question is introduced. Returning visitors can explicitly use the prepared index.
+- **Control the pace:** Next advances one input, operation, or output beat. Optional playback defaults to six seconds per beat and pauses at every output for unlimited reading time. Four- and ten-second presentation paces are also available; these are not measured system latencies.
+- **Watch the system:** sharp vector objects represent source pages, separating chunks, numeric features, an index vault, a context tray, the model, tools, and release checks. Short data-transfer animations belong to the selected operation. The scene and reading panel share one learning frame.
+- **Follow one chunk:** numbered passage selectors retain the chosen record across preparation stages. Inspect its actual text, provenance, estimated size, and seven feature values. Desktop shows the system beside an Input / Work / Output reader; narrow screens show an active-object close-up with the same reading controls.
+- **See this visit's exploration:** the meter counts distinct stage outputs actually viewed, out of four preparation and eleven request stages. Instant runs do not mark all computed stages as explored. Reviewing or repeating a stage does not add another count. Counts live only in React state and start at zero on a fresh lab load; no browser storage, accounts, or learning-completion claims are involved.
+- **Review without rerunning:** completed steps retain their exact input/output engine snapshots. Review input replays the explanation without generating again or warming another cache entry. Instant request runs retain intermediate snapshots too.
 - **Retrieval:** compare keyword overlap, transparent toy semantic scoring, reciprocal rank fusion, toy reranking, deduplication, candidate limits, and context budgets.
 - **Caching and routing:** repeat a request to observe local vector/retrieval/approved-answer reuse and simulated provider-prefix reuse. Approved answers still pass verification and current-eligibility checks; prompt caching still generates. Model profiles are explicitly simulated.
 - **Evaluation:** inject a retrieval miss, unsupported claim, bad/missing citation, false refusal, or provider outage. Ratios are computed from that run with visible denominators; unanswerable questions and infrastructure errors stay separate.
@@ -37,7 +41,15 @@ The existing Lovable/TanStack build emits its client and server output under `.o
 - **Tools/context:** run a bounded local read-only tool scenario with argument validation, permission denial, timeout, empty result, and budget handling. The workflow permits one call and no automatic retries; it is not an autonomous agent.
 - **Comparison:** hold the question and corpus fixed, compare default and modified cold runs, and optionally repeat the modified run against its own warm cache.
 
-Click stages and citations to inspect their actual inputs, outputs, source metadata, and limitations. Focus mode hides surrounding controls; narrow layouts use a linear flow and collapsible configuration. Reduced-motion/low-effects modes preserve the same information, and hidden pages stop playback timers.
+Click stages and citations to inspect their actual inputs, outputs, source metadata, and limitations. The expanded diagram and full execution reports remain below the guided scene. Reduced-motion/low-effects modes preserve the same information, and hidden pages pause playback timers.
+
+## Interaction design
+
+The localhost reference supplied by the project owner informed the persistent system scene and adjacent readable narrative. The lab keeps its own dataset, deterministic engine, and clear simulation boundaries.
+
+- [Mayer and Pilegard: learner-paced segmentation](https://www.cambridge.org/core/books/abs/cambridge-handbook-of-multimedia-learning/principles-for-managing-essential-processing-in-multimedia-learning-segmenting-pretraining-and-modality-principles/DD24C2F48B9B1277CE59F78276110258) supports dividing a complex explanation into meaningful segments that the learner controls.
+- [NN/G: visibility of system status](https://www.nngroup.com/articles/visibility-system-status/) informed immediate stage feedback, active-object highlighting, and the visit's exploration meter.
+- [W3C: pause, stop, hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide) informed explicit playback controls and bounded motion. Presentation effects finish within two seconds, reduced motion has a static equivalent, and automatic step advancement pauses on output.
 
 ## What executes, and what is simulated
 
@@ -51,7 +63,7 @@ The index uses curated passages rather than claiming to parse NASA pages live. R
 
 ## Privacy and content
 
-The learning experience accepts no visitor text and stores no notes, progress, or quiz answers. Controls and cache state live only in the current page's memory. Thinking points and copyable observation outlines support reflection without adding accounts or storage.
+The learning experience accepts no visitor text and persists no notes, progress, or quiz answers. Controls, exploration counts, and cache state live only in the current lab's memory. Thinking points and copyable observation outlines support reflection without adding accounts or storage.
 
 Lesson content is under `src/content/`; lesson renderers are under `src/components/learn/`. The connected lab has its own components under `src/components/lab/`, pure logic under `src/lib/`, and behavioral tests under `src/test/`. See `AGENTS.md` for project conventions.
 
