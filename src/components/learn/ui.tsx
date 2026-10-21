@@ -109,3 +109,27 @@ export function Callout({ title, tone = "neutral", children }: { title: string; 
     </div>
   );
 }
+
+/** On/off control for lab demonstrations. A button with aria-pressed, not a form checkbox. */
+export function ToggleChip({ label, desc, pressed, onChange, disabled }: { label: string; desc?: string; pressed: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      disabled={disabled}
+      onClick={() => onChange(!pressed)}
+      className={cn(
+        "flex w-full items-start justify-between gap-3 rounded-md border p-3 text-left text-sm transition-colors disabled:opacity-50",
+        pressed ? "border-primary bg-primary-soft" : "border-border bg-card hover:bg-muted",
+      )}
+    >
+      <span>
+        <span className="block font-semibold">{label}</span>
+        {desc && <span className="block text-xs text-muted-foreground">{desc}</span>}
+      </span>
+      <span className={cn("shrink-0 rounded-full px-2 py-0.5 font-mono text-[0.65rem] uppercase", pressed ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+        {pressed ? "On" : "Off"}
+      </span>
+    </button>
+  );
+}
