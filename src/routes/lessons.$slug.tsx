@@ -54,7 +54,7 @@ function LessonPage() {
           {lesson.nextUp?.map((n) => <li key={n}>{n}</li>)}
         </ul>
         <p className="mt-4 text-sm text-muted-foreground">
-          This lesson has no content yet, so it cannot be marked complete. It will follow the same nine-part structure as Lesson 1.
+          This lesson has no content yet. It will follow the same nine-part structure as Lesson 1.
         </p>
       </div>
       <Link to="/lessons/$slug" params={{ slug: "context" }} className={`${btnVariants({ variant: "primary" })} mt-8`}>
