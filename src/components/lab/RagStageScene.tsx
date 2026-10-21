@@ -54,10 +54,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
           </defs>
           {REQUEST_CONNECTIONS.map(([from, to]) => {
             const active =
-              plan.transfer.from === from &&
-              plan.transfer.to === to &&
-              !plan.skipped &&
-              !plan.blocked;
+              plan.moving && plan.transfer.from === from && plan.transfer.to === to;
             const points = Array.from({ length: 40 }, (_, n) =>
               travelPoint(
                 plan.positions[from]!,

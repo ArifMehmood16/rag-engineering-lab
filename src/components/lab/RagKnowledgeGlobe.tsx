@@ -33,17 +33,17 @@ function DocumentTile({
       <mesh>
         <planeGeometry args={[selected ? 0.56 : 0.42, 0.31]} />
         <meshBasicMaterial
-          color={selected ? "#baffef" : "#57c8ff"}
+          color={selected ? "#99c9be" : "#5f9dbb"}
           transparent
-          opacity={enabled ? 0.16 : 0.035}
+          opacity={enabled ? 0.1 : 0.035}
           side={THREE.DoubleSide}
           depthWrite={false}
           toneMapped={false}
         />
         <Edges
-          color={selected ? "#baffef" : "#58caff"}
+          color={selected ? "#99c9be" : "#639dbd"}
           transparent
-          opacity={enabled ? 0.9 : 0.18}
+          opacity={enabled ? 0.6 : 0.18}
         />
       </mesh>
       {[0, 1, 2].map((i) => (
@@ -52,7 +52,7 @@ function DocumentTile({
           <meshBasicMaterial
             color={selected ? "#aafff0" : "#69d3ff"}
             transparent
-            opacity={enabled ? 0.8 : 0.15}
+            opacity={enabled ? 0.5 : 0.15}
             depthWrite={false}
             toneMapped={false}
           />
@@ -111,7 +111,7 @@ export function RagKnowledgeGlobe({
   });
   return (
     <group>
-      <HoloRim radius={1.3} color="#33baff" strength={active ? 0.8 : 0.38} />
+      <HoloRim radius={1.3} color="#33baff" strength={active ? 0.3 : 0.14} />
       <group ref={shell}>
         <mesh>
           <sphereGeometry args={[1.3, 36, 20]} />
@@ -144,7 +144,7 @@ export function RagKnowledgeGlobe({
             color="#8be2ff"
             size={0.02}
             transparent
-            opacity={ready ? 0.6 : 0.18}
+            opacity={ready ? 0.38 : 0.14}
             depthWrite={false}
             toneMapped={false}
           />
@@ -155,7 +155,7 @@ export function RagKnowledgeGlobe({
         <meshBasicMaterial
           color="#c0ffff"
           transparent
-          opacity={active ? 0.75 : 0.32}
+          opacity={active ? 0.4 : 0.18}
           toneMapped={false}
         />
       </mesh>

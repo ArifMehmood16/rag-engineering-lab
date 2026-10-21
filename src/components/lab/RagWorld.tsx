@@ -67,7 +67,7 @@ function Glow({
         map={texture}
         color={color}
         transparent
-        opacity={opacity}
+        opacity={opacity * 0.35}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -141,7 +141,7 @@ function VectorBars({
                 <meshStandardMaterial
                   color={CYAN}
                   emissive={CYAN}
-                  emissiveIntensity={0.7}
+                  emissiveIntensity={0.2}
                   transparent
                   opacity={opacity}
                   metalness={0.6}
@@ -166,7 +166,7 @@ function Portal({ color = CYAN, shield = false }: { color?: string; shield?: boo
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={1}
+          emissiveIntensity={0.22}
           metalness={0.7}
           roughness={0.2}
         />
@@ -197,7 +197,7 @@ function UserTerminal({ released }: { released: boolean }) {
     <group>
       <mesh position={[0, 0.24, 0]}>
         <sphereGeometry args={[0.18, 18, 12]} />
-        <meshStandardMaterial color="#13384b" emissive={color} emissiveIntensity={0.32} />
+        <meshStandardMaterial color="#13384b" emissive={color} emissiveIntensity={0.12} />
         <Edges color={color} />
       </mesh>
       <Line
@@ -641,10 +641,10 @@ function World(props: RagWorldProps) {
     <>
       <color attach="background" args={["#040711"]} />
       <fog attach="fog" args={["#040711", 25, 100]} />
-      <ambientLight intensity={1.3} />
-      <directionalLight position={[-3, 5, 8]} intensity={3.5} color="#94c9ff" />
-      <pointLight position={[3, 2, 4]} intensity={18} color="#b15aff" distance={12} />
-      <pointLight position={[-4, 1, 3]} intensity={12} color={CYAN} distance={10} />
+      <ambientLight intensity={0.85} />
+      <directionalLight position={[-3, 5, 8]} intensity={1.3} color="#94c9ff" />
+      <pointLight position={[3, 2, 4]} intensity={3} color="#9987bd" distance={12} />
+      <pointLight position={[-4, 1, 3]} intensity={2.5} color={CYAN} distance={10} />
       <Director
         tour={tour}
         reduced={reduced}
@@ -806,7 +806,7 @@ function World(props: RagWorldProps) {
       </group>
 
       <TravellingData tour={tour} values={values} progress={progress} />
-      <RagFocus tour={tour} progress={progress} reduced={reduced} />
+      <RagFocus active={plan.moving} reduced={reduced} />
     </>
   );
 }
