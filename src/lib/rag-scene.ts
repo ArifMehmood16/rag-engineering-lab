@@ -464,11 +464,12 @@ export function travelPoint(
           (-a[axis]! + 3 * b[axis]! - 3 * c[axis]! + d[axis]!) * u * u * u),
     ) as Point3;
   }
-  const eased = t * t * (3 - 2 * t);
-  const lift = Math.sin(Math.PI * t);
+  // A clean, shallow arc proportional to the span: no S-bend, constant direction.
+  const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
+  const lift = Math.sin(Math.PI * t) * Math.min(0.45, span * 0.08);
   return [
-    from[0] + (to[0] - from[0]) * eased,
-    from[1] + (to[1] - from[1]) * eased + lift * 0.5,
-    from[2] + (to[2] - from[2]) * eased + lift * 0.65,
+    from[0] + (to[0] - from[0]) * t,
+    from[1] + (to[1] - from[1]) * t + lift,
+    from[2] + (to[2] - from[2]) * t + lift * 0.6,
   ];
 }
