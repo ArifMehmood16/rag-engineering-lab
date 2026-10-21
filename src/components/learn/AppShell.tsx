@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <aside className={cn("sticky top-0 hidden h-screen", !lab && "lg:block")} data-x=" overflow-y-auto border-r border-border bg-sidebar px-3 py-6">
+      <aside className={cn("sticky top-0 hidden h-screen overflow-y-auto border-r border-border bg-sidebar px-3 py-6", !lab && "lg:block")}>
         <Brand />
         <div className="mt-8">
           <NavList />
