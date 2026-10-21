@@ -31,11 +31,11 @@ Scroll within the visible card gallery to inspect inputs, operations, and output
 
 ## Interaction design
 
-The owner-provided sibling project `five-parts-ai-engineering` informed the perspective-camera direction, fixed scene layer, curved packet paths, and holographic document globe. This lab retains its own dataset, deterministic engine, independent preparation/request stories, and snapshots. The open neural sphere, firing points, and connection pulses are an illustrative AI entity, not a visualization of internal model reasoning. Ambient space motion continues while reading until paused; it never advances the engine.
+The owner-provided sibling project `five-parts-ai-engineering` informed the perspective-camera direction, fixed scene layer, curved packet paths, and holographic document globe. This lab retains its own dataset, deterministic engine, independent preparation/request stories, and snapshots. The open neural sphere, firing points, and connection pulses are an illustrative AI entity, not a visualization of internal model reasoning. Brief scene transitions settle while reading; they never advance the engine. Balanced graphics reduces rendering resolution and scheduled frame rate; High detail is optional.
 
 - [Mayer and Pilegard: learner-paced segmentation](https://www.cambridge.org/core/books/abs/cambridge-handbook-of-multimedia-learning/principles-for-managing-essential-processing-in-multimedia-learning-segmenting-pretraining-and-modality-principles/DD24C2F48B9B1277CE59F78276110258) supports dividing a complex explanation into meaningful segments that the learner controls.
 - [NN/G: visibility of system status](https://www.nngroup.com/articles/visibility-system-status/) informed immediate stage feedback, active-object highlighting, and the visit's exploration meter.
-- [W3C: pause, stop, hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide) informed the ambient-motion pause control and reduced-motion equivalent. Document transfers are bounded and driven by deliberate scrolling. Neural pulses, camera drift, and globe rotation stop when paused; narrative steps never advance on a timer.
+- [W3C: pause, stop, hide](https://www.w3.org/WAI/WCAG22/Understanding/pause-stop-hide) informed the ambient-motion pause control and reduced-motion equivalent. Document transfers are bounded and driven by deliberate scrolling. Neural pulses and globe rotation settle automatically and stop immediately when paused; narrative steps never advance on a timer.
 
 ## What executes, and what is simulated
 
@@ -45,7 +45,7 @@ The owner-provided sibling project `five-parts-ai-engineering` informed the pers
 
 Token counts use a declared word-count estimate. Cost comparisons use fictional work units, with the formula shown in the interface. No real provider price, latency, model accuracy, or hidden reasoning is inferred.
 
-The dedicated prefix and evaluation worlds replay recorded fixtures in a slow visual loop. Their animation clocks never run requests, increment metrics, warm caches, or advance cards. Pause, reduced motion, a hidden page, and the details drawer freeze visual time. The same per-mode outcomes have static SVG fallbacks. On narrow screens, concise object labels and result values stay with the short explanation; detailed caveats remain expandable.
+The dedicated prefix and evaluation worlds play each recorded illustration once, retain its result, and offer a visual-only replay control. Their animation clocks never run requests, increment metrics, warm caches, or advance cards. Pause, reduced motion, a hidden page, and the details drawer freeze visual time. The same per-mode outcomes have static SVG fallbacks. On narrow screens, concise object labels and result values stay with the short explanation; detailed caveats remain expandable.
 
 The index uses curated passages rather than claiming to parse NASA pages live. Records retain source URLs, version, locators, excerpt/paraphrase status, and synthetic-test labels. Facts were checked against [NASA's mission overview](https://www.nasa.gov/missions/apollo/apollo-11/apollo-11-mission-overview/) and [NASA Science's launch resource](https://science.nasa.gov/resource/apollo-11-launch/).
 
