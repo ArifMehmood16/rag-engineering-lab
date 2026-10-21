@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "rea
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { useSceneFrames } from "./useSceneFrames";
+import { useSceneLabelSizes } from "./useSceneLabelSizes";
 import { RagFocus } from "./RagFocus";
 import { RagNeuralEntity } from "./RagNeuralEntity";
 import { RagKnowledgeGlobe } from "./RagKnowledgeGlobe";
@@ -23,6 +25,7 @@ import {
   transferProgress,
   sceneProgressRange,
   travelPoint,
+  createFlowSampler,
   type Point3,
   type SceneNode,
 } from "@/lib/rag-scene";
@@ -41,6 +44,7 @@ export interface RagWorldProps {
   overview?: boolean;
   labels?: React.RefObject<Map<SceneNode, HTMLDivElement>>;
   theatre?: LearningTheatre;
+  quality?: "balanced" | "high";
 }
 const CYAN = "#64fff1";
 const VIOLET = "#bc83ff";
@@ -381,18 +385,21 @@ function Connection({
   const geometry = useMemo(() => {
     // Use the very same bounded route for the stroke, arrow, packet and label.
     // A second spline through samples would reintroduce corner overshoot.
+    const sample = createFlowSampler(from, to, via);
     class FlowCurve extends THREE.Curve<THREE.Vector3> {
       constructor() {
         super();
       }
       override getPoint(t: number, target = new THREE.Vector3()) {
-        return target.set(...travelPoint(from, to, t, via));
+        return target.set(...sample(t));
       }
     }
     const curve = new FlowCurve();
     const segments = Math.max(48, Math.min(640, Math.ceil(curve.getLength() / 0.08)));
     return {
       curve,
+      arrowPoint: curve.getPointAt(0.965),
+      arrowTangent: curve.getTangentAt(0.965),
       tube: new THREE.TubeGeometry(curve, segments, 0.026, 6, false),
       points: curve.getSpacedPoints(segments),
     };
@@ -401,15 +408,13 @@ function Connection({
   const line = useRef<Line2>(null),
     arrow = useRef<THREE.Mesh>(null);
   const packets = useRef<THREE.Mesh[]>([]);
-  const tangent = useMemo(() => new THREE.Vector3(), []);
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const signal = useMemo(() => new THREE.Color(color).multiplyScalar(1.8), [color]);
   useFrame(() => {
     if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
     if (arrow.current) {
-      geometry.curve.getPointAt(0.965, arrow.current.position);
-      geometry.curve.getTangentAt(0.965, tangent);
-      arrow.current.quaternion.setFromUnitVectors(axis, tangent);
+      arrow.current.position.copy(geometry.arrowPoint);
+      arrow.current.quaternion.setFromUnitVectors(axis, geometry.arrowTangent);
       // Arrowheads stay readable at a consistent pixel size through camera zoom.
       const pixel =
         (2 *
@@ -420,6 +425,7 @@ function Connection({
     }
     packets.current.forEach((mesh, i) => {
       mesh.visible = moving;
+      if (!moving) return;
       const t = (time.current * 0.17 - i * 0.019 + 10) % 1;
       geometry.curve.getPointAt(t, mesh.position);
     });
@@ -495,14 +501,12 @@ function Director({
   paused,
   visible,
   overview,
-  time,
 }: {
   tour: WalkthroughState;
   reduced: boolean;
   paused: boolean;
   visible: boolean;
   overview: boolean;
-  time: React.RefObject<number>;
 }) {
   const { camera, size } = useThree();
   const look = useRef(new THREE.Vector3());
@@ -531,10 +535,6 @@ function Director({
     );
     const target = new THREE.Vector3(...pose.target);
     const position = target.clone().add(new THREE.Vector3(0.15, 0.35, distance));
-    if (!reduced && !paused) {
-      position.x += Math.sin(time.current * 0.13) * 0.22;
-      position.y += Math.sin(time.current * 0.17) * 0.12;
-    }
     if (reduced || paused || !initialized.current) {
       camera.position.copy(position);
       look.current.copy(target);
@@ -646,7 +646,19 @@ function World(props: RagWorldProps) {
   const index = useMemo(() => buildKnowledgeIndex(records), [records]);
   const values = index.chunks.find((c) => c.id === record.id)?.vector ?? [];
   const [begin, end] = sceneProgressRange(tour);
-  const time = useRef(0);
+  const time = useSceneFrames({
+    wakeKey: `${tour.phase}:${tour.stage}:${tour.beat}:${record.id}:${overview}:${props.scrollProgress}:${replay}`,
+    visible,
+    paused,
+    reduced,
+    fps: props.quality === "high" ? 60 : 30,
+    settleAfter: props.scrollProgress === undefined ? Math.max(2500, duration * 1000) : 2500,
+  });
+  const labelSizes = useSceneLabelSizes(props.labels, props.flowLabel);
+  const sampleTransfer = useMemo(() => {
+    const route = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
+    return createFlowSampler(route.from, route.to, route.via);
+  }, [plan.positions, plan.transfer.from, plan.transfer.to]);
   const elapsed = useRef(0);
   const progress = useRef(reduced ? end : begin);
   const controlledProgress = useRef(props.scrollProgress);
@@ -681,18 +693,15 @@ function World(props: RagWorldProps) {
   useFrame((_, delta) => {
     if (!visible || paused || reduced) return;
     const dt = Math.min(delta, 0.08);
-    time.current += dt;
     if (props.scrollProgress === undefined && plan.moving && progress.current < end) {
       elapsed.current += dt;
       progress.current = begin + (end - begin) * Math.min(1, elapsed.current / duration);
     }
-    invalidate();
   }, -2);
   const projected = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
     if (props.flowLabel?.current) {
-      const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
-      const point = travelPoint(from, to, transferProgress(tour, progress.current), via);
+      const point = sampleTransfer(transferProgress(tour, progress.current));
       projected.set(point[0], point[1], point[2] + 0.1).project(camera);
       const element = props.flowLabel.current;
       const region = sceneRegion(size.width, size.height, tour.phase === "request");
@@ -700,26 +709,20 @@ function World(props: RagWorldProps) {
         right = region.x + region.width / 2;
       const top = region.y - region.height / 2,
         bottom = region.y + region.height / 2;
-      const halfWidth = element.offsetWidth / 2 + 8,
-        labelHeight = element.offsetHeight;
+      const dimensions = labelSizes.current.get(element) ?? { width: 180, height: 60 };
+      const halfWidth = dimensions.width / 2 + 8,
+        labelHeight = dimensions.height;
       const x = (projected.x * 0.5 + 0.5) * size.width;
       const y = (-projected.y * 0.5 + 0.5) * size.height;
       const above = y - 34 - labelHeight >= top || y + 34 + labelHeight > bottom;
       element.dataset["placement"] = above ? "above" : "below";
-      element.style.left = `${THREE.MathUtils.clamp(x, left + halfWidth, right - halfWidth)}px`;
-      element.style.top = `${above ? Math.max(top + labelHeight, Math.min(bottom - 20, y - 34)) : Math.max(top, Math.min(bottom - labelHeight, y + 34))}px`;
+      const px = THREE.MathUtils.clamp(x, left + halfWidth, right - halfWidth);
+      const py = above
+        ? Math.max(top + labelHeight, Math.min(bottom - 20, y - 34))
+        : Math.max(top, Math.min(bottom - labelHeight, y + 34));
+      element.dataset["projected"] = "true";
+      element.style.translate = `${px.toFixed(1)}px ${py.toFixed(1)}px`;
       element.style.opacity = !overview && projected.z < 1 ? "1" : "0";
-    }
-    const occupied: { x: number; y: number; w: number; h: number }[] = [];
-    const annotation = props.flowLabel?.current;
-    if (annotation && annotation.style.opacity !== "0") {
-      const rect = annotation.getBoundingClientRect();
-      occupied.push({
-        x: rect.x + rect.width / 2,
-        y: rect.y + rect.height / 2,
-        w: rect.width,
-        h: rect.height,
-      });
     }
     // Labels follow objects, but never compete with the active annotation or one another.
     const sorted = Array.from(props.labels?.current ?? []).sort(
@@ -746,22 +749,22 @@ function World(props: RagWorldProps) {
       const region = sceneRegion(size.width, size.height, tour.phase === "request");
       const x = (projected.x * 0.5 + 0.5) * size.width;
       const rawY = (-projected.y * 0.5 + 0.5) * size.height;
+      const dimensions = labelSizes.current.get(element) ?? { width: 120, height: 30 };
       const y =
         !overview && nodeEmphasis(plan, node) > 0.5
           ? THREE.MathUtils.clamp(
               rawY,
-              region.y - region.height / 2 + element.offsetHeight / 2 + 6,
-              region.y + region.height / 2 - element.offsetHeight / 2 - 6,
+              region.y - region.height / 2 + dimensions.height / 2 + 6,
+              region.y + region.height / 2 - dimensions.height / 2 - 6,
             )
           : rawY;
-      const halfWidth = element.offsetWidth / 2 + 4;
+      const halfWidth = dimensions.width / 2 + 4;
       const inArea =
         x > region.x - region.width / 2 + halfWidth &&
         x < region.x + region.width / 2 - halfWidth &&
         y > region.y - region.height / 2 &&
         y < region.y + region.height / 2;
-      element.style.left = `${x}px`;
-      element.style.top = `${y}px`;
+      element.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
       element.style.opacity = projected.z < 1 && inArea ? String(0.4 + emphasis(node) * 0.6) : "0";
     });
   });
@@ -810,7 +813,6 @@ function World(props: RagWorldProps) {
         paused={paused}
         visible={visible}
         overview={overview}
-        time={time}
       />
       <Stars time={time} />
       <group position={[-5, 3, -10]}>
@@ -1086,9 +1088,9 @@ export default function RagWorld(props: RagWorldProps) {
   return (
     <Canvas
       camera={{ position: [0, 2, 17], fov: 42, near: 0.1, far: 150 }}
-      dpr={[1, 1.75]}
+      dpr={props.quality === "high" ? [1, 1.75] : [1, 1.25]}
       frameloop="demand"
-      gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
+      gl={{ antialias: true, alpha: false, powerPreference: "default" }}
       aria-hidden
       onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
     >
@@ -1098,6 +1100,8 @@ export default function RagWorld(props: RagWorldProps) {
           reduced={props.reduced}
           paused={props.paused}
           visible={props.visible}
+          quality={props.quality ?? "balanced"}
+          replay={props.replay}
         />
       ) : (
         <World {...props} />

@@ -35,7 +35,8 @@ export function RagFocus({ active, reduced }: { active: boolean; reduced: boolea
   );
   useFrame((_, delta) => {
     effect.bloom.enabled = active && !reduced;
-    effect.composer.render(delta);
+    if (effect.bloom.enabled) effect.composer.render(delta);
+    else gl.render(scene, camera);
   }, 1);
   return null;
 }

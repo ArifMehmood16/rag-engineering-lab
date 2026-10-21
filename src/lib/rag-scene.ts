@@ -428,15 +428,11 @@ export function sceneProgressRange(tour: WalkthroughState): [number, number] {
 }
 
 /** Smooth, bounded travel with a small lift into the foreground. No hidden engine mutation. */
-export function travelPoint(
+export function createFlowSampler(
   from: Point3,
   to: Point3,
-  progress: number,
   via: Point3[] = [],
-): Point3 {
-  const t = Math.max(0, Math.min(1, progress));
-  if (t === 0) return from;
-  if (t === 1) return to;
+): (progress: number) => Point3 {
   if (via.length) {
     // Trim each bend, then round it with a bounded quadratic. Unlike a
     // Catmull-Rom spline, this cannot bow outside its allocated routing lane.
@@ -462,22 +458,41 @@ export function travelPoint(
     }
     samples.push(to);
     const lengths = samples.slice(1).map((p, i) => distance(samples[i]!, p));
-    let remaining = t * lengths.reduce((total, n) => total + n, 0);
-    for (let i = 0; i < lengths.length; i++) {
-      const length = lengths[i]!;
-      if (remaining <= length && length > 0)
-        return mix(samples[i]!, samples[i + 1]!, remaining / length);
-      remaining -= length;
-    }
-    return to;
+    const total = lengths.reduce((sum, n) => sum + n, 0);
+    return (progress) => {
+      const t = Math.max(0, Math.min(1, progress));
+      if (t === 0) return from;
+      if (t === 1) return to;
+      let remaining = t * total;
+      for (let i = 0; i < lengths.length; i++) {
+        const length = lengths[i]!;
+        if (remaining <= length && length > 0)
+          return mix(samples[i]!, samples[i + 1]!, remaining / length);
+        remaining -= length;
+      }
+      return to;
+    };
   }
 
-  // A clean, shallow arc proportional to the span: no S-bend, constant direction.
-  const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
-  const lift = Math.sin(Math.PI * t) * Math.min(0.45, span * 0.08);
-  return [
-    from[0] + (to[0] - from[0]) * t,
-    from[1] + (to[1] - from[1]) * t + lift,
-    from[2] + (to[2] - from[2]) * t + lift * 0.6,
-  ];
+  return (progress) => {
+    const t = Math.max(0, Math.min(1, progress));
+    // A clean, shallow arc proportional to the span: no S-bend, constant direction.
+    const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
+    const lift = Math.sin(Math.PI * t) * Math.min(0.45, span * 0.08);
+    return [
+      from[0] + (to[0] - from[0]) * t,
+      from[1] + (to[1] - from[1]) * t + lift,
+      from[2] + (to[2] - from[2]) * t + lift * 0.6,
+    ];
+  };
+}
+
+/** Convenience for occasional snapshots; animated routes retain a sampler instead. */
+export function travelPoint(
+  from: Point3,
+  to: Point3,
+  progress: number,
+  via: Point3[] = [],
+): Point3 {
+  return createFlowSampler(from, to, via)(progress);
 }
