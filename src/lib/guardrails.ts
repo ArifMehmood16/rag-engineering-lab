@@ -75,6 +75,6 @@ export function evaluateScenario(s: Scenario, detectorOn: boolean): Evaluated {
       ? { shown: true, flagged: null, note: "Not applicable: no instruction-like text is involved." }
       : s.detectorFlags
         ? { shown: true, flagged: true, note: "Flagged a known phrase. Useful as a signal, but the controls above are what actually prevent harm." }
-        : { shown: true, flagged: false, note: "Missed: the instruction is paraphrased. The outcome is unchanged because the controls above don’t depend on detection." };
+        : { shown: true, flagged: false, note: "Missed: the instruction doesn’t match the detector’s known phrasings. The outcome is unchanged because the controls above don’t depend on detection." };
   return { rows, stoppedBy, detector, release: s.release };
 }

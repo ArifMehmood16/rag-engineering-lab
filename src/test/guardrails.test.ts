@@ -18,7 +18,7 @@ describe("trust-boundary lab", () => {
     expect(result("unauthorized", "authorization")).toBe("caught");
   });
   it("a missed detection does not change the outcome", () => {
-    const s = SCENARIOS.find((x) => x.id === "indirect")!;
+    const s = SCENARIOS.find((x) => x.id === "toolInstruction")!;
     expect(evaluateScenario(s, true).detector.flagged).toBe(false);
     expect(evaluateScenario(s, true).stoppedBy).toEqual(evaluateScenario(s, false).stoppedBy);
   });

@@ -33,7 +33,7 @@ export const SCENARIOS: Scenario[] = [
       claimVerification: { result: "caught", note: "SYN-DOC-206 reports no study; the agreement claim contradicts SYN-DOC-109 in context. Claim rejected." },
       statusRules: { result: "caught", note: "With the claim removed and a known conflict omitted, “supported” is downgraded to “partial”." },
     },
-    detectorFlags: false,
+    detectorFlags: true,
     release: "Released as partial, with the conflicting finding restored and the manipulative page excluded from citations.",
   },
   {
@@ -48,7 +48,7 @@ export const SCENARIOS: Scenario[] = [
       toolAllowList: { result: "caught", note: "No such tool exists. Only synthetic read-only tools are declared, so the call is rejected by code." },
       authorization: { result: "caught", note: "Even if it existed, the caller’s scope grants read access only." },
     },
-    detectorFlags: true,
+    detectorFlags: false,
     release: "Metadata returned. The proposed call never executes — there is no privileged tool to reach.",
   },
   {
