@@ -58,13 +58,13 @@ export function cameraPose(tour: WalkthroughState, overview = false): CameraPose
 }
 
 /** The camera uses the space beside/above the reader, never the area hidden by its cards. */
-export function sceneRegion(width: number, height: number) {
+export function sceneRegion(width: number, height: number, request = false) {
   const wide = width >= 1000;
   const reader = width <= 1100 ? 390 : width < 1200 ? 440 : 480;
   const left = wide ? 30 : 18;
   const right = wide ? width - reader - 45 : width - 18;
   const top = wide ? 166 : 190;
-  const bottom = wide ? height - (width < 1200 ? 230 : 210) : height * 0.45 - 18;
+  const bottom = wide ? height - (request ? 300 : width < 1200 ? 230 : 210) : height * 0.45 - 18;
   return {
     width: Math.max(140, right - left),
     height: Math.max(85, bottom - top),

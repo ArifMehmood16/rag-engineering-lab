@@ -16,7 +16,7 @@ import { toyEmbedding } from "@/lib/apollo-engine";
 import { atOutput, walkthroughStep, type WalkthroughState } from "@/lib/rag-walkthrough";
 import {
   scenePlan,
-  REQUEST_CONNECTIONS,
+  sceneConnections,
   REQUEST_NODE_NAMES,
   travelPoint,
   flowRoute,
@@ -42,10 +42,15 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
           role="img"
           aria-label="Question flow: user, input checks, router, cache, model branches, tools, output checks, and return to user"
         >
-          {REQUEST_CONNECTIONS.map(([from, to]) => {
+          {sceneConnections(plan).map(([from, to]) => {
             const active = plan.moving && plan.transfer.from === from && plan.transfer.to === to;
             const route = flowRoute(plan.positions, from, to);
-            const style = flowStyle(from, to);
+            const style =
+              plan.transfer.kind === "notice" &&
+              plan.transfer.from === from &&
+              plan.transfer.to === to
+                ? { color: "#e9a0a0" }
+                : flowStyle(from, to);
             const focused = plan.transfer.from === from && plan.transfer.to === to;
             const points = Array.from({ length: 80 }, (_, n) =>
               travelPoint(route.from, route.to, n / 79, route.via),
@@ -292,14 +297,21 @@ export function RagStageScene(
           aria-label="Flow annotation"
           style={
             {
-              "--flow-color": flowStyle(plan.transfer.from, plan.transfer.to).color,
+              "--flow-color":
+                plan.transfer.kind === "notice"
+                  ? "#e9a0a0"
+                  : flowStyle(plan.transfer.from, plan.transfer.to).color,
               ...(ready && !lowEffects ? { opacity: 0 } : {}),
             } as CSSProperties
           }
         >
           <span>
             {annotation.mode === "work"
-              ? "TRANSFORMING"
+              ? tour.phase === "knowledge"
+                ? "TRANSFORMING"
+                : plan.transfer.from === plan.transfer.to
+                  ? "PROCESSING"
+                  : "TRANSFERRING"
               : annotation.mode === "input"
                 ? "INPUT"
                 : "OUTPUT"}
@@ -316,7 +328,9 @@ export function RagStageScene(
                 ? "OUTPUT READY"
                 : tour.beat === 0
                   ? "INPUT READY"
-                  : "DATA IN MOTION"}
+                  : plan.transfer.from === plan.transfer.to
+                    ? "PROCESSING THIS STEP"
+                    : "DATA IN MOTION"}
           <span>{reduced ? "Motion reduced" : paused ? "Motion paused" : "Neon / depth view"}</span>
         </div>
         <div className="scene-motion-controls">

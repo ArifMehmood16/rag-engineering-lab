@@ -52,6 +52,16 @@ export const REQUEST_SCENARIOS: RequestScenario[] = [
       "Validate get_source_passage arguments and permission, read once, add the result to context, and generate a checked answer.",
   },
   {
+    id: "tool-denied",
+    title: "Tool permission · deny the read",
+    questionId: "source-read",
+    config: { topK: 1, tool: "denied" },
+    purpose:
+      "The request itself is accepted, but the proposed source-read operation has no evidence:read permission. Input permission does not automatically authorise a tool.",
+    expected:
+      "Validate the arguments, deny execution at the tool boundary, and return a notice. No tool result or generated answer reaches the user.",
+  },
+  {
     id: "direct-lookup",
     title: "Known record · no LLM",
     questionId: "metadata",

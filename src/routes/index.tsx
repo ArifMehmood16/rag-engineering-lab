@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -11,7 +11,7 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { APOLLO_RECORDS, APOLLO_QUESTIONS, DEFAULT_QUESTION } from "@/content/apollo";
+import { APOLLO_RECORDS, APOLLO_QUESTIONS } from "@/content/apollo";
 import { DEFAULT_LEARNING_PATH, EXPERIMENTS, type ExperimentId } from "@/content/rag-lab";
 import { LabControls } from "@/components/lab/LabControls";
 import { RagWalkthrough } from "@/components/lab/RagWalkthrough";
@@ -26,6 +26,8 @@ import {
   type EngineState,
 } from "@/lib/apollo-engine";
 import { cn } from "@/lib/utils";
+import { DEFAULT_SCENARIO, REQUEST_SCENARIOS } from "@/content/rag-scenarios";
+import { scenarioSeed } from "@/lib/rag-scenarios";
 
 const TITLE = "The Intelligence Lab — See how RAG works";
 const DESC =
@@ -45,7 +47,11 @@ export const Route = createFileRoute("/")({
 });
 
 export function Lab() {
-  const [engine, setEngine] = useState<EngineState>(() => initEngine(DEFAULT_QUESTION));
+  const [engine, setEngine] = useState<EngineState>(() =>
+    scenarioSeed(DEFAULT_SCENARIO.id, APOLLO_RECORDS),
+  );
+  const [scenarioId, setScenarioId] = useState<string | null>(DEFAULT_SCENARIO.id);
+  const scenario = REQUEST_SCENARIOS.find((s) => s.id === scenarioId) ?? null;
   const [stream, setStream] = useState<"knowledge" | "request">("knowledge");
   const [walkthroughKey, setWalkthroughKey] = useState(0);
   const [explored, setExplored] = useState<string[]>([]);
@@ -79,12 +85,14 @@ export function Lab() {
     setKnowledge(null);
   };
   const configure = (patch: Partial<ApolloConfig>) => {
+    setScenarioId(null);
     setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(null);
     setEngine((s) => initEngine(s.ctx.question, { ...s.config, ...patch }, s.memory));
   };
   const chooseQuestion = (id: string) => {
+    setScenarioId(null);
     setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(null);
@@ -93,14 +101,31 @@ export function Lab() {
     );
   };
   const reset = () => {
-    setEngine(initEngine(DEFAULT_QUESTION));
+    setScenarioId(DEFAULT_SCENARIO.id);
+    setEngine(scenarioSeed(DEFAULT_SCENARIO.id, APOLLO_RECORDS));
     setStream("knowledge");
     setWalkthroughKey((key) => key + 1);
     setSelected(0);
     setKnowledge(0);
     setCompare(false);
   };
+  const chooseScenario = useCallback((id: string) => {
+    setScenarioId(id);
+    setEngine(scenarioSeed(id, APOLLO_RECORDS));
+    setStream("request");
+    setWalkthroughKey((key) => key + 1);
+    setSelected(0);
+    setKnowledge(null);
+    setExperiment(
+      id === "tool-read"
+        ? "tools"
+        : id.includes("denied") || id.includes("attack") || id === "bad-citation"
+          ? "guardrails"
+          : "efficiency",
+    );
+  }, []);
   const applyPath = (path: (typeof DEFAULT_LEARNING_PATH)[number]) => {
+    setScenarioId(null);
     setWalkthroughKey((key) => key + 1);
     setEngine(
       initEngine(APOLLO_QUESTIONS.find((q) => q.id === (path.questionId ?? "crew"))!.text, {
@@ -139,6 +164,8 @@ export function Lab() {
       <RagWalkthrough
         key={walkthroughKey}
         engine={engine}
+        scenario={scenario}
+        onScenario={chooseScenario}
         records={APOLLO_RECORDS}
         stream={stream}
         onStream={setStream}

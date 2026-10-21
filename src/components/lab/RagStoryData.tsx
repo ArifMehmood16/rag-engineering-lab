@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { ArrowRight, Check, Database, FileText } from "lucide-react";
-import type { EvidenceRecord } from "@/content/apollo";
-import { ENGINE_STAGES, TOY_FEATURES } from "@/lib/apollo-engine";
+import { getApolloQuestion, type EvidenceRecord } from "@/content/apollo";
+import { ENGINE_STAGES, TOY_FEATURES, routeDecision } from "@/lib/apollo-engine";
 import { buildKnowledgeIndex } from "@/lib/knowledge-index";
 import { stageInput, stageOutput, type WalkthroughState } from "@/lib/rag-walkthrough";
 import { cn } from "@/lib/utils";
@@ -248,10 +248,12 @@ export function RequestInput({
   const ids = stage === "assemble" ? before.ctx.retrieved.map((r) => r.id) : before.ctx.context;
   return (
     <>
-      <div className="tour-question">
-        <span>Question carried through the request</span>
-        <p>{before.ctx.question}</p>
-      </div>
+      {stage === "question" && (
+        <div className="tour-question">
+          <span>Question carried through this complete run</span>
+          <p>{before.ctx.question}</p>
+        </div>
+      )}
       {stage === "request" && (
         <dl className="tour-key-values">
           <dt>Scope</dt>
@@ -330,6 +332,98 @@ export function RequestOutput({
   const after = stageOutput(tour)!;
   const stage = ENGINE_STAGES[tour.stage]!.id;
   const result = after.results[tour.stage]!;
+  if (after.halted)
+    return (
+      <div className="user-receipt" role="status">
+        <span>RETURNED TO YOU · NO FACTUAL ANSWER RELEASED</span>
+        <h3>
+          {after.ctx.outcome === "evidence_gap"
+            ? "The sources do not answer this question"
+            : after.ctx.outcome === "infrastructure_error"
+              ? "The request could not be completed"
+              : "This request was stopped safely"}
+        </h3>
+        <p>
+          {result.output.find((line) =>
+            /denied|rejected|absent|MISSING|INELIGIBLE|unavailable|deadline/i.test(line),
+          ) ?? result.output[0]}
+        </p>
+        {after.ctx.checks.some((c) => !c.resolves || !c.supported) && (
+          <>
+            <p>The draft failed its output check. Its factual content was withheld.</p>
+            <pre className="operation-code">
+              <code>
+                {JSON.stringify(
+                  {
+                    cites: after.ctx.claims[0]?.cites,
+                    resolves: after.ctx.checks[0]?.resolves,
+                    supported: after.ctx.checks[0]?.supported,
+                  },
+                  null,
+                  2,
+                )}
+              </code>
+            </pre>
+          </>
+        )}
+        <small>
+          {after.ctx.usage.generationCalls
+            ? "The model produced a draft; it did not reach the user."
+            : "Neither LLM was called."}
+        </small>
+      </div>
+    );
+  if (stage === "tool" && after.config.tool === "off") {
+    const before = stageInput(tour);
+    const missing = getApolloQuestion(before.ctx.question).required.filter(
+      (fact) =>
+        !before.ctx.context.some((id) => records.find((r) => r.id === id)?.facts?.includes(fact)),
+    );
+    return (
+      <>
+        <p className="tour-result-summary">No extra tool call</p>
+        <p className="tour-data-note">
+          {missing.length
+            ? "A tool is disabled for this run. The evidence check comes next; the workflow will stop if facts are missing."
+            : "The selected passages already cover every requested fact. Another source-read call would add no useful evidence. Keep the tool idle and continue to the evidence check."}
+        </p>
+        <p className="tour-data-note">
+          A fixed RAG workflow can answer this question without an autonomous agent.
+        </p>
+      </>
+    );
+  }
+  if (stage === "cache") {
+    const decision = routeDecision(after.ctx.question, after.config);
+    return (
+      <div className="router-receipt">
+        <span>ROUTER DECISION FOR THIS QUESTION</span>
+        <h3>
+          {after.ctx.usage.answerHit
+            ? "Reuse the answer → output checks"
+            : after.ctx.route === "application"
+              ? "Known-record lookup → application code"
+              : `Retrieval → context → ${after.ctx.route === "large" ? "large LLM" : "small LLM"}`}
+        </h3>
+        <p>
+          {after.ctx.usage.answerHit
+            ? "The exact question, scope, index snapshot, and relevant settings match an approved answer from a previous successful fixture run."
+            : decision.reason}
+        </p>
+        <p>
+          {after.ctx.usage.answerHit
+            ? "Approved-answer cache hit. Retrieval, tools, and both LLMs are bypassed. The reused claims must still pass citation and current-permission checks."
+            : after.config.answerCache
+              ? "Approved-answer cache miss: no prior answer matches this contract. This same question continues to retrieval."
+              : "Approved-answer cache disabled. This same question continues to retrieval."}
+        </p>
+        <small>
+          {after.ctx.usage.generationCalls} model calls so far · a routing decision is not a
+          generation call
+        </small>
+      </div>
+    );
+  }
   if (stage === "retrieve" && result.status !== "skipped")
     return (
       <>
@@ -351,6 +445,12 @@ export function RequestOutput({
           {after.ctx.context.length} passages · ≈{after.ctx.tokensUsed} / {after.config.budget}{" "}
           tokens
         </p>
+        {after.ctx.excluded.some((x) => x.reason.includes("instruction")) && (
+          <p className="tour-warning">
+            SYN-ADV-01 was excluded: its instruction to change astronaut roles is untrusted document
+            content. It was not executed or passed to the generator.
+          </p>
+        )}
         <ChunkPicker
           ids={after.ctx.context}
           selected={selected}
@@ -363,6 +463,11 @@ export function RequestOutput({
     return (
       <>
         <p className="tour-warning">Unverified draft · not yet released to the user</p>
+        <p className="tour-data-note">
+          {after.ctx.route === "application"
+            ? "Application code produced this answer. Neither LLM was called."
+            : `${after.ctx.route === "large" ? "LLM (large profile)" : "Small LLM"} produced this fixture draft after retrieval and context assembly.`}
+        </p>
         <div className="tour-claims">
           {after.ctx.claims.map((claim) => (
             <p key={claim.id}>
@@ -394,6 +499,13 @@ export function RequestOutput({
         </p>
         <div className="tour-answer">
           <p>{after.ctx.released.answer}</p>
+          <p className="tour-data-note">
+            {after.ctx.usage.answerHit
+              ? "Route used: approved-answer cache → checks → you. No model or search call ran."
+              : after.ctx.route === "application"
+                ? "Route used: direct application lookup → checks → you. Neither LLM was called."
+                : `Route used: ${after.ctx.route === "large" ? "large LLM" : "small LLM"} → checks → you. One fixture draft was generated after retrieval.`}
+          </p>
           <div>
             {[...new Set(after.ctx.released.claims.flatMap((c) => c.cites))].map((id) => (
               <button key={id} type="button" onClick={() => onEvidence(id)}>

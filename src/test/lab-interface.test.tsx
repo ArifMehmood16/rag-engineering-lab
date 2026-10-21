@@ -113,7 +113,7 @@ describe("RAG card gallery", () => {
     focusCard(0, "input");
     expect(currentRegion("Step input")).toHaveTextContent("No question has been asked");
     answerStream();
-    expect(current()).toHaveTextContent("Scroll the cards.");
+    expect(current()).toHaveTextContent("One complete path.");
     focusCard(0, "input");
     expect(currentRegion("Step input")).toHaveTextContent("Who walked on the Moon");
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
@@ -141,7 +141,7 @@ describe("RAG card gallery", () => {
     render(<Lab />);
     focusCard(2, "output");
     answerStream();
-    expect(current()).toHaveTextContent("Scroll the cards.");
+    expect(current()).toHaveTextContent("One complete path.");
     focusCard(3, "output");
     fireEvent.click(screen.getByRole("button", { name: /Build knowledge Documents/ }));
     expect(current()).toHaveTextContent("Embeddings · the result");
@@ -198,7 +198,7 @@ describe("RAG card gallery", () => {
     fireEvent.click(screen.getByRole("button", { name: "35 tokens" }));
     closeDetails();
     focusCard(6, "output");
-    expect(currentRegion("Step output")).toHaveTextContent("Stopped here");
+    expect(currentRegion("Step output")).toHaveTextContent("NO FACTUAL ANSWER RELEASED");
     expect(screen.queryByRole("link", { name: "Jump to Draft" })).not.toBeInTheDocument();
     inspectRun();
     expect(screen.getByRole("region", { name: "What reached the user?" })).toHaveTextContent(
@@ -210,6 +210,7 @@ describe("RAG card gallery", () => {
     answerStream();
     openSettings();
     fireEvent.click(screen.getByRole("button", { name: /02 Spend less work/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Approved-answer cache/ }));
     fireEvent.click(screen.getByRole("button", { name: /Prompt-prefix cache/ }));
     closeDetails();
     focusCard(10, "output");
@@ -237,5 +238,53 @@ describe("RAG card gallery", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /Compare with the baseline/ }));
     expect(screen.getByRole("heading", { name: "Baseline · cold" })).toBeInTheDocument();
+  });
+  it("explains the default model reservation, then actually uses the large LLM after retrieval", () => {
+    render(<Lab />);
+    answerStream();
+    focusCard(2, "work", 1);
+    expect(current()).toHaveTextContent("Select the large LLM for later");
+    expect(current()).toHaveTextContent("multi-part question");
+    focusCard(3, "work", 1);
+    expect(current()).toHaveTextContent("Send the question from router to retrieval");
+    focusCard(7, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("LLM (large profile)");
+    focusCard(10, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Checked answer released");
+  });
+  it("switches to an independent cache-hit example and shows only its actual path", () => {
+    render(<Lab />);
+    answerStream();
+    fireEvent.click(screen.getByRole("button", { name: "Choose question example" }));
+    fireEvent.click(screen.getByRole("button", { name: "Repeat question · cache hit" }));
+    expect(current()).toHaveTextContent("seeded");
+    expect(screen.queryByRole("link", { name: "Jump to Retrieve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Jump to Draft" })).not.toBeInTheDocument();
+    focusCard(2, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Reuse the answer → output checks");
+    expect(currentRegion("Step output")).toHaveTextContent("both LLMs are bypassed");
+    focusCard(10, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Checked answer released");
+    fireEvent.click(screen.getByRole("button", { name: "Choose question example" }));
+    fireEvent.click(screen.getByRole("button", { name: "Full answer · large LLM" }));
+    focusCard(2, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("cache miss");
+  });
+  it("shows concrete tool arguments and a safe user-facing output-check refusal", () => {
+    render(<Lab />);
+    answerStream();
+    fireEvent.click(screen.getByRole("button", { name: "Choose question example" }));
+    fireEvent.click(screen.getByRole("button", { name: "Missing passage · use a tool" }));
+    focusCard(5, "work", 1);
+    expect(current()).toHaveTextContent('evidence_id: "A11-LA-CAP"');
+    expect(current()).toHaveTextContent("question names A11-LA-CAP");
+    focusCard(10, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("Checked answer released");
+    fireEvent.click(screen.getByRole("button", { name: "Choose question example" }));
+    fireEvent.click(screen.getByRole("button", { name: "Output check · stop a bad citation" }));
+    focusCard(8, "output");
+    expect(currentRegion("Step output")).toHaveTextContent("RETURNED TO YOU");
+    expect(currentRegion("Step output")).toHaveTextContent("UNKNOWN-SPAN");
+    expect(screen.queryByRole("link", { name: "Jump to Answer" })).not.toBeInTheDocument();
   });
 });

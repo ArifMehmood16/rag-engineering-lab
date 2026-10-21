@@ -1,9 +1,5 @@
 import type { EvidenceRecord } from "@/content/apollo";
-import {
-  KNOWLEDGE_WALKTHROUGH,
-  REQUEST_WALKTHROUGH,
-  requestWalkthroughStep,
-} from "@/content/rag-walkthrough";
+import { KNOWLEDGE_WALKTHROUGH, requestWalkthroughStep } from "@/content/rag-walkthrough";
 import { advance, ENGINE_STAGES, initEngine, type EngineState } from "./apollo-engine";
 
 export interface WalkthroughState {

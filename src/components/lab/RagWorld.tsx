@@ -16,6 +16,8 @@ import {
   flowStyle,
   nodeEmphasis,
   REQUEST_CONNECTIONS,
+  FAILURE_CONNECTIONS,
+  sceneConnections,
   transferProgress,
   sceneProgressRange,
   travelPoint,
@@ -469,7 +471,7 @@ function Director({
   const pose = cameraPose(tour, overview);
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
-    const region = sceneRegion(size.width, size.height);
+    const region = sceneRegion(size.width, size.height, tour.phase === "request");
     cam.setViewOffset(
       size.width,
       size.height,
@@ -479,10 +481,10 @@ function Director({
       size.height,
     );
     cam.updateProjectionMatrix();
-  }, [camera, size.width, size.height]);
+  }, [camera, size.width, size.height, tour.phase]);
   useFrame((_, delta) => {
     if (!visible) return;
-    const region = sceneRegion(size.width, size.height);
+    const region = sceneRegion(size.width, size.height, tour.phase === "request");
     const halfFov = Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2));
     const distance = Math.max(
       (pose.span[0] * size.height) / (2 * halfFov * region.width),
@@ -654,7 +656,7 @@ function World(props: RagWorldProps) {
       const point = travelPoint(from, to, transferProgress(tour, progress.current), via);
       projected.set(point[0], point[1], point[2] + 0.1).project(camera);
       const element = props.flowLabel.current;
-      const region = sceneRegion(size.width, size.height);
+      const region = sceneRegion(size.width, size.height, tour.phase === "request");
       const left = region.x - region.width / 2,
         right = region.x + region.width / 2;
       const top = region.y - region.height / 2,
@@ -702,7 +704,7 @@ function World(props: RagWorldProps) {
                     ? -0.7
                     : -0.9;
       projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
-      const region = sceneRegion(size.width, size.height);
+      const region = sceneRegion(size.width, size.height, tour.phase === "request");
       const x = (projected.x * 0.5 + 0.5) * size.width;
       const rawY = (-projected.y * 0.5 + 0.5) * size.height;
       const y =
@@ -727,7 +729,7 @@ function World(props: RagWorldProps) {
   const active = (n: SceneNode) => plan.active === n;
   const emphasis = (n: SceneNode) => nodeEmphasis(plan, n, overview);
   const positions = plan.positions;
-  // Scrolling changes brightness and packet position, not the 21 route geometries.
+  // Scrolling changes brightness and packet position, not the route geometries.
   const routes = useMemo(() => {
     const edges: [SceneNode, SceneNode][] = prep
       ? [
@@ -735,7 +737,7 @@ function World(props: RagWorldProps) {
           ["chunks", "vectors"],
           ["vectors", "index"],
         ]
-      : REQUEST_CONNECTIONS;
+      : [...REQUEST_CONNECTIONS, ...FAILURE_CONNECTIONS];
     return Object.fromEntries(
       edges.map(([from, to]) => [`${from}:${to}`, flowRoute(positions, from, to)]),
     );
@@ -747,7 +749,7 @@ function World(props: RagWorldProps) {
       <Connection
         key={`${from}-${to}`}
         {...routes[`${from}:${to}`]!}
-        color={flowStyle(from, to).color}
+        color={focused && plan.transfer.kind === "notice" ? "#e9a0a0" : flowStyle(from, to).color}
         emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.3 : 0.06}
         active={plan.moving && focused}
         moving={plan.moving && focused}
@@ -857,7 +859,7 @@ function World(props: RagWorldProps) {
         </>
       ) : (
         <>
-          {REQUEST_CONNECTIONS.map(([from, to]) => connection(from, to))}
+          {sceneConnections(plan).map(([from, to]) => connection(from, to))}
           <EntityFocus
             strength={emphasis("index")}
             instant={reduced || paused}
@@ -895,7 +897,9 @@ function World(props: RagWorldProps) {
             scale={0.48}
           >
             <RagNeuralEntity
-              active={tour.stage === 7 && plan.generator === "small" && !plan.skipped}
+              active={
+                active("small") && tour.stage === 7 && plan.generator === "small" && !plan.skipped
+              }
               time={time}
             />
           </EntityFocus>
@@ -983,7 +987,13 @@ function World(props: RagWorldProps) {
         scale={1.12}
       >
         <RagNeuralEntity
-          active={!prep && tour.stage === 7 && plan.generator === "model" && !plan.skipped}
+          active={
+            active("model") &&
+            !prep &&
+            tour.stage === 7 &&
+            plan.generator === "model" &&
+            !plan.skipped
+          }
           time={time}
         />
       </EntityFocus>

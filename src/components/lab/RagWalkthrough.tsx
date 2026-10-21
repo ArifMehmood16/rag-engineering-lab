@@ -35,9 +35,13 @@ import {
   RequestOutput,
   Vector,
 } from "./RagStoryData";
+import { RagExamplePicker } from "./RagExamplePicker";
+import type { RequestScenario } from "@/content/rag-scenarios";
 import { useRagGallery } from "./useRagGallery";
 
 type Props = {
+  scenario: RequestScenario | null;
+  onScenario: (id: string) => void;
   engine: EngineState;
   records: EvidenceRecord[];
   stream: StoryStream;
@@ -54,24 +58,41 @@ type Props = {
 };
 
 export function RagWalkthrough(props: Props) {
-  const { records, stream, onStream, explored, reduced, lowEffects = false, visible } = props;
+  const {
+    records,
+    stream,
+    onStream,
+    explored,
+    reduced,
+    lowEffects = false,
+    visible,
+    scenario,
+    onScenario,
+    onEvidence,
+  } = props;
   const [frames, setFrames] = useState(() => buildStoryFrames(props.engine, records));
   const [chunkId, setChunkId] = useState("A11-LA-CAP");
+  const [requestSeen, setRequestSeen] = useState<number[]>([]);
   const [motionPaused, setMotionPaused] = useState(false);
   const highestFrame = useRef(0);
   const callbacks = useRef(props);
   callbacks.current = props;
   const steps = stream === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH;
   const count = stream === "knowledge" ? 4 : frames.length - 1;
-  const cards = useMemo(() => storyCards(stream, count), [stream, count]);
+  const cards = useMemo(() => storyCards(stream, count, frames), [stream, count, frames]);
+  const stages = useMemo(() => [...new Set(cards.slice(1).map((c) => c.stage))], [cards]);
   const gallery = useRagGallery(cards, stream, visible, reduced);
   const selected = Math.min(gallery.selected.index, cards.length - 1);
   const card = cards[selected]!;
   const { stage, beat } = card;
   const tour = useMemo(() => storyTour(stream, stage, beat, frames), [stream, stage, beat, frames]);
   const output = card.kind === "output";
+  const decisionVisible =
+    output || (card.kind === "work" && beat === walkthroughStep(tour).work.length);
   const record = records.find((r) => r.id === chunkId) ?? records[0]!;
-  const seen = explored.filter((id) => id.startsWith(`${stream}:`)).length;
+  const wasSeen = (n: number) =>
+    stream === "request" ? requestSeen.includes(n) : explored.includes(`knowledge:${n}`);
+  const seen = stages.filter(wasSeen).length;
 
   useEffect(() => {
     if (stream === "knowledge") callbacks.current.onKnowledge(stage);
@@ -79,19 +100,24 @@ export function RagWalkthrough(props: Props) {
   }, [stream, stage]);
   useEffect(() => {
     if (!visible) return;
-    if (output) callbacks.current.onExplore(`${stream}:${stage}`);
+    if (output) {
+      callbacks.current.onExplore(`${stream}:${stage}`);
+      if (stream === "request")
+        setRequestSeen((prev) => (prev.includes(stage) ? prev : [...prev, stage]));
+    }
     if (stream === "request") {
-      const frame = stage + (output ? 1 : 0);
+      const frame = stage + (decisionVisible ? 1 : 0);
       if (frame >= highestFrame.current) {
         highestFrame.current = frame;
         callbacks.current.onEngine(frames[frame]!);
       }
     }
-  }, [stream, stage, output, frames, visible]);
+  }, [stream, stage, output, decisionVisible, frames, visible]);
   const { goTo } = gallery;
   const repeat = useCallback(() => {
     const last = frames.at(-1)!;
     highestFrame.current = 0;
+    setRequestSeen([]);
     goTo(0);
     setFrames(buildStoryFrames(initEngine(last.ctx.question, last.config, last.memory), records));
   }, [frames, records, goTo]);
@@ -113,9 +139,19 @@ export function RagWalkthrough(props: Props) {
                   <Mouse size={14} /> START HERE
                 </span>
                 <h2>
-                  Scroll the cards.
-                  <br />
-                  Watch the system move.
+                  {stream === "knowledge" ? (
+                    <>
+                      Scroll the cards.
+                      <br />
+                      Watch the system move.
+                    </>
+                  ) : (
+                    <>
+                      One question.
+                      <br />
+                      One complete path.
+                    </>
+                  )}
                 </h2>
               </header>
               <div className="story-card-body gallery-intro-body">
@@ -123,8 +159,12 @@ export function RagWalkthrough(props: Props) {
                 <p className="gallery-intro-context">
                   {stream === "knowledge"
                     ? "Follow source documents into chunks, vectors, and a searchable index."
-                    : "Start with a prepared index. Follow one question to its checked answer."}
+                    : (scenario?.purpose ??
+                      "Follow the configured question from input to answer. Routing selects a model for later; retrieval comes first.")}
                 </p>
+                {stream === "request" && scenario && (
+                  <p className="example-expectation">{scenario.expected}</p>
+                )}
               </div>
               <footer className="story-card-footer">
                 <div>
@@ -139,13 +179,14 @@ export function RagWalkthrough(props: Props) {
             <header className="story-card-heading">
               <div className="story-kicker">
                 <span>
-                  {String(item.stage + 1).padStart(2, "0")} / {count} · {step.short}
+                  {String(stages.indexOf(item.stage) + 1).padStart(2, "0")} / {stages.length} ·{" "}
+                  {step.short}
                 </span>
                 <span className={`gallery-kind kind-${item.kind}`}>
                   {item.kind === "work" ? `Work ${item.beat}/${step.work.length}` : item.kind}
                 </span>
               </div>
-              <h2>{item.title}</h2>
+              <h2>{item.kind === "work" ? step.work[item.beat - 1]!.title : item.title}</h2>
             </header>
             <div className="story-card-body">
               {item.kind === "input" ? (
@@ -171,6 +212,11 @@ export function RagWalkthrough(props: Props) {
                 <section aria-label="Step work" className="gallery-operation">
                   <Icon size={25} aria-hidden />
                   <p>{step.work[item.beat - 1]!.detail}</p>
+                  {stream === "request" && item.stage === 5 && item.beat === 1 && (
+                    <pre className="operation-code">
+                      <code>{'get_source_passage({\n  evidence_id: "A11-LA-CAP"\n})'}</code>
+                    </pre>
+                  )}
                   {stream === "knowledge" && item.stage === 2 && item.beat === 3 && (
                     <Vector values={toyEmbedding(record.text)} />
                   )}
@@ -199,7 +245,7 @@ export function RagWalkthrough(props: Props) {
                       records={records}
                       selected={chunkId}
                       onSelect={setChunkId}
-                      onEvidence={props.onEvidence}
+                      onEvidence={onEvidence}
                     />
                   )}
                 </section>
@@ -216,8 +262,16 @@ export function RagWalkthrough(props: Props) {
                   <span>
                     {item.kind === "input"
                       ? "Scroll into the work"
-                      : "Keep reading down the gallery"}
+                      : "Keep following this question"}
                   </span>
+                </div>
+              )}
+              {item.kind === "output" && !final && (
+                <div className="story-next">
+                  Next: {steps[stages[stages.indexOf(item.stage) + 1]!]!.short}
+                  {stream === "request"
+                    ? " · this same question continues"
+                    : " · continue building the index"}
                 </div>
               )}
               {final && (
@@ -230,9 +284,20 @@ export function RagWalkthrough(props: Props) {
                   </div>
                   <div className="story-end-actions">
                     {stream === "request" && (
-                      <button type="button" onClick={repeat}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          scenario
+                            ? onScenario(scenario.id === "large-answer" ? "cache-hit" : scenario.id)
+                            : repeat()
+                        }
+                      >
                         <RotateCcw size={12} />
-                        Replay with warm caches
+                        {scenario?.id === "large-answer"
+                          ? "Repeat this question from cache"
+                          : scenario
+                            ? "Replay this example"
+                            : "Replay with warm caches"}
                       </button>
                     )}
                     <button
@@ -249,7 +314,22 @@ export function RagWalkthrough(props: Props) {
           </>
         );
       }),
-    [cards, stream, frames, record, chunkId, records, count, props.onEvidence, onStream, repeat],
+    [
+      cards,
+      stages,
+      steps,
+      stream,
+      frames,
+      record,
+      chunkId,
+      records,
+      count,
+      onEvidence,
+      scenario,
+      onScenario,
+      onStream,
+      repeat,
+    ],
   );
   return (
     <section
@@ -311,6 +391,7 @@ export function RagWalkthrough(props: Props) {
         </div>
       </header>
       <div className="story-gallery-shell">
+        {stream === "request" && <RagExamplePicker scenario={scenario} onSelect={onScenario} />}
         <header className="gallery-header">
           <div>
             <ArrowDownUp size={15} />
@@ -338,7 +419,11 @@ export function RagWalkthrough(props: Props) {
             {cards.map((item, i) => (
               <article
                 key={item.id}
-                id={item.kind === "input" ? `story-${stream}-${item.stage}` : undefined}
+                id={
+                  i > 0 && cards[i - 1]?.stage !== item.stage
+                    ? `story-${stream}-${item.stage}`
+                    : undefined
+                }
                 ref={(el) => {
                   if (el) gallery.elements.current.set(item.id, el);
                   else gallery.elements.current.delete(item.id);
@@ -367,46 +452,49 @@ export function RagWalkthrough(props: Props) {
         </div>
       </div>
       <nav className="story-ruler" aria-label="Stream chapters">
+        {stream === "request" && (
+          <div className="journey-question" aria-label="Question for this run">
+            <span>THIS QUESTION · {scenario?.title ?? "CUSTOM EXPERIMENT"}</span>
+            <p>{frames[0]!.ctx.question}</p>
+          </div>
+        )}
         <div>
           <span>{stream === "knowledge" ? "KNOWLEDGE" : "REQUEST"} STREAM</span>
           <small>
-            {seen} / {stream === "knowledge" ? 4 : 11} explored
+            {seen} / {stages.length} explored
           </small>
         </div>
         <ol>
-          {steps.slice(0, count).map((s, n) => (
-            <li
-              key={s.short}
-              data-active={stage === n}
-              data-seen={explored.includes(`${stream}:${n}`)}
-            >
-              <a
-                href={`#story-${stream}-${n}`}
-                aria-current={stage === n ? "step" : undefined}
-                aria-label={`Jump to ${s.short}`}
-                onClick={(event) => {
-                  event.preventDefault();
-                  gallery.goTo(
-                    cards.findIndex((item) => item.stage === n && item.kind === "input"),
-                  );
-                }}
-              >
-                <span>
-                  {explored.includes(`${stream}:${n}`) ? (
-                    <Check size={10} />
-                  ) : (
-                    String(n + 1).padStart(2, "0")
-                  )}
-                </span>
-                <small>{s.short}</small>
-              </a>
-            </li>
-          ))}
+          {stages.map((n, ordinal) => {
+            const s = steps[n]!;
+            return (
+              <li key={s.short} data-active={stage === n} data-seen={wasSeen(n)}>
+                <a
+                  href={`#story-${stream}-${n}`}
+                  aria-current={stage === n ? "step" : undefined}
+                  aria-label={`Jump to ${s.short}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    gallery.goTo(
+                      cards.findIndex((item) => item.stage === n && item.kind !== "intro"),
+                    );
+                  }}
+                >
+                  <span>
+                    {wasSeen(n) ? <Check size={10} /> : String(ordinal + 1).padStart(2, "0")}
+                  </span>
+                  <small>{s.short}</small>
+                </a>
+              </li>
+            );
+          })}
         </ol>
         <ul className="route-key" aria-label="Flow colours">
           {Object.entries(FLOW_STYLES)
             .filter(
-              ([key]) => stream === "request" || ["input", "evidence", "generation"].includes(key),
+              ([key]) =>
+                key !== "notice" &&
+                (stream === "request" || ["input", "evidence", "generation"].includes(key)),
             )
             .map(([key, style]) => (
               <li key={key} style={{ "--route-color": style.color } as CSSProperties}>

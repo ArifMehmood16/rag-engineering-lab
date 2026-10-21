@@ -9,6 +9,7 @@
 @import "./styles/rag-gallery.css";
 @import "./styles/rag-flow.css";
 @import "./styles/readability.css";
+@import "./styles/rag-journey.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -41,7 +41,7 @@ export function storyCards(
         stage,
         beat: step.work.length + 1,
         kind: "output",
-        title: "No extra tool needed",
+        title: "No extra tool call",
       });
       return;
     }
