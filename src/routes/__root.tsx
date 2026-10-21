@@ -79,12 +79,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "THE INTELLIGENCE LAB" },
+      { title: "RAG Simulator · AI Learning Lab" },
       {
         name: "description",
         content:
-          "Five AI engineering concepts, taught through the design-phase EvidenceLens case study.",
+          "An interactive RAG simulator on an AI learning lab base: five AI engineering concepts, taught through the design-phase EvidenceLens case study.",
       },
+
     ],
     links: [
       {

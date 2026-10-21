@@ -29,9 +29,10 @@ import { cn } from "@/lib/utils";
 import { DEFAULT_SCENARIO, REQUEST_SCENARIOS } from "@/content/rag-scenarios";
 import { scenarioSeed } from "@/lib/rag-scenarios";
 
-const TITLE = "The Intelligence Lab — See how RAG works";
+const TITLE = "RAG Simulator · AI Learning Lab — See how RAG works";
 const DESC =
-  "Follow documents into an index, a question into retrieved context, and an LLM draft through verification. Five interactive AI engineering experiments.";
+  "An interactive RAG simulator on an AI learning lab base: follow documents into an index, a question into retrieved context, and a draft through verification. Five hands-on AI engineering experiments.";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -150,7 +151,7 @@ export function Lab() {
       <header className="lab-intro">
         <div>
           <p className="eyebrow">
-            <span className="live-indicator" /> The intelligence lab / interactive systems
+            <span className="live-indicator" /> RAG Simulator / AI learning lab
           </p>
           <h1>
             See how <span>RAG works.</span>
