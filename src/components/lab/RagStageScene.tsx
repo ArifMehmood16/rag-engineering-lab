@@ -116,7 +116,7 @@ export function RagStageScene(
                 chunks: "Bounded chunks",
                 vectors: "Embedding · 7D",
                 index: "Knowledge index",
-                model: "Neural AI entity",
+                model: "LLM",
                 question: "Question",
                 retrieve: "Retrieve",
                 context: "Context tray",
