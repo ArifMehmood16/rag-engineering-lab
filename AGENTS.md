@@ -12,4 +12,4 @@
 ## Project rules
 - Lesson prose, quizzes, and synthetic fixtures live in `src/content/`; components in `src/components/learn/` only render them — keeps content revisable without touching UI.
 - Lab logic is pure and deterministic in `src/lib/` with tests in `src/test/` — demonstrations must be reproducible, no model calls.
-- Notes/progress persist via `src/lib/storage.ts` (localStorage, `aemp:` prefix) — no backend by design.
+- The site is static and read-only: no notes, progress, quiz answers, or stored visitor input; lab controls are aria-pressed toggle buttons — the user wants thinking points instead of input-taking.
