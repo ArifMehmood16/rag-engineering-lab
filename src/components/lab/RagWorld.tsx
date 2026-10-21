@@ -573,6 +573,9 @@ function TravellingData({
   const pieces = useRef<THREE.Group[]>([]);
   const bars = useRef<THREE.Group>(null);
   const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
+  const sample = useMemo(() => createFlowSampler(from, to, via), [plan.positions, plan.transfer.from, plan.transfer.to]);
+  const lastProgress = useRef(-1);
+  useLayoutEffect(() => { lastProgress.current = -1; });
   const split = plan.transfer.kind === "split";
   const encode = plan.transfer.kind === "encode";
   const vector = plan.transfer.kind === "vector";
@@ -580,7 +583,9 @@ function TravellingData({
   useFrame(() => {
     if (!group.current) return;
     const t = transferProgress(tour, progress.current);
-    group.current.position.set(...travelPoint(from, to, t, via));
+    if (lastProgress.current === t) return;
+    lastProgress.current = t;
+    group.current.position.set(...sample(t));
     group.current.rotation.y = -0.22 + Math.sin(Math.PI * t) * 0.35;
     group.current.rotation.z = Math.sin(Math.PI * t) * -0.1;
     if (document.current)
