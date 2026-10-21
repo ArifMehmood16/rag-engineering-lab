@@ -71,8 +71,8 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
                 key={`${from}:${to}`}
                 d={points.map(([x, y], n) => `${n ? "L" : "M"}${x},${-y}`).join(" ")}
                 fill="none"
-                stroke={active ? "#8dffe1" : "#31516c"}
-                strokeWidth={active ? 0.04 : 0.02}
+                stroke={active ? "#80c4b7" : "#71879e"}
+                strokeWidth={active ? 0.04 : 0.025}
                 markerEnd={`url(#${marker})`}
               />
             );

@@ -292,7 +292,7 @@ function Connection({
     );
     return {
       curve,
-      tube: new THREE.TubeGeometry(curve, 72, 0.012, 6, false),
+      tube: new THREE.TubeGeometry(curve, 72, 0.026, 6, false),
       points: curve.getSpacedPoints(80),
     };
   }, [from, to, via]);
@@ -302,6 +302,7 @@ function Connection({
   const packets = useRef<THREE.Mesh[]>([]);
   const tangent = useMemo(() => new THREE.Vector3(), []);
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
+  const signal = useMemo(() => new THREE.Color(color).multiplyScalar(1.8), [color]);
   useFrame(() => {
     if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
     if (arrow.current) {
@@ -319,18 +320,28 @@ function Connection({
     <group>
       <mesh geometry={geometry.tube}>
         <meshBasicMaterial
-          color={active ? color : "#365273"}
+          color={signal}
           transparent
-          opacity={active ? 0.65 : 0.5}
+          opacity={active ? 0.18 : 0}
           toneMapped={false}
           depthWrite={false}
         />
       </mesh>
+      {/* The complete route and its arrow stay crisp even when no data is moving. */}
+      <Line
+        points={geometry.points}
+        color={active ? color : "#71879e"}
+        lineWidth={1.35}
+        transparent
+        opacity={0.86}
+        toneMapped={false}
+        depthWrite={false}
+      />
       <Line
         ref={line}
         points={geometry.points}
-        color={color}
-        lineWidth={1.8}
+        color={signal}
+        lineWidth={2}
         dashed
         dashSize={0.16}
         gapSize={0.2}
@@ -340,11 +351,11 @@ function Connection({
         depthWrite={false}
       />
       <mesh ref={arrow}>
-        <coneGeometry args={[0.065, 0.2, 3]} />
+        <coneGeometry args={[0.085, 0.26, 3]} />
         <meshBasicMaterial
-          color={active ? color : "#7197b9"}
+          color={active ? color : "#91a6bb"}
           transparent
-          opacity={active ? 1 : 0.4}
+          opacity={0.95}
           toneMapped={false}
         />
       </mesh>
@@ -621,13 +632,7 @@ function World(props: RagWorldProps) {
             ? "#a5ffcb"
             : CYAN
       }
-      active={
-        plan.transfer.from === from &&
-        plan.transfer.to === to &&
-        tour.beat > 0 &&
-        !plan.skipped &&
-        !plan.blocked
-      }
+      active={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
       moving={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
       time={time}
     />
@@ -716,14 +721,7 @@ function World(props: RagWorldProps) {
         </>
       ) : (
         <>
-          {REQUEST_CONNECTIONS.filter(([from, to]) => {
-            if ((from === "router" && to === "context") || (from === "context" && to === "check"))
-              return plan.applicationLookup;
-            if ((from === "cache" && to === "check") || (from === "cache" && to === "router"))
-              return stageInput(tour).config.answerCache;
-            if (from === "index" && to === "check") return tour.stage === 9;
-            return true;
-          }).map(([from, to]) => connection(from, to))}
+          {REQUEST_CONNECTIONS.map(([from, to]) => connection(from, to))}
           <group position={positions.index!}>
             <RagKnowledgeGlobe
               chunks={index.chunks}
