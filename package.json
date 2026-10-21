@@ -96,5 +96,37 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
     "vitest": "^4.1.10"
-  }
+  },
+  "description": "Interactive 3D lab for learning RAG, embeddings, prompt caching, model routing, evaluations, guardrails, and tool calling.",
+  "license": "Apache-2.0",
+  "author": "Arif Mehmood",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArifMehmood16/rag-engineering-lab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ArifMehmood16/rag-engineering-lab/issues"
+  },
+  "keywords": [
+    "rag",
+    "retrieval-augmented-generation",
+    "ai-engineering",
+    "llm",
+    "embeddings",
+    "prompt-caching",
+    "model-routing",
+    "llm-evaluation",
+    "guardrails",
+    "tool-calling",
+    "interactive-learning",
+    "threejs",
+    "react",
+    "typescript",
+    "tanstack-start"
+  ],
+  "packageManager": "bun@1.4.0",
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  },
+  "homepage": "https://rag-engineering-lab.lovable.app/"
 }
