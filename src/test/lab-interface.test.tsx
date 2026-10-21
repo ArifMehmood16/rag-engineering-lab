@@ -83,6 +83,100 @@ function inspectRun() {
   fireEvent.click(screen.getByRole("button", { name: "Inspect run" }));
 }
 const progress = () => screen.getByRole("progressbar", { name: "Stages explored this visit" });
+const conceptsProgress = () =>
+  screen.getByRole("progressbar", { name: "Concepts explored this visit" });
+function focusLearning(index: number) {
+  const list = screen.getByRole("region", { name: "Scrollable concept examples" });
+  const card = list.querySelector<HTMLElement>(`[data-learning-card="${index}"]`)!;
+  act(() => {
+    list.scrollTop = card.offsetTop + card.offsetHeight / 2 - list.clientHeight / 2;
+    fireEvent.scroll(list);
+    vi.runOnlyPendingTimers();
+  });
+}
+
+describe("five visible concept views", () => {
+  it("offers named concepts and returns to the exact independent stream positions", () => {
+    render(<Lab />);
+    const nav = screen.getByRole("navigation", { name: "Five AI engineering learnings" });
+    expect(within(nav).getAllByRole("button")).toHaveLength(5);
+    expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
+    focusCard(2, "output");
+    fireEvent.click(screen.getByLabelText("Learn Caching & routing"));
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "process the prefix",
+    );
+    expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
+    fireEvent.click(screen.getByRole("button", { name: "Back to flow" }));
+    expect(current()).toHaveTextContent("Embeddings · the result");
+    answerStream();
+    focusCard(3, "output");
+    fireEvent.click(screen.getByLabelText("Learn Evaluations & judges"));
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "reviewed test cases",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Back to flow" }));
+    expect(current()).toHaveTextContent("Retrieve · the result");
+    fireEvent.click(screen.getByRole("button", { name: /Build knowledge Documents/ }));
+    expect(current()).toHaveTextContent("Embeddings · the result");
+  });
+  it("shows prefix processing separately from new generation and answer reuse", () => {
+    render(<Lab />);
+    fireEvent.click(screen.getByLabelText("Learn Caching & routing"));
+    focusLearning(1);
+    const prefix = screen.getByLabelText("Current concept example");
+    expect(prefix).toHaveTextContent("REUSED PROCESSING");
+    expect(prefix).toHaveTextContent("1 model call");
+    expect(prefix).toHaveTextContent("160");
+    focusLearning(2);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "Approved-answer cache",
+    );
+    expect(progress()).toHaveAttribute("aria-valuenow", "0");
+    focusLearning(3);
+    expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "1");
+    focusLearning(0);
+    focusLearning(3);
+    expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "1");
+    cleanup();
+    render(<Lab />);
+    expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
+  });
+  it("teaches offline retrieval, generation, and judge evaluation without advancing the user's run", () => {
+    render(<Lab />);
+    fireEvent.click(screen.getByLabelText("Learn Evaluations & judges"));
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "Three local fixtures",
+    );
+    expect(screen.getByText("OFFLINE OBSERVER · NO LIVE REQUEST STEP")).toBeInTheDocument();
+    focusLearning(2);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "Fixed context: IDENTICAL",
+    );
+    focusLearning(3);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "SIMULATED LLM-AS-JUDGE",
+    );
+    expect(progress()).toHaveAttribute("aria-valuenow", "0");
+    fireEvent.click(screen.getByRole("button", { name: "Back to flow" }));
+    expect(current()).toHaveTextContent("Scroll the cards");
+  });
+  it("separates schema and support checks and explains the tool-call authority", () => {
+    render(<Lab />);
+    fireEvent.click(screen.getByLabelText("Learn Guardrails & permissions"));
+    focusLearning(2);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "SCHEMA PASS · SUPPORT FAIL",
+    );
+    fireEvent.click(screen.getByLabelText("Learn Tools & context"));
+    focusLearning(1);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "Application code proposes this known-ID lookup",
+    );
+    focusLearning(3);
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent("35 token budget");
+  });
+});
 
 describe("RAG card gallery", () => {
   it("keeps the request topology understandable without WebGL", () => {

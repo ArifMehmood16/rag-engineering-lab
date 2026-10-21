@@ -468,6 +468,14 @@ export function RequestOutput({
             ? "Application code produced this answer. Neither LLM was called."
             : `${after.ctx.route === "large" ? "LLM (large profile)" : "Small LLM"} produced this fixture draft after retrieval and context assembly.`}
         </p>
+        {after.config.promptCache && (
+          <div className="learning-status">
+            Prompt-prefix cache: {after.ctx.usage.prefixHit ? "hit" : "miss"} ·{" "}
+            {after.ctx.usage.cachedPrefixTokens} assumed prefix tokens reused ·{" "}
+            {after.ctx.usage.generationCalls} new generation call. Answer generation was not
+            bypassed.
+          </div>
+        )}
         <div className="tour-claims">
           {after.ctx.claims.map((claim) => (
             <p key={claim.id}>

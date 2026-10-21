@@ -308,7 +308,7 @@ function CacheStore({ active, enabled }: { active: boolean; enabled: boolean }) 
   );
 }
 
-/** A keypad-shaped tool dock; the executable fixture remains a bounded passage lookup. */
+/** A source-read console: a document enters a bounded API, with a linked result leaving it. */
 function ToolConsole({ active }: { active: boolean }) {
   const color = active ? "#b7ffdf" : "#83a7b9";
   return (
@@ -318,16 +318,38 @@ function ToolConsole({ active }: { active: boolean }) {
         <meshStandardMaterial color="#102b38" metalness={0.7} roughness={0.3} />
         <Edges color={color} />
       </mesh>
-      <mesh position={[0, 0.25, 0.085]}>
-        <boxGeometry args={[0.49, 0.18, 0.025]} />
-        <meshBasicMaterial color={color} transparent opacity={active ? 0.85 : 0.35} />
-      </mesh>
-      {Array.from({ length: 9 }, (_, n) => (
-        <mesh key={n} position={[((n % 3) - 1) * 0.17, -0.01 - Math.floor(n / 3) * 0.16, 0.09]}>
-          <boxGeometry args={[0.1, 0.08, 0.035]} />
-          <meshBasicMaterial color={color} transparent opacity={active ? 0.8 : 0.35} />
-        </mesh>
-      ))}
+      <group position={[-0.02, 0.05, 0.12]} scale={0.5}>
+        <Paper color={color} small />
+      </group>
+      <Line
+        points={[
+          [-0.24, -0.15, 0.14],
+          [-0.32, -0.15, 0.14],
+          [-0.32, 0.27, 0.14],
+          [-0.24, 0.27, 0.14],
+        ]}
+        color={color}
+        lineWidth={1.5}
+      />
+      <Line
+        points={[
+          [0.24, -0.15, 0.14],
+          [0.32, -0.15, 0.14],
+          [0.32, 0.27, 0.14],
+          [0.24, 0.27, 0.14],
+        ]}
+        color={color}
+        lineWidth={1.5}
+      />
+      <Line
+        points={[
+          [-0.2, -0.3, 0.14],
+          [0.2, -0.3, 0.14],
+          [0.13, -0.24, 0.14],
+        ]}
+        color={color}
+        lineWidth={1.5}
+      />
       {active && <Glow color="#a5ffcb" scale={2} opacity={0.25} />}
     </group>
   );

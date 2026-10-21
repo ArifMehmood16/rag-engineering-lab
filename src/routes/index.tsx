@@ -55,6 +55,11 @@ export function Lab() {
   const [stream, setStream] = useState<"knowledge" | "request">("knowledge");
   const [walkthroughKey, setWalkthroughKey] = useState(0);
   const [explored, setExplored] = useState<string[]>([]);
+  const [conceptsExplored, setConceptsExplored] = useState<string[]>([]);
+  const exploreConcept = useCallback(
+    (id: string) => setConceptsExplored((seen) => (seen.includes(id) ? seen : [...seen, id])),
+    [],
+  );
   const [selected, setSelected] = useState(0);
   const [knowledge, setKnowledge] = useState<number | null>(0);
   const [experiment, setExperiment] = useState<ExperimentId>("retrieval");
@@ -162,6 +167,8 @@ export function Lab() {
       </header>
 
       <RagWalkthrough
+        conceptsExplored={conceptsExplored}
+        onConceptExplore={exploreConcept}
         key={walkthroughKey}
         engine={engine}
         scenario={scenario}
@@ -238,14 +245,12 @@ export function Lab() {
                         type="button"
                         key={e.id}
                         aria-pressed={experiment === e.id}
+                        aria-label={`${e.number} ${e.title} ${e.subtitle}`}
                         title={e.title}
                         onClick={() => setExperiment(e.id)}
                       >
                         <span>{e.number}</span>
-                        <span className="sr-only">
-                          {" "}
-                          {e.title} {e.subtitle}
-                        </span>
+                        <span>{e.subtitle}</span>
                       </button>
                     ))}
                   </nav>

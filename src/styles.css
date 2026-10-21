@@ -10,6 +10,7 @@
 @import "./styles/rag-flow.css";
 @import "./styles/readability.css";
 @import "./styles/rag-journey.css";
+@import "./styles/rag-learning.css";
 
 @custom-variant dark (&:is(.dark *));
 

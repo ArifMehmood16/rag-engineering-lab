@@ -8,6 +8,7 @@ export function useRagGallery(
   stream: StoryStream,
   visible: boolean,
   reduced: boolean,
+  readLongCardsFromStart = false,
 ) {
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -68,7 +69,13 @@ export function useRagGallery(
       content.style.paddingBottom = `${Math.max(24, (list.clientHeight - (last?.offsetHeight ?? 0)) / 2)}px`;
       centers.current = cards.map((card) => {
         const el = elements.current.get(card.id);
-        return (el?.offsetTop ?? 0) + (el?.offsetHeight ?? 0) / 2;
+        const height = el?.offsetHeight ?? 0;
+        // Concept examples can be taller than the reading window. Enter at their heading,
+        // then keep native scrolling available for the entire example instead of starting halfway down.
+        return (
+          (el?.offsetTop ?? 0) +
+          (readLongCardsFromStart ? Math.min(height, list.clientHeight - 40) : height) / 2
+        );
       });
       list.scrollTo({
         top: galleryScrollTarget(saved, centers.current, list.clientHeight),
@@ -89,7 +96,7 @@ export function useRagGallery(
       observer?.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [cards, stream, visible, reduced]);
+  }, [cards, stream, visible, reduced, readLongCardsFromStart]);
 
   const goTo = useCallback(
     (index: number, smooth = false) => {

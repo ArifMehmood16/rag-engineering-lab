@@ -9,6 +9,9 @@ import { scenarioSeed } from "@/lib/rag-scenarios";
 
 describe("five controlled learning examples", () => {
   const data = buildLearningExamples(APOLLO_RECORDS);
+  it("makes the synonym example explicit without claiming a learned embedding", () => {
+    expect(data.synonymPair).toEqual({ keywordOverlap: 0, toyCosine: 1 });
+  });
   it("distinguishes prefix reuse, prefix invalidation, and complete answer reuse", () => {
     expect(data.cold.ctx.usage.cachedPrefixTokens).toBe(0);
     expect(data.warm.ctx.usage.cachedPrefixTokens).toBe(160);
@@ -27,7 +30,7 @@ describe("five controlled learning examples", () => {
     const missing = evaluateApolloRun(data.missing, APOLLO_RECORDS);
     const wrong = evaluateApolloRun(data.wrong, APOLLO_RECORDS);
     expect(data.testSet).toHaveLength(3);
-    expect(data.testSet.every(q => q.pass)).toBe(true);
+    expect(data.testSet.every((q) => q.pass)).toBe(true);
     expect(missing.recall.num).toBeLessThan(baseline.recall.num);
     expect(data.missing.ctx.usage.generationCalls).toBe(0);
     expect(data.wrong.ctx.context).toEqual(data.baseline.ctx.context);
@@ -47,8 +50,8 @@ describe("five controlled learning examples", () => {
     for (const lens of LEARNING_LENSES) {
       const deck = learningDeck(lens.id, data, APOLLO_RECORDS);
       expect(deck.length).toBeGreaterThanOrEqual(3);
-      expect(deck.every(p => p.offline === (lens.id === "evaluation"))).toBe(true);
-      expect(deck.every(p => stageInput(p.tour))).toBe(true);
+      expect(deck.every((p) => p.offline === (lens.id === "evaluation"))).toBe(true);
+      expect(deck.every((p) => stageInput(p.tour))).toBe(true);
       if (lens.id === "efficiency") {
         expect(stageInput(deck[0]!.tour).memory.prefixes).toHaveLength(0);
         expect(stageInput(deck[1]!.tour).memory.prefixes.length).toBeGreaterThan(0);
@@ -57,7 +60,9 @@ describe("five controlled learning examples", () => {
       if (lens.id === "guardrails") expect(stageOutput(deck[0]!.tour)?.halted).toBe(true);
     }
     expect(data).toEqual(before);
-    const prefix = buildStoryFrames(scenarioSeed("prefix-hit", APOLLO_RECORDS), APOLLO_RECORDS).at(-1)!;
+    const prefix = buildStoryFrames(scenarioSeed("prefix-hit", APOLLO_RECORDS), APOLLO_RECORDS).at(
+      -1,
+    )!;
     expect(prefix.ctx.usage.prefixHit).toBe(true);
     expect(prefix.ctx.usage.answerHit).toBe(false);
     expect(prefix.ctx.usage.generationCalls).toBe(1);

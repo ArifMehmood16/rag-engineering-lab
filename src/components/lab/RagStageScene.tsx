@@ -165,6 +165,7 @@ export function RagStageScene(
     paused: boolean;
     lowEffects?: boolean;
     onPause: () => void;
+    annotationOverride?: { mode: "input" | "work" | "output"; text: string; payload?: string };
   },
 ) {
   const { tour, reduced, paused, onPause, lowEffects } = props;
@@ -172,7 +173,10 @@ export function RagStageScene(
   const [ready, setReady] = useState(false);
   const replay = 0;
   const flow = useRef<HTMLDivElement>(null);
-  const annotation = flowLabel(tour, props.record, props.records);
+  const annotation = {
+    ...flowLabel(tour, props.record, props.records),
+    ...props.annotationOverride,
+  };
   const [overview, setOverview] = useState(false);
   useEffect(() => {
     setReady(typeof window.WebGL2RenderingContext !== "undefined");
@@ -317,6 +321,7 @@ export function RagStageScene(
                 : "OUTPUT"}
           </span>
           <strong>{annotation.text}</strong>
+          <small>{annotation.payload}</small>
           <i />
         </div>
         <div className="scene-mode-label">

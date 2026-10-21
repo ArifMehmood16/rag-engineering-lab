@@ -29,8 +29,8 @@ export function RagExamplePicker({
         >
           <h3>Choose a complete journey</h3>
           <p>
-            Each selection starts an independent request. Only the repeat example starts with an
-            approved cached answer.
+            Each selection starts an independent request. The answer-repeat and shared-prefix
+            examples explicitly seed their different cache types.
           </p>
           <div role="group" aria-label="Question examples">
             {REQUEST_SCENARIOS.map((example, i) => (

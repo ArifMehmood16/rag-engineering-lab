@@ -38,8 +38,12 @@ import {
 import { RagExamplePicker } from "./RagExamplePicker";
 import type { RequestScenario } from "@/content/rag-scenarios";
 import { useRagGallery } from "./useRagGallery";
+import { RagLearningDock, RagLearningLab, type LearningScene } from "./RagLearningLab";
+import type { ExperimentId } from "@/content/rag-lab";
 
 type Props = {
+  conceptsExplored: string[];
+  onConceptExplore: (id: string) => void;
   scenario: RequestScenario | null;
   onScenario: (id: string) => void;
   engine: EngineState;
@@ -69,7 +73,19 @@ export function RagWalkthrough(props: Props) {
     scenario,
     onScenario,
     onEvidence,
+    conceptsExplored,
+    onConceptExplore,
   } = props;
+  const [concept, setConcept] = useState<ExperimentId | null>(null);
+  const [learningScene, setLearningScene] = useState<LearningScene | null>(null);
+  const closeLearning = useCallback(() => {
+    setConcept(null);
+    setLearningScene(null);
+  }, []);
+  const chooseLearning = (id: ExperimentId) => {
+    setLearningScene(null);
+    setConcept(id);
+  };
   const [frames, setFrames] = useState(() => buildStoryFrames(props.engine, records));
   const [chunkId, setChunkId] = useState("A11-LA-CAP");
   const [requestSeen, setRequestSeen] = useState<number[]>([]);
@@ -81,7 +97,7 @@ export function RagWalkthrough(props: Props) {
   const count = stream === "knowledge" ? 4 : frames.length - 1;
   const cards = useMemo(() => storyCards(stream, count, frames), [stream, count, frames]);
   const stages = useMemo(() => [...new Set(cards.slice(1).map((c) => c.stage))], [cards]);
-  const gallery = useRagGallery(cards, stream, visible, reduced);
+  const gallery = useRagGallery(cards, stream, visible && concept === null, reduced);
   const selected = Math.min(gallery.selected.index, cards.length - 1);
   const card = cards[selected]!;
   const { stage, beat } = card;
@@ -99,7 +115,7 @@ export function RagWalkthrough(props: Props) {
     else callbacks.current.onInspect(stage);
   }, [stream, stage]);
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || concept !== null) return;
     if (output) {
       callbacks.current.onExplore(`${stream}:${stage}`);
       if (stream === "request")
@@ -112,7 +128,7 @@ export function RagWalkthrough(props: Props) {
         callbacks.current.onEngine(frames[frame]!);
       }
     }
-  }, [stream, stage, output, decisionVisible, frames, visible]);
+  }, [stream, stage, output, decisionVisible, frames, visible, concept]);
   const { goTo } = gallery;
   const repeat = useCallback(() => {
     const last = frames.at(-1)!;
@@ -155,7 +171,10 @@ export function RagWalkthrough(props: Props) {
                 </h2>
               </header>
               <div className="story-card-body gallery-intro-body">
-                <p>Read down this column. The card in the middle controls the scene beside it.</p>
+                <p>
+                  Read down this column. The card in the middle controls the scene beside it. The
+                  five learning views above explain the decisions and trade-offs.
+                </p>
                 <p className="gallery-intro-context">
                   {stream === "knowledge"
                     ? "Follow source documents into chunks, vectors, and a searchable index."
@@ -262,7 +281,9 @@ export function RagWalkthrough(props: Props) {
                   <span>
                     {item.kind === "input"
                       ? "Scroll into the work"
-                      : "Keep following this question"}
+                      : stream === "knowledge"
+                        ? "Keep following this source"
+                        : "Keep following this question"}
                   </span>
                 </div>
               )}
@@ -339,9 +360,10 @@ export function RagWalkthrough(props: Props) {
       data-stream={stream}
       data-stage={stage}
       data-beat={beat}
+      data-learning={concept ?? undefined}
     >
       <RagStageScene
-        tour={tour}
+        tour={learningScene?.tour ?? tour}
         record={record}
         records={records}
         reduced={reduced}
@@ -349,15 +371,29 @@ export function RagWalkthrough(props: Props) {
         paused={motionPaused}
         visible={visible}
         duration={4.2}
-        scrollProgress={gallery.selected.transfer}
+        scrollProgress={learningScene?.progress ?? gallery.selected.transfer}
+        {...(learningScene
+          ? {
+              annotationOverride: {
+                mode: learningScene.mode,
+                text: learningScene.title,
+                ...(learningScene.offline
+                  ? { payload: "3 reviewed fixtures · offline comparisons" }
+                  : {}),
+              },
+            }
+          : {})}
         onPause={() => setMotionPaused(!motionPaused)}
       />
       <header className="story-navigation">
         <div className="story-streams" role="group" aria-label="Independent learning streams">
           <button
             type="button"
-            aria-pressed={stream === "knowledge"}
-            onClick={() => onStream("knowledge")}
+            aria-pressed={concept === null && stream === "knowledge"}
+            onClick={() => {
+              closeLearning();
+              onStream("knowledge");
+            }}
           >
             <Database size={15} />
             <span>
@@ -366,8 +402,11 @@ export function RagWalkthrough(props: Props) {
           </button>
           <button
             type="button"
-            aria-pressed={stream === "request"}
-            onClick={() => onStream("request")}
+            aria-pressed={concept === null && stream === "request"}
+            onClick={() => {
+              closeLearning();
+              onStream("request");
+            }}
           >
             <MessageSquare size={15} />
             <span>
@@ -375,22 +414,42 @@ export function RagWalkthrough(props: Props) {
             </span>
           </button>
         </div>
-        <div
-          className="story-visit-progress"
-          role="progressbar"
-          aria-label="Stages explored this visit"
-          aria-valuemin={0}
-          aria-valuemax={15}
-          aria-valuenow={explored.length}
-        >
-          <span>
-            <strong>{explored.length}</strong> / 15 explored
+        <div className="story-visit-progress">
+          <span
+            role="progressbar"
+            aria-label="Concepts explored this visit"
+            aria-valuemin={0}
+            aria-valuemax={5}
+            aria-valuenow={conceptsExplored.length}
+          >
+            <strong>{conceptsExplored.length}</strong> / 5 concepts explored
           </span>
-          <small>This visit · resets on reload</small>
-          <i style={{ transform: `scaleX(${explored.length / 15})` }} />
+          <small
+            role="progressbar"
+            aria-label="Stages explored this visit"
+            aria-valuemin={0}
+            aria-valuemax={15}
+            aria-valuenow={explored.length}
+          >
+            {explored.length}/15 flow outputs · this visit
+          </small>
+          <i style={{ transform: `scaleX(${conceptsExplored.length / 5})` }} />
         </div>
       </header>
-      <div className="story-gallery-shell">
+      <RagLearningDock active={concept} seen={conceptsExplored} onSelect={chooseLearning} />
+      {concept && (
+        <RagLearningLab
+          key={concept}
+          concept={concept}
+          records={records}
+          reduced={reduced}
+          visible={visible}
+          onClose={closeLearning}
+          onScene={setLearningScene}
+          onExplore={onConceptExplore}
+        />
+      )}
+      <div className="story-gallery-shell" style={concept ? { display: "none" } : undefined}>
         {stream === "request" && <RagExamplePicker scenario={scenario} onSelect={onScenario} />}
         <header className="gallery-header">
           <div>
@@ -451,7 +510,27 @@ export function RagWalkthrough(props: Props) {
           <ArrowDown size={13} />
         </div>
       </div>
-      <nav className="story-ruler" aria-label="Stream chapters">
+      {concept && (
+        <aside className="learning-world-note">
+          <span>
+            {learningScene?.offline
+              ? "OFFLINE OBSERVER · NO LIVE REQUEST STEP"
+              : "ISOLATED TEACHING EXAMPLE"}
+          </span>
+          <h3>{learningScene?.title ?? "Preparing the example"}</h3>
+          <p>{learningScene?.question}</p>
+          <small>
+            {learningScene?.offline
+              ? "The system is held at its completed result. The cards compare separate recorded fixture runs."
+              : "Your two stream positions and request state are retained. Back to flow resumes the same story."}
+          </small>
+        </aside>
+      )}
+      <nav
+        className="story-ruler"
+        aria-label="Stream chapters"
+        style={concept ? { display: "none" } : undefined}
+      >
         {stream === "request" && (
           <div className="journey-question" aria-label="Question for this run">
             <span>THIS QUESTION · {scenario?.title ?? "CUSTOM EXPERIMENT"}</span>

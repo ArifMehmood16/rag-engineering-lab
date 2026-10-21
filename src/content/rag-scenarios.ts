@@ -47,8 +47,10 @@ export const REQUEST_SCENARIOS: RequestScenario[] = [
     questionId: "crew",
     config: { promptCache: true, answerCache: false },
     warm: true,
-    purpose: "A prior fixture run processed the same stable instructions. Reuse that prefix processing while retrieving evidence and generating a new answer.",
-    expected: "160 assumed prefix tokens are reused. One new fixture generation still runs, followed by all release checks. No approved answer is reused.",
+    purpose:
+      "A prior fixture run processed the same stable instructions. Reuse that prefix processing while retrieving evidence and generating a new answer.",
+    expected:
+      "160 assumed prefix tokens are reused. One new fixture generation still runs, followed by all release checks. No approved answer is reused.",
   },
   {
     id: "tool-read",

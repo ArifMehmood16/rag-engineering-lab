@@ -92,5 +92,27 @@ export function flowLabel(
             ? "Tool disabled · no external action"
             : step.work[tour.beat - 1]!.title;
   }
-  return { mode, text };
+  const selectedEvidence = (after?.ctx.context ?? before.ctx.context).slice(0, 2).join(" · ");
+  const payload =
+    tour.phase === "knowledge"
+      ? tour.stage > 0
+        ? `${record.id} · text + source identity`
+        : "Source pages → readable text"
+      : tour.stage === 3
+        ? `${
+            (after?.ctx.retrieved ?? before.ctx.retrieved)
+              .slice(0, 2)
+              .map((r) => r.id)
+              .join(" · ") || "Query vector"
+          } · candidates`
+        : tour.stage >= 4 && tour.stage <= 7
+          ? selectedEvidence
+            ? `Evidence: ${selectedEvidence}`
+            : "No usable evidence yet"
+          : tour.stage === 2
+            ? "Question + scope + index + settings"
+            : tour.stage >= 8
+              ? "Claims + citation IDs · checked before release"
+              : "Same question · application access scope";
+  return { mode, text, payload };
 }
