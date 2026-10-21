@@ -255,7 +255,7 @@ function StageNodes({
 }
 
 export default function OrbitScene({ states, selected, animate, speed, onSelect }: { states: NodeState[]; selected: number; animate: boolean; speed: number; onSelect: (i: number) => void }) {
-  const progress = states.filter((x) => x === "done").length / states.length;
+  const progress = states?.length ? states.filter((x) => x === "done").length / states.length : 0;
   return (
     <Canvas
       frameloop={animate ? "always" : "demand"}
