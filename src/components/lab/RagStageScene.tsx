@@ -165,6 +165,7 @@ export function RagStageScene(
   props: Omit<RagWorldProps, "paused" | "replay"> & {
     paused: boolean;
     lowEffects?: boolean;
+    autoOverview?: boolean;
     onPause: () => void;
     annotationOverride?: { mode: "input" | "work" | "output"; text: string; payload?: string };
   },
