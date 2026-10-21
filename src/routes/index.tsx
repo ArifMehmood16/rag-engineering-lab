@@ -49,6 +49,7 @@ export function Lab() {
   const [engine, setEngine] = useState<EngineState>(() => initEngine(DEFAULT_QUESTION));
   const [prepared, setPrepared] = useState(false);
   const [walkthroughKey, setWalkthroughKey] = useState(0);
+  const [explored, setExplored] = useState<string[]>([]);
   const [selected, setSelected] = useState(0);
   const [knowledge, setKnowledge] = useState<number | null>(0);
   const [experiment, setExperiment] = useState<ExperimentId>("retrieval");
@@ -142,6 +143,8 @@ export function Lab() {
         engine={engine}
         records={APOLLO_RECORDS}
         prepared={prepared}
+        explored={explored}
+        onExplore={(id) => setExplored((seen) => (seen.includes(id) ? seen : [...seen, id]))}
         onPrepared={() => setPrepared(true)}
         onEngine={setEngine}
         onInspect={inspect}
@@ -200,6 +203,9 @@ export function Lab() {
             onQuestion={chooseQuestion}
             onConfig={configure}
           />
+          <a href="#rag-stage" className="back-to-system">
+            Return to the system <ArrowUpRight size={13} />
+          </a>
           <details className="display-settings">
             <summary>
               Display & motion <ChevronDown size={13} />

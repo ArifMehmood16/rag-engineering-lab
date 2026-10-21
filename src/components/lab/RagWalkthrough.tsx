@@ -40,6 +40,7 @@ import {
   type WalkthroughState,
 } from "@/lib/rag-walkthrough";
 import { cn } from "@/lib/utils";
+import { RagStageScene } from "./RagStageScene";
 
 const FEATURE_NAMES = ["Surface", "Orbit", "Crew", "Module", "Launch", "Backup", "Food"];
 const PACES = [
@@ -255,7 +256,7 @@ function KnowledgeOutput({
   return (
     <>
       <p className="tour-result-summary">
-        <Check size={14} />
+        {stage === 3 ? <Database size={14} /> : <Check size={14} />}
         {stage === 1
           ? `${index.chunks.length} curated chunks · ≈${chunk.tokens} tokens in this one`
           : stage === 2
@@ -269,12 +270,6 @@ function KnowledgeOutput({
         records={records}
       >
         {stage >= 2 && <Vector values={chunk.vector} />}
-        {stage === 3 && (
-          <div className="tour-index-link">
-            <Database size={15} />
-            <code>vector ↔ {chunk.id} ↔ source text</code>
-          </div>
-        )}
       </ChunkPicker>
     </>
   );
@@ -474,6 +469,8 @@ export function RagWalkthrough({
   engine,
   records,
   prepared,
+  explored,
+  onExplore,
   onPrepared,
   onEngine,
   onInspect,
@@ -486,6 +483,8 @@ export function RagWalkthrough({
   engine: EngineState;
   records: EvidenceRecord[];
   prepared: boolean;
+  explored: string[];
+  onExplore: (id: string) => void;
   onPrepared: () => void;
   onEngine: (engine: EngineState) => void;
   onInspect: (stage: number) => void;
@@ -514,6 +513,7 @@ export function RagWalkthrough({
     setMobilePane(null);
     if (latestEngine(next) !== latestEngine(tour)) onEngine(latestEngine(next));
     if (next.preparedThrough === 3) onPrepared();
+    if (atOutput(next)) onExplore(`${next.phase}:${next.stage}`);
     if (next.phase === "knowledge") onKnowledge(next.stage);
     else onInspect(next.stage);
   };
@@ -544,7 +544,11 @@ export function RagWalkthrough({
   const counts = TOY_FEATURES.map((words) => words.filter((w) => rawTerms.has(w)).length);
   const result = stageOutput(tour)?.results[tour.stage];
   return (
-    <section className={cn("rag-tour", reduced && "tour-reduced")} aria-labelledby={titleId}>
+    <section
+      id="rag-stage"
+      className={cn("rag-tour", reduced && "tour-reduced")}
+      aria-labelledby={titleId}
+    >
       <header className="tour-header">
         <div className="tour-phase-tabs" role="group" aria-label="Learning phase">
           <button
@@ -564,10 +568,34 @@ export function RagWalkthrough({
             <span>02</span> Answer a question
           </button>
         </div>
-        <span className="tour-simulation">Fixture replay · no live LLM</span>
+        <div
+          className="tour-exploration"
+          role="progressbar"
+          aria-label="Stages explored this visit"
+          aria-valuemin={0}
+          aria-valuemax={15}
+          aria-valuenow={explored.length}
+        >
+          <svg viewBox="0 0 36 36" aria-hidden>
+            <circle cx="18" cy="18" r="14" />
+            <circle
+              cx="18"
+              cy="18"
+              r="14"
+              pathLength="100"
+              strokeDasharray={`${(explored.length / 15) * 100} 100`}
+            />
+          </svg>
+          <div>
+            <strong>
+              {explored.length} / 15 <span>stages explored</span>
+            </strong>
+            <small>This visit · resets on reload</small>
+          </div>
+        </div>
       </header>
 
-      <div className="tour-map" aria-label="Complete RAG pipeline">
+      <div className="tour-map" data-phase={tour.phase} aria-label="Complete RAG pipeline">
         <div className="tour-map-row">
           <span>BEFORE A QUESTION</span>
           <div className="tour-track tour-knowledge-track">
@@ -626,165 +654,169 @@ export function RagWalkthrough({
         </strong>
       </div>
 
-      <div className="tour-pane-tabs" role="group" aria-label="Step panels">
-        {(["input", "work", "output"] as const).map((pane) => (
-          <button
-            type="button"
-            key={pane}
-            aria-pressed={active === pane}
-            onClick={() => setMobilePane(pane)}
-          >
-            {pane}
-            {pane === attention && <ArrowDown size={12} />}
-          </button>
-        ))}
-      </div>
-      <div className="tour-panels" data-mobile-pane={active}>
-        <section
-          className="tour-pane"
-          data-pane="input"
-          data-attention={attention === "input"}
-          aria-label="Step input"
-        >
-          <h3>
-            <span>01</span> Input
-            {attention === "input" && (
-              <span className="tour-look">
-                <ArrowDown size={13} /> Start here
-              </span>
-            )}
-          </h3>
-          <div className="tour-pane-content">
-            {tour.phase === "knowledge" ? (
-              <KnowledgeInput
-                stage={tour.stage}
-                beat={tour.beat}
-                record={record}
-                records={records}
-                onSelect={setChunkId}
-              />
-            ) : (
-              <RequestInput
-                tour={tour}
-                records={records}
-                selected={chunkId}
-                onSelect={setChunkId}
-              />
-            )}
+      <div className="tour-stage-layout">
+        <RagStageScene tour={tour} record={record} records={records} reduced={reduced} />
+        <div className="tour-reader">
+          <div className="tour-pane-tabs" role="group" aria-label="Step panels">
+            {(["input", "work", "output"] as const).map((pane) => (
+              <button
+                type="button"
+                key={pane}
+                aria-pressed={active === pane}
+                onClick={() => setMobilePane(pane)}
+              >
+                {pane.charAt(0).toUpperCase() + pane.slice(1)}
+                {pane === attention && <ArrowDown size={12} />}
+              </button>
+            ))}
           </div>
-        </section>
-        <section
-          className="tour-pane tour-work-pane"
-          data-pane="work"
-          data-attention={attention === "work"}
-          aria-label="Step work"
-        >
-          <h3>
-            <span>02</span> Work
-            {attention === "work" && (
-              <span className="tour-look">
-                <ArrowDown size={13} /> Follow this
-              </span>
-            )}
-          </h3>
-          <div className="tour-pane-content">
-            <ol className="tour-work-steps">
-              {step.work.map((work, n) => (
-                <li
-                  key={work.title}
-                  aria-current={tour.beat === n + 1 ? "step" : undefined}
-                  data-done={tour.beat > n + 1}
-                >
-                  <span>{tour.beat > n + 1 ? <Check size={13} /> : n + 1}</span>
-                  <div>
-                    <strong>{work.title}</strong>
-                    <p>{work.detail}</p>
-                  </div>
-                  {tour.beat === n + 1 && (
-                    <ArrowLeft className="tour-work-pointer" size={17} aria-hidden />
-                  )}
-                </li>
-              ))}
-            </ol>
-            {tour.phase === "knowledge" && tour.stage === 2 && tour.beat >= 2 && (
-              <div className="tour-feature-counts">
-                <span>Matched features in this chunk</span>
-                <div>
-                  {counts.map((count, n) => (
-                    <span key={n}>
-                      {FEATURE_NAMES[n]} <b>{count}</b>
-                    </span>
-                  ))}
-                </div>
-                <small>Normalise by √({counts.map((n) => `${n}²`).join(" + ")})</small>
-              </div>
-            )}
-            {tour.phase === "request" && tour.stage === 3 && tour.beat >= 1 && (
-              <div className="tour-feature-counts">
-                <span>The query in the index’s representation</span>
-                {stageInput(tour).config.mode === "keyword" ? (
-                  <p>{queryTerms(stageInput(tour).ctx.question).join(" · ")}</p>
+          <div className="tour-panels" data-mobile-pane={active}>
+            <section
+              className="tour-pane"
+              data-pane="input"
+              data-attention={attention === "input"}
+              aria-label="Step input"
+            >
+              <h3>
+                <span>01</span> Input
+                {attention === "input" && (
+                  <span className="tour-look">
+                    <ArrowDown size={13} /> Start here
+                  </span>
+                )}
+              </h3>
+              <div className="tour-pane-content">
+                {tour.phase === "knowledge" ? (
+                  <KnowledgeInput
+                    stage={tour.stage}
+                    beat={tour.beat}
+                    record={record}
+                    records={records}
+                    onSelect={setChunkId}
+                  />
                 ) : (
-                  <Vector values={toyEmbedding(stageInput(tour).ctx.question)} />
+                  <RequestInput
+                    tour={tour}
+                    records={records}
+                    selected={chunkId}
+                    onSelect={setChunkId}
+                  />
                 )}
               </div>
-            )}
-            {result?.status === "skipped" && output && (
-              <p className="tour-data-note">
-                The engine skipped this stage on the chosen route; no extra model or tool work
-                occurred.
-              </p>
-            )}
-          </div>
-        </section>
-        <section
-          className="tour-pane"
-          data-pane="output"
-          data-attention={attention === "output"}
-          aria-label="Step output"
-        >
-          <h3>
-            <span>03</span> Output
-            {attention === "output" && (
-              <span className="tour-look">
-                <ArrowDown size={13} /> Read the result
-              </span>
-            )}
-          </h3>
-          <div className="tour-pane-content">
-            {!output ? (
-              <div className="tour-output-wait">
-                <ScanLine size={27} />
-                <strong>Output appears after the work</strong>
-                <p>
-                  Follow each highlighted sub-step. Nothing advances until you choose Next, or play
-                  this step slowly.
-                </p>
-                <span>
-                  {tour.beat} / {outputBeat(tour)} transitions
-                </span>
+            </section>
+            <section
+              className="tour-pane tour-work-pane"
+              data-pane="work"
+              data-attention={attention === "work"}
+              aria-label="Step work"
+            >
+              <h3>
+                <span>02</span> Work
+                {attention === "work" && (
+                  <span className="tour-look">
+                    <ArrowDown size={13} /> Follow this
+                  </span>
+                )}
+              </h3>
+              <div className="tour-pane-content">
+                <ol className="tour-work-steps">
+                  {step.work.map((work, n) => (
+                    <li
+                      key={work.title}
+                      aria-current={tour.beat === n + 1 ? "step" : undefined}
+                      data-done={tour.beat > n + 1}
+                    >
+                      <span>{tour.beat > n + 1 ? <Check size={13} /> : n + 1}</span>
+                      <div>
+                        <strong>{work.title}</strong>
+                        <p>{work.detail}</p>
+                      </div>
+                      {tour.beat === n + 1 && (
+                        <ArrowLeft className="tour-work-pointer" size={17} aria-hidden />
+                      )}
+                    </li>
+                  ))}
+                </ol>
+                {tour.phase === "knowledge" && tour.stage === 2 && tour.beat >= 2 && (
+                  <div className="tour-feature-counts">
+                    <span>Matched features in this chunk</span>
+                    <div>
+                      {counts.map((count, n) => (
+                        <span key={n}>
+                          {FEATURE_NAMES[n]} <b>{count}</b>
+                        </span>
+                      ))}
+                    </div>
+                    <small>Normalise by √({counts.map((n) => `${n}²`).join(" + ")})</small>
+                  </div>
+                )}
+                {tour.phase === "request" && tour.stage === 3 && tour.beat >= 1 && (
+                  <div className="tour-feature-counts">
+                    <span>The query in the index’s representation</span>
+                    {stageInput(tour).config.mode === "keyword" ? (
+                      <p>{queryTerms(stageInput(tour).ctx.question).join(" · ")}</p>
+                    ) : (
+                      <Vector values={toyEmbedding(stageInput(tour).ctx.question)} />
+                    )}
+                  </div>
+                )}
+                {result?.status === "skipped" && output && (
+                  <p className="tour-data-note">
+                    The engine skipped this stage on the chosen route; no extra model or tool work
+                    occurred.
+                  </p>
+                )}
               </div>
-            ) : tour.phase === "knowledge" ? (
-              <KnowledgeOutput
-                stage={tour.stage}
-                record={record}
-                selected={chunkId}
-                onSelect={setChunkId}
-                records={records}
-              />
-            ) : (
-              <RequestOutput
-                tour={tour}
-                records={records}
-                selected={chunkId}
-                onSelect={setChunkId}
-                onEvidence={onEvidence}
-              />
-            )}
+            </section>
+            <section
+              className="tour-pane"
+              data-pane="output"
+              data-attention={attention === "output"}
+              aria-label="Step output"
+            >
+              <h3>
+                <span>03</span> Output
+                {attention === "output" && (
+                  <span className="tour-look">
+                    <ArrowDown size={13} /> Read the result
+                  </span>
+                )}
+              </h3>
+              <div className="tour-pane-content">
+                {!output ? (
+                  <div className="tour-output-wait">
+                    <ScanLine size={27} />
+                    <strong>Output appears after the work</strong>
+                    <p>
+                      Follow each highlighted sub-step. Nothing advances until you choose Next, or
+                      play this step slowly.
+                    </p>
+                    <span>
+                      {tour.beat} / {outputBeat(tour)} transitions
+                    </span>
+                  </div>
+                ) : tour.phase === "knowledge" ? (
+                  <KnowledgeOutput
+                    stage={tour.stage}
+                    record={record}
+                    selected={chunkId}
+                    onSelect={setChunkId}
+                    records={records}
+                  />
+                ) : (
+                  <RequestOutput
+                    tour={tour}
+                    records={records}
+                    selected={chunkId}
+                    onSelect={setChunkId}
+                    onEvidence={onEvidence}
+                  />
+                )}
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
-
       <footer className="tour-controls">
         <div className="tour-main-controls">
           <button type="button" className="tour-next" onClick={next} disabled={auto}>

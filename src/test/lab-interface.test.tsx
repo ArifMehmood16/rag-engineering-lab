@@ -88,9 +88,11 @@ describe("RAG lab interface", () => {
     expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent(
       "No question has been asked",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Output" }));
     expect(screen.getByRole("region", { name: "Step output" })).toHaveTextContent(
       "Output appears after the work",
     );
+    fireEvent.click(screen.getByRole("button", { name: "Input" }));
     for (let stage = 0; stage < 4; stage++) {
       for (let beat = 0; beat < 4; beat++)
         fireEvent.click(screen.getByRole("button", { name: /^(Next sub-step|Show output)$/ }));
@@ -101,8 +103,10 @@ describe("RAG lab interface", () => {
           "Cape Kennedy",
         );
       }
-      if (stage === 2)
+      if (stage === 2) {
+        fireEvent.click(screen.getByRole("button", { name: "Input" }));
         expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent("A11-OV-HL1");
+      }
       fireEvent.click(
         screen.getByRole("button", { name: stage === 3 ? "Ask the first question" : "Next stage" }),
       );
@@ -113,6 +117,10 @@ describe("RAG lab interface", () => {
     );
     expect(screen.getByRole("region", { name: "Step input" })).toHaveTextContent(
       "Who walked on the Moon",
+    );
+    expect(screen.getByRole("progressbar", { name: "Stages explored this visit" })).toHaveAttribute(
+      "aria-valuenow",
+      "4",
     );
   });
 
@@ -141,5 +149,23 @@ describe("RAG lab interface", () => {
       "true",
     );
     expect(screen.getByRole("button", { name: "Next stage" })).toBeEnabled();
+  });
+
+  it("counts viewed outputs once and starts exploration fresh on the next lab load", () => {
+    renderPreparedLab();
+    const progress = () => screen.getByRole("progressbar", { name: "Stages explored this visit" });
+    expect(progress()).toHaveAttribute("aria-valuenow", "0");
+    fireEvent.click(screen.getByRole("button", { name: "Run to result" }));
+    expect(progress()).toHaveAttribute("aria-valuenow", "1");
+    fireEvent.click(screen.getByRole("button", { name: "Repeat instantly" }));
+    expect(progress()).toHaveAttribute("aria-valuenow", "1");
+    fireEvent.click(screen.getByRole("button", { name: /Retrieve$/ }));
+    expect(progress()).toHaveAttribute("aria-valuenow", "2");
+    fireEvent.click(screen.getByRole("button", { name: /02 Spend less work/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Prompt-prefix cache/ }));
+    expect(progress()).toHaveAttribute("aria-valuenow", "2");
+    cleanup();
+    render(<Lab />);
+    expect(progress()).toHaveAttribute("aria-valuenow", "0");
   });
 });
