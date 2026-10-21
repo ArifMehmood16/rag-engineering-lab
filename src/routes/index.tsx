@@ -56,7 +56,7 @@ function Lab() {
       {/* Left: question & experiment controls */}
       <section
         aria-labelledby="ctl-h"
-        className="glass order-3 space-y-5 rounded-xl p-4 lg:order-1"
+        className="glass order-3 space-y-5 rounded-xl p-4 lg:order-1 lg:max-h-[calc(56vh+9rem)] lg:overflow-y-auto"
       >
         <div>
           <p className="hud-label" id="ctl-h">
@@ -88,10 +88,8 @@ function Lab() {
               const l = getLesson(e.lesson)!;
               return (
                 <li key={e.id} className="rounded-md border border-dashed border-border p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold">{e.title}</p>
-                    <NotConnected />
-                  </div>
+                  <p className="text-sm font-semibold">{e.title}</p>
+                  <div className="mt-1"><NotConnected /></div>
                   <p className="mt-1 text-xs text-muted-foreground">{e.desc}</p>
                   <Link
                     to="/lessons/$slug"

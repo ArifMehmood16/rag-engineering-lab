@@ -2,12 +2,12 @@
 export function OrbitStatic({ count, selected }: { count: number; selected: number }) {
   const nodes = Array.from({ length: count }, (_, i) => {
     const t = (i / count) * Math.PI * 2 - Math.PI / 2;
-    return [200 + Math.cos(t) * 165, 150 + Math.sin(t) * 70] as const;
+    return [200 + Math.cos(t) * 165, 150 + Math.sin(t) * 95] as const;
   });
   return (
     <svg viewBox="0 0 400 300" className="size-full" aria-hidden>
       <g fill="none" strokeWidth="1">
-        <ellipse cx="200" cy="150" rx="165" ry="70" className="stroke-info/40" />
+        <ellipse cx="200" cy="150" rx="165" ry="95" className="stroke-info/40" />
         <ellipse
           cx="200"
           cy="150"

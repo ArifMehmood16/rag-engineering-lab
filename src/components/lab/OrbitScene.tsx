@@ -161,12 +161,12 @@ function StageNodes({
     () =>
       Array.from({ length: count }, (_, i) => {
         const t = (i / count) * Math.PI * 2 - Math.PI / 2;
-        return new THREE.Vector3(Math.cos(t) * 2.9, Math.sin(t) * 0.55, Math.sin(t) * 1.6);
+        return new THREE.Vector3(Math.cos(t) * 2.9, Math.sin(t) * 1.25, Math.sin(t) * 0.9);
       }),
     [count],
   );
   return (
-    <group rotation={[0.25, 0, 0]}>
+    <group rotation={[0, 0, -0.12]}>
       <Line points={[...pts, pts[0]!]} color={BLUE} lineWidth={1} transparent opacity={0.35} />
       {pts.map((p, i) => (
         <group key={i}>
