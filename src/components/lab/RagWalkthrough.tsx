@@ -52,6 +52,7 @@ export function RagWalkthrough(props: Props) {
   const [motionPaused, setMotionPaused] = useState(false);
   const places = useRef<Record<StoryStream, number>>({ knowledge: 0, request: 0 });
   const highestFrame = useRef(0);
+  const viewportHeight = useRef(typeof window === "undefined" ? 720 : window.innerHeight);
   const callbacks = useRef(props);
   callbacks.current = props;
   const steps = stream === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH;
@@ -98,12 +99,21 @@ export function RagWalkthrough(props: Props) {
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(measure);
     };
+    const resize = () => {
+      const scale = window.innerHeight / viewportHeight.current;
+      const offset = places.current[stream] * scale;
+      places.current.knowledge *= scale;
+      places.current.request *= scale;
+      viewportHeight.current = window.innerHeight;
+      window.scrollTo({ top: offset, behavior: "instant" });
+      schedule();
+    };
     window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    window.addEventListener("resize", resize);
     measure();
     return () => {
       window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
+      window.removeEventListener("resize", resize);
       cancelAnimationFrame(frame);
     };
   }, [stream, count, visible]);
@@ -271,10 +281,6 @@ export function RagWalkthrough(props: Props) {
             </section>
           ) : (
             <section aria-label="Step output">
-              <span className="story-focus-label">
-                <Check size={12} />{" "}
-                {result?.status === "blocked" ? "Stopped at this boundary" : "Result of this step"}
-              </span>
               {stream === "knowledge" ? (
                 <KnowledgeOutput
                   stage={stage}

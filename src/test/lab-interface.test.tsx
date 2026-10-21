@@ -22,6 +22,7 @@ vi.mock("@tanstack/react-router", async (original) => ({
 import { Lab } from "@/routes/index";
 beforeEach(() => {
   vi.useFakeTimers();
+  Object.defineProperty(window, "innerHeight", { configurable: true, writable: true, value: 768 });
   Object.defineProperty(window, "scrollY", { configurable: true, writable: true, value: 0 });
   vi.spyOn(window, "scrollTo").mockImplementation((options: number | ScrollToOptions) => {
     if (typeof options === "object")
@@ -118,6 +119,20 @@ describe("RAG scroll lab", () => {
     expect(
       screen.getByRole("heading", { name: "Retrieve passages that match the question" }),
     ).toBeInTheDocument();
+  });
+  it("keeps the same story moment when the viewport height changes", () => {
+    render(<Lab />);
+    scrollTo(2, 0.8);
+    act(() => {
+      Object.defineProperty(window, "innerHeight", { value: 1024 });
+      fireEvent.resize(window);
+      vi.runOnlyPendingTimers();
+    });
+    expect(
+      screen.getByRole("heading", { name: "Encode each chunk as a numeric vector" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Step output" })).toBeInTheDocument();
+    expect(progress()).toHaveAttribute("aria-valuenow", "1");
   });
   it("counts only viewed outputs, deduplicates reverse scroll, and resets on a new load", () => {
     render(<Lab />);

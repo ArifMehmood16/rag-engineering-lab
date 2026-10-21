@@ -307,14 +307,14 @@ function Director({
       size.width,
       size.height,
       wide ? Math.min(230, size.width * 0.185) : 0,
-      wide ? 0 : size.height * 0.2,
+      wide ? 0 : size.height * 0.28,
       size.width,
       size.height,
     );
     cam.updateProjectionMatrix();
   }, [camera, size.width, size.height]);
   useFrame((_, delta) => {
-    if (!visible || paused) return;
+    if (!visible) return;
     const wide = size.width >= 1000;
     const aspect =
       (wide ? size.width - 460 : size.width) / (wide ? size.height * 0.78 : size.height * 0.65);
@@ -324,11 +324,11 @@ function Director({
       .sub(target)
       .multiplyScalar(pull)
       .add(target);
-    if (!reduced) {
+    if (!reduced && !paused) {
       position.x += Math.sin(time.current * 0.13) * 0.22;
       position.y += Math.sin(time.current * 0.17) * 0.12;
     }
-    if (reduced || !initialized.current) {
+    if (reduced || paused || !initialized.current) {
       camera.position.copy(position);
       look.current.copy(target);
       initialized.current = true;
@@ -474,7 +474,8 @@ function World(props: RagWorldProps) {
       projected.set(point[0], point[1] + 0.95, point[2] + 0.1).project(camera);
       const element = props.flowLabel.current;
       element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
-      element.style.top = `${(-projected.y * 0.5 + 0.5) * size.height}px`;
+      const y = (-projected.y * 0.5 + 0.5) * size.height;
+      element.style.top = `${size.width < 1000 ? Math.max(size.height < 760 ? 232 : 225, Math.min(size.height < 760 ? 240 : size.height * 0.4, y)) : y}px`;
       element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1 ? "1" : "0";
     }
     props.labels?.current.forEach((element, node) => {

@@ -80,7 +80,11 @@ export function flowLabel(
           ? result?.status === "blocked"
             ? (result.output[0] ?? "Stopped · no answer released")
             : result?.status === "skipped"
-              ? "Bypassed · reuse the checked result"
+              ? tour.stage === 5 && before.config.tool === "off"
+                ? outputs[5]!
+                : before.ctx.usage.answerHit
+                  ? "Bypassed · reuse the checked result"
+                  : "Stage bypassed on this route"
               : outputs[tour.stage]!
           : tour.stage === 5 && before.config.tool === "off"
             ? "Tool disabled · no external action"

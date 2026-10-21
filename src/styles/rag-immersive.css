@@ -760,7 +760,7 @@
     right: 10px;
     top: auto;
     bottom: 54px;
-    max-height: 53svh;
+    max-height: 62svh;
     border-radius: 13px;
   }
   .story-card-heading {
@@ -934,5 +934,85 @@
   .story-visit-progress i,
   .story-streams button {
     transition: none;
+  }
+}
+
+/* Leave the mobile header clear and reserve the upper world for the current transfer. */
+@media (max-width: 999px) {
+  .story-visit-progress {
+    top: 125px;
+    right: 12px;
+    padding: 0;
+    font-size: 7px;
+  }
+  .story-visit-progress strong {
+    font-size: 8px;
+  }
+  .story-ruler > div > small {
+    visibility: hidden;
+  }
+  .story-card .tour-chunk-counter span:last-child {
+    display: none;
+  }
+  .story-card .tour-chunk-picker button {
+    width: 22px;
+    height: 22px;
+    font-size: 9px;
+  }
+  .story-card .tour-chunk-picker {
+    margin-bottom: 7px;
+  }
+  .story-card .tour-passage > p {
+    margin: 7px 0;
+  }
+  .story-card .tour-passage-id {
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+  }
+}
+@media (max-width: 999px) and (max-height: 760px) {
+  .story-card {
+    max-height: 68svh;
+  }
+  .story-card-heading {
+    padding-top: 9px;
+  }
+  .story-card h2 {
+    font-size: 15px;
+    margin: 6px 0 8px;
+  }
+  .story-card-body {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .story-card-footer {
+    padding-top: 7px;
+    padding-bottom: 8px;
+  }
+  .story-card-footer > p {
+    font-size: 9px;
+  }
+  .story-card .tour-source-preview p,
+  .story-card .tour-source-text > p,
+  .story-card .tour-passage > p {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 999px) and (max-height: 760px) {
+  .story-card .tour-chunk-counter {
+    display: none;
+  }
+  .story-card-body {
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+@media (max-width: 999px) {
+  .world-fallback ~ .scene-flow-label {
+    left: 50%;
+    top: 26%;
   }
 }

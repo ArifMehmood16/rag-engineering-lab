@@ -205,7 +205,7 @@ export function RagStageScene(
           </button>
           <button
             type="button"
-            aria-label={paused ? "Resume visual motion" : "Pause visual motion"}
+            aria-label={paused ? "Resume ambient motion" : "Pause ambient motion"}
             onClick={onPause}
             disabled={reduced}
           >
