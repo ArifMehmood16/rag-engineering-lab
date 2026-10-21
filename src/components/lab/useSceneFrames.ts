@@ -53,6 +53,18 @@ export function useSceneFrames({
     };
     timer = setTimeout(tick, 1000 / (finished() ? ambientFps : fps));
     return () => clearTimeout(timer);
-  }, [wakeKey, visible, paused, reduced, fps, settleAfter, resetKey, finishAt, ambientTime, ambientFps, invalidate]);
+  }, [
+    wakeKey,
+    visible,
+    paused,
+    reduced,
+    fps,
+    settleAfter,
+    resetKey,
+    finishAt,
+    ambientTime,
+    ambientFps,
+    invalidate,
+  ]);
   return time;
 }

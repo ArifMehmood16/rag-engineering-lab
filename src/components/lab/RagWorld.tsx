@@ -515,7 +515,9 @@ function Director({
   const lastTime = useRef(-1);
   const dirty = useRef(true);
   const pose = cameraPose(tour, overview);
-  useLayoutEffect(() => { dirty.current = true; });
+  useLayoutEffect(() => {
+    dirty.current = true;
+  });
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     const region = sceneRegion(size.width, size.height, tour.phase === "request");
@@ -572,9 +574,14 @@ function TravellingData({
   const pieces = useRef<THREE.Group[]>([]);
   const bars = useRef<THREE.Group>(null);
   const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
-  const sample = useMemo(() => createFlowSampler(from, to, via), [plan.positions, plan.transfer.from, plan.transfer.to]);
+  const sample = useMemo(
+    () => createFlowSampler(from, to, via),
+    [plan.positions, plan.transfer.from, plan.transfer.to],
+  );
   const lastProgress = useRef(-1);
-  useLayoutEffect(() => { lastProgress.current = -1; });
+  useLayoutEffect(() => {
+    lastProgress.current = -1;
+  });
   const split = plan.transfer.kind === "split";
   const encode = plan.transfer.kind === "encode";
   const vector = plan.transfer.kind === "vector";
@@ -716,10 +723,13 @@ function World(props: RagWorldProps) {
   }, -2);
   const projected = useMemo(() => new THREE.Vector3(), []);
   const lastProjection = useRef({ matrix: new THREE.Matrix4(), progress: -1, dirty: true });
-  useLayoutEffect(() => { lastProjection.current.dirty = true; });
+  useLayoutEffect(() => {
+    lastProjection.current.dirty = true;
+  });
   useFrame(() => {
     const last = lastProjection.current;
-    if (!last.dirty && last.progress === progress.current && last.matrix.equals(camera.matrixWorld)) return;
+    if (!last.dirty && last.progress === progress.current && last.matrix.equals(camera.matrixWorld))
+      return;
     last.dirty = false;
     last.progress = progress.current;
     last.matrix.copy(camera.matrixWorld);

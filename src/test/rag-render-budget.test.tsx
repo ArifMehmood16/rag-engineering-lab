@@ -105,9 +105,16 @@ describe("the scene's reading-time render budget", () => {
   it.each(["paused", "reduced", "hidden"] as const)("stops both clocks when %s", (flag) => {
     const ambientTime = { current: 0 };
     const initial = { ...base, ambientTime };
-    const { result, rerender } = renderHook((props) => useSceneFrames(props), { initialProps: initial });
+    const { result, rerender } = renderHook((props) => useSceneFrames(props), {
+      initialProps: initial,
+    });
     act(() => vi.advanceTimersByTime(4000));
-    rerender({ ...initial, paused: flag === "paused", reduced: flag === "reduced", visible: flag !== "hidden" });
+    rerender({
+      ...initial,
+      paused: flag === "paused",
+      reduced: flag === "reduced",
+      visible: flag !== "hidden",
+    });
     const ambient = ambientTime.current;
     const transition = result.current.current;
     const calls = invalidate.mock.calls.length;
