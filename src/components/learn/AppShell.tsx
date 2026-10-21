@@ -13,10 +13,16 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         to="/"
         onClick={onNavigate}
-        className={cn(
-          "rounded-md px-3 py-2 text-sm hover:bg-muted",
-          path === "/" && "bg-card font-semibold shadow-sm",
-        )}
+        aria-current={path === "/" ? "page" : undefined}
+        className={cn("rounded-md px-3 py-2 font-mono text-xs uppercase tracking-widest hover:bg-muted", path === "/" && "bg-card text-primary")}
+      >
+        ◎ The Lab · ORBIT
+      </Link>
+      <Link
+        to="/overview"
+        onClick={onNavigate}
+        aria-current={path === "/overview" ? "page" : undefined}
+        className={cn("rounded-md px-3 py-2 text-sm hover:bg-muted", path === "/overview" && "bg-card font-semibold shadow-sm")}
       >
         Overview
       </Link>
