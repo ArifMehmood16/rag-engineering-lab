@@ -396,18 +396,24 @@ function Director({
       size.width,
       size.height,
       wide ? Math.min(230, size.width * 0.185) : 0,
-      wide ? 0 : size.height * 0.28,
+      wide ? 0 : size.height * (tour.phase === "request" ? (size.height < 760 ? 0.1 : 0.14) : 0.28),
       size.width,
       size.height,
     );
     cam.updateProjectionMatrix();
-  }, [camera, size.width, size.height]);
+  }, [camera, size.width, size.height, tour.phase]);
   useFrame((_, delta) => {
     if (!visible) return;
     const wide = size.width >= 1000;
     const aspect =
       (wide ? size.width - 460 : size.width) / (wide ? size.height * 0.78 : size.height * 0.65);
-    const pull = aspect < 1.3 ? Math.pow(1.3 / aspect, 0.9) : 1;
+    const pull =
+      (aspect < 1.3 ? Math.pow(1.3 / aspect, 0.9) : 1) *
+      (!wide && tour.phase === "request"
+        ? tour.stage === 0 || tour.stage === 10
+          ? 1.22
+          : 1.1
+        : 1);
     const target = new THREE.Vector3(...pose.target);
     const position = new THREE.Vector3(...pose.position)
       .sub(target)
@@ -574,7 +580,7 @@ function World(props: RagWorldProps) {
       const margin = size.width < 1000 ? 110 : 150;
       element.style.left = `${Math.max(margin, Math.min(size.width - margin, x))}px`;
       const y = (-projected.y * 0.5 + 0.5) * size.height;
-      element.style.top = `${size.width < 1000 ? Math.max(size.height < 760 ? 232 : 225, Math.min(size.height < 760 ? 240 : size.height * 0.4, y)) : y}px`;
+      element.style.top = `${size.width < 1000 ? Math.max(240, Math.min(size.height < 760 ? 240 : size.height * 0.4, y)) : y}px`;
       element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1 ? "1" : "0";
     }
     props.labels?.current.forEach((element, node) => {
