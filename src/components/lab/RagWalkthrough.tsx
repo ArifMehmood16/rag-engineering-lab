@@ -1,3 +1,5 @@
+import { FLOW_STYLES } from "@/lib/rag-scene";
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
@@ -401,10 +403,24 @@ export function RagWalkthrough(props: Props) {
             </li>
           ))}
         </ol>
-        <p>
-          <ArrowDown size={14} />
-          Follow the cards. The system follows you.
-        </p>
+        <ul className="route-key" aria-label="Flow colours">
+          {Object.entries(FLOW_STYLES)
+            .filter(
+              ([key]) => stream === "request" || ["input", "evidence", "generation"].includes(key),
+            )
+            .map(([key, style]) => (
+              <li key={key} style={{ "--route-color": style.color } as CSSProperties}>
+                <i aria-hidden />
+                {stream === "knowledge"
+                  ? key === "input"
+                    ? "Documents"
+                    : key === "generation"
+                      ? "Encoding"
+                      : "Index"
+                  : style.label}
+              </li>
+            ))}
+        </ul>
       </nav>
     </section>
   );

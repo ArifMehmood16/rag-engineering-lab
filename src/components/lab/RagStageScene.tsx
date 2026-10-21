@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 import { Pause, Play, Sparkles, Maximize2, Focus } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
@@ -18,7 +19,9 @@ import {
   REQUEST_CONNECTIONS,
   REQUEST_NODE_NAMES,
   travelPoint,
-  flowWaypoints,
+  flowRoute,
+  flowStyle,
+  nodeEmphasis,
   type SceneNode,
 } from "@/lib/rag-scene";
 import { flowLabel } from "@/lib/rag-flow-label";
@@ -35,43 +38,41 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
     return (
       <div className="world-fallback request-fallback">
         <svg
-          viewBox="-9 -6.2 16 11"
+          viewBox="-9 -9 18 15"
           role="img"
           aria-label="Question flow: user, input checks, router, cache, model branches, tools, output checks, and return to user"
         >
-          <defs>
-            <marker
-              id={marker}
-              markerWidth="5"
-              markerHeight="5"
-              refX="4"
-              refY="2.5"
-              orient="auto"
-              markerUnits="strokeWidth"
-            >
-              <path d="M0,0 L5,2.5 L0,5" fill="#80c5d4" />
-            </marker>
-          </defs>
           {REQUEST_CONNECTIONS.map(([from, to]) => {
-            const active =
-              plan.moving && plan.transfer.from === from && plan.transfer.to === to;
-            const points = Array.from({ length: 40 }, (_, n) =>
-              travelPoint(
-                plan.positions[from]!,
-                plan.positions[to]!,
-                n / 39,
-                flowWaypoints(from, to),
-              ),
+            const active = plan.moving && plan.transfer.from === from && plan.transfer.to === to;
+            const route = flowRoute(plan.positions, from, to);
+            const style = flowStyle(from, to);
+            const focused = plan.transfer.from === from && plan.transfer.to === to;
+            const points = Array.from({ length: 80 }, (_, n) =>
+              travelPoint(route.from, route.to, n / 79, route.via),
             );
             return (
-              <path
-                key={`${from}:${to}`}
-                d={points.map(([x, y], n) => `${n ? "L" : "M"}${x},${-y}`).join(" ")}
-                fill="none"
-                stroke={active ? "#80c4b7" : "#71879e"}
-                strokeWidth={active ? 0.04 : 0.025}
-                markerEnd={`url(#${marker})`}
-              />
+              <g key={`${from}:${to}`} opacity={focused ? 1 : 0.35}>
+                <defs>
+                  <marker
+                    id={`${marker}-${from}-${to}`}
+                    markerWidth="5"
+                    markerHeight="5"
+                    refX="4"
+                    refY="2.5"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M0,0 L5,2.5 L0,5" fill={style.color} />
+                  </marker>
+                </defs>
+                <path
+                  d={points.map(([x, y], n) => `${n ? "L" : "M"}${x},${-y}`).join(" ")}
+                  fill="none"
+                  stroke={style.color}
+                  strokeWidth={active ? 0.045 : 0.03}
+                  markerEnd={`url(#${marker}-${from}-${to})`}
+                />
+              </g>
             );
           })}
           {Object.entries(REQUEST_NODE_NAMES).map(([name, title]) => {
@@ -80,7 +81,11 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
             const radius =
               node === "model" ? 1.05 : node === "index" ? 0.9 : node === "small" ? 0.5 : 0.27;
             return (
-              <g key={node} transform={`translate(${x},${-y})`}>
+              <g
+                key={node}
+                transform={`translate(${x},${-y})`}
+                opacity={0.4 + nodeEmphasis(plan, node) * 0.6}
+              >
                 <circle
                   r={radius}
                   fill="#0b1c2c"
@@ -96,7 +101,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
                     strokeDasharray=".1 .1"
                   />
                 )}
-                <text y={radius + 0.45} textAnchor="middle" fill="#c4e5ef" fontSize="0.26">
+                <text y={radius + 0.45} textAnchor="middle" fill="#c4e5ef" fontSize="0.32">
                   {title}
                 </text>
               </g>
@@ -176,6 +181,7 @@ export function RagStageScene(
         "tour-system-scene",
         tour.phase === "knowledge" && "scene-preparing",
         reduced && "scene-still",
+        overview && "scene-overview",
       )}
       aria-label={`Visual RAG system: ${walkthroughStep(tour).title}`}
     >
@@ -210,9 +216,7 @@ export function RagStageScene(
                 vectors: "Embedding · 7D",
               };
               if (
-                (tour.phase === "knowledge" &&
-                  ((node === "chunks" && tour.stage < 1) ||
-                    (node === "vectors" && tour.stage < 2))) ||
+                (tour.phase === "knowledge" && node === "vectors" && tour.stage < 2) ||
                 !names[node] ||
                 (node === "source" && tour.phase !== "knowledge")
               )
@@ -266,6 +270,7 @@ export function RagStageScene(
                     else labels.current.delete(node);
                   }}
                   className={cn("world-label", plan.active === node && "world-label-active")}
+                  data-relevance={nodeEmphasis(plan, node) > 0.5 ? "current" : "idle"}
                   style={{ opacity: 0 }}
                 >
                   {plan.active === node && <span className="world-focus-arrow">↓</span>}
@@ -285,7 +290,12 @@ export function RagStageScene(
           ref={flow}
           className={`scene-flow-label flow-${annotation.mode}`}
           aria-label="Flow annotation"
-          style={ready && !lowEffects ? { opacity: 0 } : undefined}
+          style={
+            {
+              "--flow-color": flowStyle(plan.transfer.from, plan.transfer.to).color,
+              ...(ready && !lowEffects ? { opacity: 0 } : {}),
+            } as CSSProperties
+          }
         >
           <span>
             {annotation.mode === "work"

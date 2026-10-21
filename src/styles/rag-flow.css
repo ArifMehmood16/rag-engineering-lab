@@ -1,0 +1,60 @@
+/* Route colour communicates the kind of data, brightness the current operation. */
+.scene-flow-label {
+  border-color: color-mix(in srgb, var(--flow-color, #8fc5b8) 55%, transparent);
+}
+.scene-flow-label > span {
+  color: var(--flow-color, #9ed8ce);
+}
+.scene-flow-label > i {
+  background: var(--flow-color, #9ed8ce);
+}
+.scene-flow-label[data-placement="below"] {
+  transform: translate(-50%, 0);
+}
+.scene-flow-label[data-placement="below"] i {
+  top: auto;
+  bottom: 100%;
+  transform: rotate(180deg);
+}
+.scene-overview .world-label {
+  max-width: 74px;
+  text-align: center;
+}
+.scene-overview .world-label small {
+  display: none;
+}
+.route-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 15px;
+  margin: 13px 0 0;
+  list-style: none;
+}
+.story-ruler .route-key li {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 12px/1.5 var(--font-sans);
+  color: #b6c9df;
+}
+.story-ruler .route-key li::after {
+  display: none;
+}
+.route-key i {
+  width: 16px;
+  height: 3px;
+  border-radius: 4px;
+  background: var(--route-color);
+}
+@media (max-width: 999px) {
+  .route-key {
+    display: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .scene-overview .world-label[data-relevance="idle"] {
+    opacity: 0 !important;
+  }
+}

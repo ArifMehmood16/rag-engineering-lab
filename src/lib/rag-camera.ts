@@ -1,40 +1,74 @@
 import type { WalkthroughState } from "./rag-walkthrough";
-import { requestModel } from "./rag-scene";
-import type { Point3 } from "./rag-scene";
+import { atOutput } from "./rag-walkthrough";
+import {
+  flowRoute,
+  NODE_RADIUS,
+  REQUEST_CONNECTIONS,
+  scenePlan,
+  type Point3,
+  type SceneNode,
+} from "./rag-scene";
+
 export interface CameraPose {
-  position: Point3;
   target: Point3;
+  span: [width: number, height: number];
 }
-/** A shot frames a concept, not a new engine state. Model and evidence remain in one continuous world. */
+
+/** Frame the actual operation and its endpoints. Outputs tighten the shot; the next input opens it. */
 export function cameraPose(tour: WalkthroughState, overview = false): CameraPose {
-  if (overview)
-    return tour.phase === "request"
-      ? { position: [-1.4, -0.1, 23.5], target: [-1.4, -0.5, 0] }
-      : { position: [0.3, 2, 18.5], target: [0, 0.6, 0] };
-  if (tour.phase === "knowledge")
-    return (
-      [
-        { position: [-1, 1.7, 15.6], target: [-0.6, 0.3, 0] },
-        { position: [-2.3, 0.8, 12.8], target: [-1.7, -0.1, 0.1] },
-        { position: [-0.5, 1.3, 13.3], target: [-0.6, 0.5, 0] },
-        { position: [-1.7, 2.7, 11.8], target: [-1.7, 1.3, -0.4] },
-      ] satisfies CameraPose[]
-    )[tour.stage]!;
-  if (tour.stage === 7 && requestModel(tour) === "model")
-    return { position: [2.1, 1.1, 12.4], target: [1.9, 0.7, 0] };
-  return (
-    [
-      { position: [-1.4, -0.1, 23.5], target: [-1.4, -0.5, 0] },
-      { position: [-4.7, 0.1, 17.5], target: [-4.7, -0.3, 0] },
-      { position: [-3.7, 0.7, 17.2], target: [-3.7, -0.1, 0] },
-      { position: [-2.1, 3.1, 15.8], target: [-1.6, 2.7, -0.3] },
-      { position: [-0.5, 2, 16.8], target: [-0.5, 1.5, 0.1] },
-      { position: [1.8, 2, 16.5], target: [1.8, 1.2, 0.1] },
-      { position: [-0.3, 2.1, 15.8], target: [-0.3, 1.5, 0] },
-      { position: [-1.9, -0.1, 16.5], target: [-1.9, -0.5, 0] },
-      { position: [0.8, 0.2, 20], target: [0.6, -0.4, 0] },
-      { position: [0.8, 2.1, 20.8], target: [0.8, 1.4, 0] },
-      { position: [-1.4, -0.1, 23.5], target: [-1.4, -0.5, 0] },
-    ] satisfies CameraPose[]
-  )[tour.stage]!;
+  const plan = scenePlan(tour);
+  const points: Point3[] = [];
+  const addNode = (node: SceneNode) => {
+    const p = plan.positions[node];
+    if (!p) return;
+    const radius = NODE_RADIUS[node] ?? 0.5;
+    points.push([p[0] - radius, p[1] - radius, 0], [p[0] + radius, p[1] + radius, 0]);
+  };
+  if (overview) {
+    Object.keys(plan.positions).forEach((n) => addNode(n as SceneNode));
+    const connections: [SceneNode, SceneNode][] =
+      tour.phase === "request"
+        ? REQUEST_CONNECTIONS
+        : [
+            ["source", "chunks"],
+            ["chunks", "vectors"],
+            ["vectors", "index"],
+          ];
+    connections.forEach(([from, to]) => points.push(...flowRoute(plan.positions, from, to).via));
+  } else {
+    addNode(plan.transfer.from);
+    addNode(plan.transfer.to);
+    points.push(...flowRoute(plan.positions, plan.transfer.from, plan.transfer.to).via);
+    if (tour.phase === "knowledge" && tour.stage === 0) addNode("chunks");
+  }
+  const xs = points.map((p) => p[0]),
+    ys = points.map((p) => p[1]);
+  const left = Math.min(...xs),
+    right = Math.max(...xs),
+    top = Math.max(...ys),
+    bottom = Math.min(...ys);
+  const padding = overview ? 2 : tour.beat === 0 ? 2.4 : atOutput(tour) ? 1.3 : 1.8;
+  return {
+    target: [(left + right) / 2, (top + bottom) / 2, 0],
+    span: [
+      Math.max(atOutput(tour) && !overview ? 5.5 : 6.2, right - left + padding),
+      Math.max(atOutput(tour) && !overview ? 4 : 4.6, top - bottom + padding),
+    ],
+  };
+}
+
+/** The camera uses the space beside/above the reader, never the area hidden by its cards. */
+export function sceneRegion(width: number, height: number) {
+  const wide = width >= 1000;
+  const reader = width <= 1100 ? 390 : width < 1200 ? 440 : 480;
+  const left = wide ? 30 : 18;
+  const right = wide ? width - reader - 45 : width - 18;
+  const top = wide ? 166 : 190;
+  const bottom = wide ? height - 190 : height * 0.45 - 18;
+  return {
+    width: Math.max(140, right - left),
+    height: Math.max(85, bottom - top),
+    x: (left + right) / 2,
+    y: (top + bottom) / 2,
+  };
 }

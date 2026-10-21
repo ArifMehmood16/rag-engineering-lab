@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Line } from "@react-three/drei";
 import * as THREE from "three";
 import { RagFocus } from "./RagFocus";
 import { RagNeuralEntity } from "./RagNeuralEntity";
 import { RagKnowledgeGlobe } from "./RagKnowledgeGlobe";
-import { cameraPose } from "@/lib/rag-camera";
+import { cameraPose, sceneRegion } from "@/lib/rag-camera";
 import type { Line2 } from "three-stdlib";
 import type { EvidenceRecord } from "@/content/apollo";
 import { buildKnowledgeIndex } from "@/lib/knowledge-index";
 import { atOutput, stageInput, stageOutput, type WalkthroughState } from "@/lib/rag-walkthrough";
 import {
   scenePlan,
-  flowWaypoints,
+  flowRoute,
+  flowStyle,
+  nodeEmphasis,
   REQUEST_CONNECTIONS,
   transferProgress,
   sceneProgressRange,
@@ -37,6 +39,69 @@ export interface RagWorldProps {
 }
 const CYAN = "#64fff1";
 const VIOLET = "#bc83ff";
+/** A per-entity GPU dimmer: geometry remains in place while unrelated objects recede. */
+function EntityFocus({
+  strength,
+  instant,
+  children,
+  ...transform
+}: {
+  strength: number;
+  instant: boolean;
+  children: ReactNode;
+  position: Point3;
+  rotation?: Point3;
+  scale?: number;
+}) {
+  const group = useRef<THREE.Group>(null);
+  const light = useRef({ value: strength });
+  const patched = useRef(new Map<THREE.Material, () => void>());
+  useLayoutEffect(() => {
+    if (instant) light.current.value = strength;
+    group.current?.traverse((object) => {
+      const source = (object as THREE.Mesh).material;
+      if (!source) return;
+      (Array.isArray(source) ? source : [source]).forEach((material) => {
+        if (patched.current.has(material)) return;
+        const compile = material.onBeforeCompile;
+        const cacheKey = material.customProgramCacheKey;
+        material.onBeforeCompile = function (shader, renderer) {
+          compile.call(this, shader, renderer);
+          shader.uniforms["uSceneLight"] = light.current;
+          shader.fragmentShader =
+            "uniform float uSceneLight;\n" +
+            shader.fragmentShader.replace(/}\s*$/, "gl_FragColor.rgb *= uSceneLight;\n}");
+        };
+        material.customProgramCacheKey = function () {
+          return cacheKey.call(this) + ":entity-focus";
+        };
+        material.needsUpdate = true;
+        patched.current.set(material, () => {
+          material.onBeforeCompile = compile;
+          material.customProgramCacheKey = cacheKey;
+        });
+      });
+    });
+  });
+  useEffect(() => {
+    const materials = patched.current;
+    return () => {
+      materials.forEach((restore) => restore());
+      materials.clear();
+    };
+  }, []);
+  useFrame((_, delta) => {
+    light.current.value = instant
+      ? strength
+      : THREE.MathUtils.lerp(light.current.value, strength, 1 - Math.exp(-delta * 5));
+  });
+  return (
+    <group ref={group} {...transform}>
+      {children}
+    </group>
+  );
+}
+
 function Glow({
   color,
   scale = 2,
@@ -271,6 +336,7 @@ function Connection({
   to,
   active,
   moving,
+  emphasis,
   time,
   color = CYAN,
   via = [],
@@ -280,6 +346,7 @@ function Connection({
   via?: Point3[];
   active: boolean;
   moving: boolean;
+  emphasis: number;
   time: React.RefObject<number>;
   color?: string;
 }) {
@@ -306,8 +373,8 @@ function Connection({
   useFrame(() => {
     if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
     if (arrow.current) {
-      geometry.curve.getPointAt(0.8, arrow.current.position);
-      geometry.curve.getTangentAt(0.8, tangent);
+      geometry.curve.getPointAt(0.91, arrow.current.position);
+      geometry.curve.getTangentAt(0.91, tangent);
       arrow.current.quaternion.setFromUnitVectors(axis, tangent);
     }
     packets.current.forEach((mesh, i) => {
@@ -330,10 +397,10 @@ function Connection({
       {/* The complete route and its arrow stay crisp even when no data is moving. */}
       <Line
         points={geometry.points}
-        color={active ? color : "#71879e"}
-        lineWidth={1.35}
+        color={color}
+        lineWidth={active ? 2 : 1.3}
         transparent
-        opacity={0.86}
+        opacity={0.15 + emphasis * 0.75}
         toneMapped={false}
         depthWrite={false}
       />
@@ -353,9 +420,9 @@ function Connection({
       <mesh ref={arrow}>
         <coneGeometry args={[0.085, 0.26, 3]} />
         <meshBasicMaterial
-          color={active ? color : "#91a6bb"}
+          color={active ? signal : color}
           transparent
-          opacity={0.95}
+          opacity={0.2 + emphasis * 0.7}
           toneMapped={false}
         />
       </mesh>
@@ -402,13 +469,12 @@ function Director({
   const pose = cameraPose(tour, overview);
   useEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
-    const wide = size.width >= 1000;
+    const region = sceneRegion(size.width, size.height);
     cam.setViewOffset(
       size.width,
       size.height,
-      wide ? Math.min(230, size.width * 0.185) : 0,
-      // Centre the mobile world above the reading gallery, below the stream controls.
-      wide ? 0 : size.height * (size.height < 760 ? 0.21 : 0.12),
+      size.width / 2 - region.x,
+      size.height / 2 - region.y,
       size.width,
       size.height,
     );
@@ -416,22 +482,14 @@ function Director({
   }, [camera, size.width, size.height]);
   useFrame((_, delta) => {
     if (!visible) return;
-    const wide = size.width >= 1000;
-    const aspect =
-      (wide ? size.width - 460 : size.width) / (wide ? size.height * 0.78 : size.height * 0.65);
-    const pull =
-      (aspect < 1.3 ? Math.pow(1.3 / aspect, 0.9) : 1) *
-      (wide ? 1 : size.height < 760 ? 1.45 : 1.25) *
-      (!wide && tour.phase === "request"
-        ? tour.stage === 0 || tour.stage === 10
-          ? 1.22
-          : 1.1
-        : 1);
+    const region = sceneRegion(size.width, size.height);
+    const halfFov = Math.tan(THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov / 2));
+    const distance = Math.max(
+      (pose.span[0] * size.height) / (2 * halfFov * region.width),
+      (pose.span[1] * size.height) / (2 * halfFov * region.height),
+    );
     const target = new THREE.Vector3(...pose.target);
-    const position = new THREE.Vector3(...pose.position)
-      .sub(target)
-      .multiplyScalar(pull)
-      .add(target);
+    const position = target.clone().add(new THREE.Vector3(0.15, 0.35, distance));
     if (!reduced && !paused) {
       position.x += Math.sin(time.current * 0.13) * 0.22;
       position.y += Math.sin(time.current * 0.17) * 0.12;
@@ -441,7 +499,7 @@ function Director({
       look.current.copy(target);
       initialized.current = true;
     } else {
-      const k = 1 - Math.exp(-delta * 1.8);
+      const k = 1 - Math.exp(-delta * 3);
       camera.position.lerp(position, k);
       look.current.lerp(target, k);
     }
@@ -465,8 +523,7 @@ function TravellingData({
   const document = useRef<THREE.Group>(null);
   const pieces = useRef<THREE.Group[]>([]);
   const bars = useRef<THREE.Group>(null);
-  const from = plan.positions[plan.transfer.from]!;
-  const to = plan.positions[plan.transfer.to]!;
+  const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
   const split = plan.transfer.kind === "split";
   const encode = plan.transfer.kind === "encode";
   const vector = plan.transfer.kind === "vector";
@@ -474,9 +531,7 @@ function TravellingData({
   useFrame(() => {
     if (!group.current) return;
     const t = transferProgress(tour, progress.current);
-    group.current.position.set(
-      ...travelPoint(from, to, t, flowWaypoints(plan.transfer.from, plan.transfer.to)),
-    );
+    group.current.position.set(...travelPoint(from, to, t, via));
     group.current.rotation.y = -0.22 + Math.sin(Math.PI * t) * 0.35;
     group.current.rotation.z = Math.sin(Math.PI * t) * -0.1;
     if (document.current)
@@ -500,7 +555,11 @@ function TravellingData({
   if (!plan.moving) return null;
   return (
     <group ref={group} position={from}>
-      <Glow color={encode || vector ? "#a9a2ff" : CYAN} scale={2.5} opacity={0.6} />
+      <Glow
+        color={flowStyle(plan.transfer.from, plan.transfer.to).color}
+        scale={1.8}
+        opacity={0.35}
+      />
       <group ref={document} scale={1.18}>
         <Paper color={plan.transfer.kind === "draft" ? VIOLET : CYAN} small={encode} />
       </group>
@@ -549,13 +608,26 @@ function World(props: RagWorldProps) {
   const time = useRef(0);
   const elapsed = useRef(0);
   const progress = useRef(reduced ? end : begin);
+  const controlledProgress = useRef(props.scrollProgress);
+  controlledProgress.current = props.scrollProgress;
   const { invalidate, size, camera } = useThree();
   const after = stageOutput(tour);
   useEffect(() => {
     elapsed.current = 0;
-    progress.current = props.scrollProgress ?? (reduced || !plan.moving ? end : begin);
+    progress.current = controlledProgress.current ?? (reduced || !plan.moving ? end : begin);
     invalidate();
-  }, [tour.phase, tour.stage, tour.beat, record.id, replay, reduced, plan.moving, invalidate]);
+  }, [
+    tour.phase,
+    tour.stage,
+    tour.beat,
+    record.id,
+    replay,
+    reduced,
+    plan.moving,
+    begin,
+    end,
+    invalidate,
+  ]);
   useEffect(() => {
     if (props.scrollProgress !== undefined) {
       progress.current = props.scrollProgress;
@@ -578,23 +650,24 @@ function World(props: RagWorldProps) {
   const projected = useMemo(() => new THREE.Vector3(), []);
   useFrame(() => {
     if (props.flowLabel?.current) {
-      const from = plan.positions[plan.transfer.from]!;
-      const to = plan.positions[plan.transfer.to]!;
-      const point = travelPoint(
-        from,
-        to,
-        transferProgress(tour, progress.current),
-        flowWaypoints(plan.transfer.from, plan.transfer.to),
-      );
-      const lift = tour.phase === "request" && (tour.stage < 2 || tour.stage === 10) ? 2.9 : 0.95;
-      projected.set(point[0], point[1] + lift, point[2] + 0.1).project(camera);
+      const { from, to, via } = flowRoute(plan.positions, plan.transfer.from, plan.transfer.to);
+      const point = travelPoint(from, to, transferProgress(tour, progress.current), via);
+      projected.set(point[0], point[1], point[2] + 0.1).project(camera);
       const element = props.flowLabel.current;
+      const region = sceneRegion(size.width, size.height);
+      const left = region.x - region.width / 2,
+        right = region.x + region.width / 2;
+      const top = region.y - region.height / 2,
+        bottom = region.y + region.height / 2;
+      const halfWidth = element.offsetWidth / 2 + 8,
+        labelHeight = element.offsetHeight;
       const x = (projected.x * 0.5 + 0.5) * size.width;
-      const margin = size.width < 1000 ? 110 : 150;
-      element.style.left = `${Math.max(margin, Math.min(size.width - margin, x))}px`;
       const y = (-projected.y * 0.5 + 0.5) * size.height;
-      element.style.top = `${size.width < 1000 ? Math.max(240, Math.min(size.height < 760 ? 240 : size.height * 0.4, y)) : y}px`;
-      element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1 ? "1" : "0";
+      const above = y - 34 - labelHeight >= top || y + 34 + labelHeight > bottom;
+      element.dataset["placement"] = above ? "above" : "below";
+      element.style.left = `${THREE.MathUtils.clamp(x, left + halfWidth, right - halfWidth)}px`;
+      element.style.top = `${above ? Math.max(top + labelHeight, Math.min(bottom - 20, y - 34)) : Math.max(top, Math.min(bottom - labelHeight, y + 34))}px`;
+      element.style.opacity = !overview && projected.z < 1 ? "1" : "0";
     }
     props.labels?.current.forEach((element, node) => {
       const point = plan.positions[node];
@@ -614,35 +687,42 @@ function World(props: RagWorldProps) {
                     ? -0.7
                     : -0.9;
       projected.set(point[0], point[1] + offset, point[2] + 0.2).project(camera);
-      element.style.left = `${(projected.x * 0.5 + 0.5) * size.width}px`;
-      element.style.top = `${(-projected.y * 0.5 + 0.5) * size.height}px`;
-      element.style.opacity = projected.z < 1 && Math.abs(projected.x) < 1.1 ? "1" : "0";
+      const region = sceneRegion(size.width, size.height);
+      const x = (projected.x * 0.5 + 0.5) * size.width;
+      const y = (-projected.y * 0.5 + 0.5) * size.height;
+      const halfWidth = element.offsetWidth / 2 + 4;
+      const inArea =
+        x > region.x - region.width / 2 + halfWidth &&
+        x < region.x + region.width / 2 - halfWidth &&
+        y > region.y - region.height / 2 &&
+        y < region.y + region.height / 2;
+      element.style.left = `${x}px`;
+      element.style.top = `${y}px`;
+      element.style.opacity = projected.z < 1 && inArea ? String(0.4 + emphasis(node) * 0.6) : "0";
     });
   });
   const active = (n: SceneNode) => plan.active === n;
+  const emphasis = (n: SceneNode) => nodeEmphasis(plan, n, overview);
   const positions = plan.positions;
-  const connection = (from: SceneNode, to: SceneNode) => (
-    <Connection
-      key={`${from}-${to}`}
-      from={positions[from]!}
-      to={positions[to]!}
-      via={flowWaypoints(from, to)}
-      color={
-        from === "cache" || to === "cache"
-          ? "#ffc875"
-          : from === "check" && to === "question"
-            ? "#a5ffcb"
-            : CYAN
-      }
-      active={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
-      moving={plan.moving && plan.transfer.from === from && plan.transfer.to === to}
-      time={time}
-    />
-  );
+  const connection = (from: SceneNode, to: SceneNode) => {
+    const focused = plan.transfer.from === from && plan.transfer.to === to;
+    const nearby = from === plan.active || to === plan.active;
+    return (
+      <Connection
+        key={`${from}-${to}`}
+        {...flowRoute(positions, from, to)}
+        color={flowStyle(from, to).color}
+        emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.3 : 0.06}
+        active={plan.moving && focused}
+        moving={plan.moving && focused}
+        time={time}
+      />
+    );
+  };
   return (
     <>
       <color attach="background" args={["#040711"]} />
-      <fog attach="fog" args={["#040711", 25, 100]} />
+      <fog attach="fog" args={["#040711", 100, 400]} />
       <ambientLight intensity={0.85} />
       <directionalLight position={[-3, 5, 8]} intensity={1.3} color="#94c9ff" />
       <pointLight position={[3, 2, 4]} intensity={3} color="#9987bd" distance={12} />
@@ -667,15 +747,24 @@ function World(props: RagWorldProps) {
           {connection("source", "chunks")}
           {connection("chunks", "vectors")}
           {connection("vectors", "index")}
-          <group position={positions.source!} rotation={[0.04, -0.22, -0.08]}>
+          <EntityFocus
+            strength={emphasis("source")}
+            instant={reduced || paused}
+            position={positions.source!}
+            rotation={[0.04, -0.22, -0.08]}
+          >
             <group position={[0.13, -0.1, -0.18]}>
               <Paper opacity={0.45} />
             </group>
             <Paper />
             {active("source") && <Glow color={CYAN} scale={2.8} opacity={0.4} />}
-          </group>
+          </EntityFocus>
 
-          <group position={positions.chunks!}>
+          <EntityFocus
+            strength={emphasis("chunks")}
+            instant={reduced || paused}
+            position={positions.chunks!}
+          >
             {(tour.stage > 1 || (tour.stage === 1 && atOutput(tour))) &&
               index.chunks.map((c, i) => (
                 <group
@@ -694,9 +783,14 @@ function World(props: RagWorldProps) {
                   />
                 </group>
               ))}
+            {tour.stage < 1 && <Paper small opacity={0.3} />}
             {active("chunks") && <Glow color={CYAN} scale={3} opacity={0.35} />}
-          </group>
-          <group position={positions.vectors!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("vectors")}
+            instant={reduced || paused}
+            position={positions.vectors!}
+          >
             {(tour.stage > 2 || (tour.stage === 2 && atOutput(tour))) && (
               <VectorBars values={values} />
             )}
@@ -709,9 +803,13 @@ function World(props: RagWorldProps) {
               lineWidth={1}
             />
             {active("vectors") && <Glow color={CYAN} scale={2.5} opacity={0.5} />}
-          </group>
+          </EntityFocus>
 
-          <group position={positions.index!}>
+          <EntityFocus
+            strength={emphasis("index")}
+            instant={reduced || paused}
+            position={positions.index!}
+          >
             <RagKnowledgeGlobe
               chunks={index.chunks}
               selected={record.id}
@@ -719,12 +817,16 @@ function World(props: RagWorldProps) {
               ready={!prep || (tour.stage === 3 && atOutput(tour))}
               time={time}
             />
-          </group>
+          </EntityFocus>
         </>
       ) : (
         <>
           {REQUEST_CONNECTIONS.map(([from, to]) => connection(from, to))}
-          <group position={positions.index!}>
+          <EntityFocus
+            strength={emphasis("index")}
+            instant={reduced || paused}
+            position={positions.index!}
+          >
             <RagKnowledgeGlobe
               chunks={index.chunks}
               selected={record.id}
@@ -732,23 +834,40 @@ function World(props: RagWorldProps) {
               ready
               time={time}
             />
-          </group>
-          <group position={positions.question!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("question")}
+            instant={reduced || paused}
+            position={positions.question!}
+          >
             <UserTerminal
               released={tour.stage === 10 && atOutput(tour) && Boolean(after?.ctx.released)}
             />
             {active("question") && <Glow scale={2} opacity={0.3} color="#a5ffcb" />}
-          </group>
-          <group position={positions.input!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("input")}
+            instant={reduced || paused}
+            position={positions.input!}
+          >
             <Portal shield color={tour.stage === 1 && plan.blocked ? "#ff878d" : CYAN} />
-          </group>
-          <group position={positions.small!} scale={0.48}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("small")}
+            instant={reduced || paused}
+            position={positions.small!}
+            scale={0.48}
+          >
             <RagNeuralEntity
               active={tour.stage === 7 && plan.generator === "small" && !plan.skipped}
               time={time}
             />
-          </group>
-          <group position={positions.router!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("router")}
+            instant={reduced || paused}
+            position={positions.router!}
+          >
             <mesh rotation={[0, 0, Math.PI / 4]}>
               <boxGeometry args={[0.28, 0.28, 0.28]} />
               <meshStandardMaterial
@@ -758,8 +877,12 @@ function World(props: RagWorldProps) {
               />
               <Edges color="#e1bcff" />
             </mesh>
-          </group>
-          <group position={positions.retrieve!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("retrieve")}
+            instant={reduced || paused}
+            position={positions.retrieve!}
+          >
             <mesh>
               <torusGeometry args={[0.3, 0.045, 8, 48]} />
               <meshBasicMaterial color={CYAN} />
@@ -772,8 +895,12 @@ function World(props: RagWorldProps) {
               color={CYAN}
               lineWidth={3}
             />
-          </group>
-          <group position={positions.context!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("context")}
+            instant={reduced || paused}
+            position={positions.context!}
+          >
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.3, 0]}>
               <boxGeometry args={[1.1, 0.8, 0.06]} />
               <meshStandardMaterial color="#1a3550" metalness={0.7} />
@@ -788,24 +915,42 @@ function World(props: RagWorldProps) {
                 <Paper small opacity={tour.stage >= 4 ? 0.9 : 0.3} />
               </group>
             ))}
-          </group>
-          <group position={positions.cache!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("cache")}
+            instant={reduced || paused}
+            position={positions.cache!}
+          >
             <CacheStore active={active("cache")} enabled={stageInput(tour).config.answerCache} />
-          </group>
-          <group position={positions.tool!} scale={0.9}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("tool")}
+            instant={reduced || paused}
+            position={positions.tool!}
+            scale={0.9}
+          >
             <ToolConsole active={tour.stage === 5 && stageInput(tour).config.tool !== "off"} />
-          </group>
-          <group position={positions.check!}>
+          </EntityFocus>
+          <EntityFocus
+            strength={emphasis("check")}
+            instant={reduced || paused}
+            position={positions.check!}
+          >
             <Portal color={plan.blocked && tour.stage >= 8 ? "#ff878d" : "#aaffce"} shield />
-          </group>
+          </EntityFocus>
         </>
       )}
-      <group position={positions.model!} scale={1.12}>
+      <EntityFocus
+        strength={emphasis("model")}
+        instant={reduced || paused}
+        position={positions.model!}
+        scale={1.12}
+      >
         <RagNeuralEntity
           active={!prep && tour.stage === 7 && plan.generator === "model" && !plan.skipped}
           time={time}
         />
-      </group>
+      </EntityFocus>
 
       <TravellingData tour={tour} values={values} progress={progress} />
       <RagFocus active={plan.moving} reduced={reduced} />

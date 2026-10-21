@@ -33,10 +33,10 @@ export interface SceneTransfer {
 // World coordinates, shared by objects, connections and the travelling data.
 export const PREPARATION_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   source: [-5, -0.7, 0.7],
-  chunks: [-2.8, -1.1, 0.8],
-  vectors: [-0.6, -0.45, 0.5],
-  index: [-2.5, 2, -1.4],
-  model: [3, 0.7, -0.5],
+  chunks: [-2.5, -0.7, 0.8],
+  vectors: [0.2, -0.7, 0.5],
+  index: [3.2, 0.7, -0.8],
+  model: [7.2, 1.2, -0.5],
 };
 export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   question: [-8, 0, 0.4],
@@ -46,9 +46,9 @@ export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   small: [-3.1, -2.25, 0.6],
   retrieve: [-2.5, 2.05, 0.4],
   index: [-2.35, 4.5, -1.8],
-  context: [0.1, 2.3, 0.65],
+  context: [0.1, 3.1, 0.65],
   model: [1.7, 0, 0],
-  tool: [4.4, 2.45, 0.15],
+  tool: [4.2, 3, 0.15],
   check: [5.25, 0, 0.4],
   // The response returns to the same person who supplied the question.
   answer: [-8, 0, 0.4],
@@ -93,37 +93,168 @@ export const REQUEST_NODE_NAMES: Partial<Record<SceneNode, string>> = {
 
 /** Shared bends keep lines, arrowheads, data packets, labels and focus on one route. */
 const PATH_BENDS: Partial<Record<string, Point3[]>> = {
-  "check:question": [
-    [4.7, -2.7, 0.8],
-    [0, -3.6, 1],
-    [-5.8, -2.9, 0.8],
+  "source:chunks": [[-3.8, -0.45, 0.8]],
+  "chunks:vectors": [[-1.15, -0.4, 0.8]],
+  "vectors:index": [[1.7, -0.35, 0.2]],
+  "question:input": [[-7, 0.15, 0.4]],
+  "input:router": [[-5.05, 0.15, 0.4]],
+  "router:cache": [
+    [-4.55, 1.5, 0.4],
+    [-5.2, 2.8, 0.2],
   ],
-  "small:check": [
-    [-1, -2.9, 0.8],
-    [3.7, -2.2, 0.7],
+  "cache:router": [
+    [-6.1, 1.1, 0.7],
+    [-4.8, 0.65, 0.6],
   ],
-  "cache:check": [
-    [-3.6, 3.3, -0.6],
-    [1.9, 3.8, -0.5],
-    [4.9, 1.4, 0.4],
+  "router:small": [
+    [-4.25, -1.15, 0.5],
+    [-3.85, -2, 0.6],
   ],
+  "router:model": [
+    [-2, 0.1, 0.4],
+    [-0.8, -0.1, 0.3],
+  ],
+  "router:retrieve": [[-3.65, 1.25, 0.4]],
+  "router:context": [
+    [-2.9, 0.7, -0.8],
+    [-0.5, 1.6, -0.8],
+  ],
+  "index:retrieve": [[-2.7, 2.9, -0.4]],
+  "retrieve:context": [[-1.3, 2.65, 0.55]],
+  "context:model": [[0.45, 2.45, 0.5]],
   "context:small": [
-    [-1.6, 1.15, 1],
-    [-2.2, -0.6, 1],
+    [-1.2, 1.7, 0.8],
+    [-2.2, 0.5, 0.9],
+    [-2.6, -1.15, 0.8],
+  ],
+  "model:check": [[4.2, 0, 0.4]],
+  "small:check": [
+    [-1.2, -3.3, 0.5],
+    [3, -3.3, 0.5],
+    [4.8, -1.6, 0.5],
+  ],
+  // Bypass, validation, and release each have their own perimeter lane.
+  "cache:check": [
+    [-6.7, 5.6, -1],
+    [-4.6, 7.2, -1],
+    [6.5, 7.2, -1],
+    [8.1, 3.6, -0.2],
+    [7.1, -0.8, 0.4],
+  ],
+  "index:check": [
+    [-0.3, 6.5, -0.6],
+    [5.7, 6.5, -0.6],
+    [7.1, 3, 0.2],
+    [6.55, 0.5, 0.4],
+  ],
+  "context:check": [
+    [1.5, 4.7, 0.5],
+    [5.2, 4.8, 0.4],
+    [6.1, 1.6, 0.4],
   ],
   "context:tool": [
-    [1.6, 3.35, 0.9],
-    [3.5, 3.3, 0.5],
+    [1.5, 4, 0.6],
+    [3.2, 4, 0.4],
   ],
   "tool:context": [
-    [3.6, 1.8, 1],
-    [1.5, 1.65, 1],
+    [3.25, 2.55, 0.8],
+    [1.25, 2.65, 0.8],
+  ],
+  "model:tool": [
+    [4.15, 1.05, 0.5],
+    [5.5, 1.65, 0.5],
+    [5.5, 2.8, 0.3],
+  ],
+  "check:question": [
+    [5.5, -3.7, 0.5],
+    [0, -4.3, 0.6],
+    [-6.7, -3.5, 0.6],
   ],
   "input:question": [[-7, -1.2, 0.8]],
 };
 const STRAIGHT_PATH: Point3[] = [];
 export const flowWaypoints = (from: SceneNode, to: SceneNode) =>
   PATH_BENDS[`${from}:${to}`] ?? STRAIGHT_PATH;
+
+export const NODE_RADIUS: Partial<Record<SceneNode, number>> = {
+  source: 0.7,
+  chunks: 0.75,
+  vectors: 0.7,
+  index: 1.65,
+  model: 2.15,
+  question: 0.65,
+  input: 0.55,
+  router: 0.35,
+  cache: 0.65,
+  small: 1,
+  retrieve: 0.45,
+  context: 0.65,
+  tool: 0.65,
+  check: 0.55,
+};
+
+/** Connect the outside of each object, rather than drawing through its centre. */
+export function flowRoute(
+  positions: Partial<Record<SceneNode, Point3>>,
+  from: SceneNode,
+  to: SceneNode,
+) {
+  const start = positions[from]!;
+  const end = positions[to]!;
+  if (from === to) return { from: start, to: end, via: STRAIGHT_PATH };
+  const via = flowWaypoints(from, to);
+  const port = (center: Point3, toward: Point3, radius: number): Point3 => {
+    const length = Math.hypot(...toward.map((v, i) => v - center[i]!));
+    return center.map(
+      (v, i) => v + ((toward[i]! - v) / Math.max(0.001, length)) * Math.min(radius, length * 0.75),
+    ) as Point3;
+  };
+  return {
+    from: port(start, via[0] ?? end, NODE_RADIUS[from] ?? 0.5),
+    to: port(end, via.at(-1) ?? start, NODE_RADIUS[to] ?? 0.5),
+    via,
+  };
+}
+
+export const FLOW_STYLES = {
+  input: { color: "#79baff", label: "Request" },
+  evidence: { color: "#69d6ca", label: "Evidence" },
+  generation: { color: "#c4a0ef", label: "Model" },
+  cache: { color: "#e7ba7b", label: "Cache" },
+  tool: { color: "#eea1b9", label: "Tool" },
+  release: { color: "#94d8a3", label: "Checks & return" },
+} as const;
+export function flowStyle(from: SceneNode, to: SceneNode) {
+  return FLOW_STYLES[
+    from === "cache" || to === "cache"
+      ? "cache"
+      : from === "tool" || to === "tool"
+        ? "tool"
+        : from === "check" || (to === "check" && from !== "model" && from !== "small")
+          ? "release"
+          : from === "model" ||
+              from === "small" ||
+              to === "model" ||
+              to === "small" ||
+              to === "vectors"
+            ? "generation"
+            : from === "index" || from === "retrieve" || from === "vectors" || to === "index"
+              ? "evidence"
+              : "input"
+  ];
+}
+
+export function nodeEmphasis(
+  plan: ReturnType<typeof scenePlan>,
+  node: SceneNode,
+  overview = false,
+) {
+  if (overview) return 0.9;
+  if (node === plan.active) return 1;
+  if (!plan.skipped && !plan.blocked && (node === plan.transfer.from || node === plan.transfer.to))
+    return 0.85;
+  return 0.2;
+}
 
 export function requestModel(tour: WalkthroughState): "model" | "small" | "context" {
   const input = stageInput(tour);
@@ -184,11 +315,15 @@ export function scenePlan(tour: WalkthroughState) {
   return {
     positions: prep ? PREPARATION_POSITIONS : REQUEST_POSITIONS,
     transfer: actual,
-    active: toolFailure
-      ? ("tool" as const)
-      : tour.beat === 0 || (blocked && tour.stage === 1)
-        ? actual.from
-        : actual.to,
+    active: skipped
+      ? cached
+        ? ("cache" as const)
+        : actual.from
+      : toolFailure
+        ? ("tool" as const)
+        : tour.beat === 0 || (blocked && tour.stage === 1)
+          ? actual.from
+          : actual.to,
     moving: tour.beat > 0 && !atOutput(tour) && !skipped && !blocked && !toolFailure,
     skipped,
     blocked,
