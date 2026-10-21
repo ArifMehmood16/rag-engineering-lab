@@ -57,7 +57,7 @@ describe("the visual data path", () => {
       beat: 1,
       frames: tour.frames.map((f, i) => (i === 7 ? lookupFrame : f)),
     };
-    expect(scenePlan(lookup).transfer.to).toBe("check");
+    expect(scenePlan(lookup).transfer.to).toBe("context");
     expect(scenePlan(lookup).applicationLookup).toBe(true);
   });
   it("keeps moving objects on their connection and at the target after completion", () => {
@@ -77,13 +77,24 @@ describe("the visual data path", () => {
   it("places checks before routing and routes generation to the selected model", () => {
     const frames = buildStoryFrames(initEngine(DEFAULT_QUESTION), APOLLO_RECORDS);
     expect(scenePlan(storyTour("request", 0, 1, frames)).transfer.to).toBe("input");
-    expect(scenePlan(storyTour("request", 1, 1, frames)).transfer).toMatchObject({
+    expect(scenePlan(storyTour("request", 1, 3, frames)).transfer).toMatchObject({
       from: "input",
       to: "router",
     });
-    expect(scenePlan(storyTour("request", 2, 1, frames)).transfer.to).toBe("small");
-    expect(scenePlan(storyTour("request", 7, 1, frames)).transfer.to).toBe("small");
-    expect(scenePlan(storyTour("request", 8, 1, frames)).transfer.from).toBe("small");
+    expect(scenePlan(storyTour("request", 2, 1, frames)).transfer).toMatchObject({
+      from: "router",
+      to: "router",
+    });
+    expect(scenePlan(storyTour("request", 3, 1, frames)).transfer).toMatchObject({
+      from: "router",
+      to: "retrieve",
+    });
+    expect(scenePlan(storyTour("request", 3, 2, frames)).transfer).toMatchObject({
+      from: "retrieve",
+      to: "index",
+    });
+    expect(scenePlan(storyTour("request", 7, 1, frames)).transfer.to).toBe("model");
+    expect(scenePlan(storyTour("request", 8, 1, frames)).transfer.from).toBe("model");
     const large = buildStoryFrames(
       initEngine(DEFAULT_QUESTION, { profile: "large" }),
       APOLLO_RECORDS,
@@ -111,17 +122,17 @@ describe("the visual data path", () => {
       APOLLO_RECORDS,
     );
     const outward = storyTour("request", 5, 1, frames);
-    const inward = storyTour("request", 5, 2, frames);
+    const inward = storyTour("request", 5, 3, frames);
     expect(scenePlan(outward).transfer).toMatchObject({ from: "context", to: "tool" });
     expect(scenePlan(inward).transfer).toMatchObject({ from: "tool", to: "context" });
-    expect(transferProgress(outward, 0.5)).toBe(1);
-    expect(transferProgress(inward, 0.5)).toBe(0);
+    expect(transferProgress(outward, 1 / 3)).toBe(1);
+    expect(transferProgress(inward, 2 / 3)).toBe(0);
     expect(transferProgress(inward, 1)).toBe(1);
     for (const tool of ["invalid", "denied", "timeout", "empty"] as const) {
       const failed = buildStoryFrames(initEngine(DEFAULT_QUESTION, { tool }), APOLLO_RECORDS);
-      const stopped = scenePlan(storyTour("request", 5, 2, failed));
-      expect(stopped.transfer.to).toBe("tool");
-      expect(stopped.moving).toBe(false);
+      const stopped = scenePlan(storyTour("request", 5, 3, failed));
+      expect(stopped.transfer).toMatchObject({ from: "tool", to: "question", kind: "notice" });
+      expect(stopped.moving).toBe(true);
     }
   });
   it("takes reused answers through output checks while generation stays bypassed", () => {
@@ -134,7 +145,7 @@ describe("the visual data path", () => {
       initEngine(DEFAULT_QUESTION, last.config, last.memory),
       APOLLO_RECORDS,
     );
-    expect(scenePlan(storyTour("request", 2, 1, warm)).transfer.to).toBe("cache");
+    expect(scenePlan(storyTour("request", 2, 2, warm)).transfer.to).toBe("cache");
     expect(scenePlan(storyTour("request", 7, 1, warm)).moving).toBe(false);
     expect(scenePlan(storyTour("request", 8, 1, warm)).transfer.from).toBe("cache");
     expect(scenePlan(storyTour("request", 10, 1, warm)).transfer.to).toBe("question");
@@ -142,8 +153,8 @@ describe("the visual data path", () => {
       initEngine(DEFAULT_QUESTION, { fault: "badCitation" }),
       APOLLO_RECORDS,
     );
-    const withheld = scenePlan(storyTour("request", 8, 3, bad));
-    expect(withheld.active).toBe("check");
+    const withheld = scenePlan(storyTour("request", 8, 4, bad));
+    expect(withheld.active).toBe("question");
     expect(withheld.moving).toBe(false);
   });
 });

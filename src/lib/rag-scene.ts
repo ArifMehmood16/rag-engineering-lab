@@ -1,4 +1,4 @@
-import { getApolloQuestion } from "@/content/apollo";
+import { routeDecision } from "./apollo-engine";
 import {
   atOutput,
   stageInput,
@@ -27,7 +27,16 @@ export type Point3 = [number, number, number];
 export interface SceneTransfer {
   from: SceneNode;
   to: SceneNode;
-  kind: "document" | "split" | "encode" | "vector" | "query" | "evidence" | "draft" | "answer";
+  kind:
+    | "document"
+    | "split"
+    | "encode"
+    | "vector"
+    | "query"
+    | "evidence"
+    | "draft"
+    | "answer"
+    | "notice";
 }
 
 // World coordinates, shared by objects, connections and the travelling data.
@@ -59,23 +68,29 @@ export const REQUEST_CONNECTIONS: [SceneNode, SceneNode][] = [
   ["input", "router"],
   ["router", "cache"],
   ["cache", "router"],
-  ["router", "small"],
-  ["router", "model"],
   ["router", "retrieve"],
-  ["router", "context"],
+  ["router", "index"],
+  ["retrieve", "index"],
   ["index", "retrieve"],
   ["retrieve", "context"],
-  ["context", "model"],
   ["context", "small"],
+  ["context", "model"],
+  ["context", "tool"],
+  ["tool", "context"],
   ["context", "check"],
   ["model", "check"],
   ["small", "check"],
   ["cache", "check"],
+  ["check", "index"],
   ["index", "check"],
-  ["context", "tool"],
-  ["tool", "context"],
-  ["model", "tool"],
   ["check", "question"],
+];
+export const FAILURE_CONNECTIONS: [SceneNode, SceneNode][] = [
+  ["input", "question"],
+  ["context", "question"],
+  ["tool", "question"],
+  ["model", "question"],
+  ["small", "question"],
 ];
 export const REQUEST_NODE_NAMES: Partial<Record<SceneNode, string>> = {
   question: "You",
@@ -93,6 +108,38 @@ export const REQUEST_NODE_NAMES: Partial<Record<SceneNode, string>> = {
 
 /** Shared bends keep lines, arrowheads, data packets, labels and focus on one route. */
 const PATH_BENDS: Partial<Record<string, Point3[]>> = {
+  "router:index": [
+    [-4.6, 2.5, -0.2],
+    [-4.3, 4.8, -1.5],
+  ],
+  "retrieve:index": [
+    [-4, 3.1, -0.4],
+    [-4.2, 4.1, -1.5],
+  ],
+  "check:index": [
+    [6.15, 1.1, 0.8],
+    [5.5, 5.65, 0.5],
+    [0.5, 5.7, -0.5],
+  ],
+  "context:question": [
+    [-1.3, 1.2, 0.8],
+    [-1.55, -4.3, 0.8],
+    [-6, -4.2, 0.8],
+  ],
+  "tool:question": [
+    [7, 2.5, 0.8],
+    [7.4, -4.5, 0.8],
+    [-5.8, -5, 0.8],
+  ],
+  "model:question": [
+    [3.7, -3.4, 0.8],
+    [0, -5.5, 0.8],
+    [-6, -4.6, 0.8],
+  ],
+  "small:question": [
+    [-5, -3.2, 0.8],
+    [-7, -2, 0.8],
+  ],
   "source:chunks": [[-3.8, -0.45, 0.8]],
   "chunks:vectors": [[-1.15, -0.4, 0.8]],
   "vectors:index": [[1.7, -0.35, 0.2]],
@@ -223,6 +270,7 @@ export const FLOW_STYLES = {
   cache: { color: "#e7ba7b", label: "Cache" },
   tool: { color: "#eea1b9", label: "Tool" },
   release: { color: "#94d8a3", label: "Checks & return" },
+  notice: { color: "#e9a0a0", label: "Withheld notice" },
 } as const;
 export function flowStyle(from: SceneNode, to: SceneNode) {
   return FLOW_STYLES[
@@ -259,13 +307,7 @@ export function nodeEmphasis(
 export function requestModel(tour: WalkthroughState): "model" | "small" | "context" {
   const input = stageInput(tour);
   const route =
-    tour.stage > 2
-      ? input.ctx.route
-      : getApolloQuestion(input.ctx.question).kind === "metadata"
-        ? "application"
-        : input.config.profile === "large"
-          ? "large"
-          : "small";
+    tour.stage > 2 ? input.ctx.route : routeDecision(input.ctx.question, input.config).route;
   return route === "application" ? "context" : route === "large" ? "model" : "small";
 }
 const preparation: SceneTransfer[] = [
@@ -277,54 +319,92 @@ const preparation: SceneTransfer[] = [
 export function scenePlan(tour: WalkthroughState) {
   const prep = tour.phase === "knowledge";
   const input = stageInput(tour);
-  const result = stageOutput(tour)?.results[tour.stage];
-  const applicationLookup = !prep && requestModel(tour) === "context";
+  const after = stageOutput(tour);
+  const result = after?.results[tour.stage];
   const generator = prep ? "model" : requestModel(tour);
-  const cached = input.ctx.usage.answerHit || Boolean(stageOutput(tour)?.ctx.usage.answerHit);
-  const routes: SceneTransfer[] = [
-    { from: "question", to: "input", kind: "query" },
-    { from: "input", to: "router", kind: "query" },
-    { from: "router", to: input.config.answerCache ? "cache" : generator, kind: "query" },
-    { from: "index", to: "retrieve", kind: "evidence" },
-    { from: "retrieve", to: "context", kind: "evidence" },
-    { from: "context", to: "tool", kind: "query" },
-    { from: "context", to: "context", kind: "evidence" },
-    { from: "context", to: applicationLookup ? "check" : generator, kind: "evidence" },
-    { from: cached ? "cache" : generator, to: "check", kind: "draft" },
-    { from: "index", to: "check", kind: "evidence" },
-    { from: "check", to: "question", kind: "answer" },
-  ];
-  const transfer = prep ? preparation[tour.stage]! : routes[tour.stage]!;
-  // Tool returns travel back into the context before sufficiency/generation.
-  const toolReturn = !prep && tour.stage === 5 && tour.beat >= 2 && input.config.tool === "valid";
-  const actual = toolReturn
-    ? { from: "tool" as const, to: "context" as const, kind: "evidence" as const }
-    : transfer;
+  const applicationLookup = !prep && generator === "context";
+  const cached = input.ctx.usage.answerHit || Boolean(after?.ctx.usage.answerHit);
   const skipped =
     !prep &&
     (result?.status === "skipped" ||
       (tour.stage === 5 && input.config.tool === "off") ||
-      (tour.stage >= 3 && tour.stage <= 7 && input.ctx.usage.answerHit));
-  const toolFailure =
-    !prep &&
-    tour.stage === 5 &&
-    tour.beat >= 2 &&
-    input.config.tool !== "off" &&
-    input.config.tool !== "valid";
+      (tour.stage >= 3 && tour.stage <= 7 && cached));
   const blocked = !prep && result?.status === "blocked";
+  const leg = (from: SceneNode, to: SceneNode, kind: SceneTransfer["kind"]): SceneTransfer => ({
+    from,
+    to,
+    kind,
+  });
+  const hold = (node: SceneNode, kind: SceneTransfer["kind"] = "query") => leg(node, node, kind);
+  const notice = (from: SceneNode) => leg(from, "question", "notice");
+  const draftSource = cached ? "cache" : generator;
+  const paths: SceneTransfer[][] = [
+    [leg("question", "input", "query"), hold("input")],
+    [hold("input"), hold("input"), blocked ? notice("input") : leg("input", "router", "query")],
+    [
+      hold("router"),
+      input.config.answerCache ? leg("router", "cache", "query") : hold("router"),
+      input.config.answerCache
+        ? cached
+          ? hold("cache", "draft")
+          : leg("cache", "router", "query")
+        : hold("router"),
+    ],
+    applicationLookup
+      ? [
+          leg("router", "index", "query"),
+          leg("index", "retrieve", "evidence"),
+          hold("retrieve", "evidence"),
+        ]
+      : [
+          leg("router", "retrieve", "query"),
+          leg("retrieve", "index", "query"),
+          leg("index", "retrieve", "evidence"),
+        ],
+    [leg("retrieve", "context", "evidence"), hold("context", "evidence")],
+    input.config.tool === "off"
+      ? [hold("context"), hold("context"), hold("context")]
+      : [
+          leg("context", "tool", "query"),
+          hold("tool"),
+          blocked ? notice("tool") : leg("tool", "context", "evidence"),
+        ],
+    [hold("context", "evidence"), blocked ? notice("context") : hold("context", "evidence")],
+    [
+      applicationLookup ? hold("context", "evidence") : leg("context", generator, "evidence"),
+      blocked ? notice(generator) : hold(generator, "draft"),
+    ],
+    [
+      leg(draftSource, "check", "draft"),
+      hold("check", "draft"),
+      blocked ? notice("check") : hold("check", "draft"),
+    ],
+    [
+      leg("check", "index", "query"),
+      leg("index", "check", "evidence"),
+      blocked ? notice("check") : hold("check", "answer"),
+    ],
+    [leg("check", "question", "answer"), hold("question", "answer")],
+  ];
+  const operations = paths[tour.stage]!;
+  const index = Math.max(0, Math.min(operations.length - 1, tour.beat - 1));
+  const transfer = prep ? preparation[tour.stage]! : operations[index]!;
   return {
     positions: prep ? PREPARATION_POSITIONS : REQUEST_POSITIONS,
-    transfer: actual,
-    active: skipped
-      ? cached
-        ? ("cache" as const)
-        : actual.from
-      : toolFailure
-        ? ("tool" as const)
-        : tour.beat === 0 || (blocked && tour.stage === 1)
-          ? actual.from
-          : actual.to,
-    moving: tour.beat > 0 && !atOutput(tour) && !skipped && !blocked && !toolFailure,
+    transfer,
+    active: prep
+      ? tour.beat === 0
+        ? transfer.from
+        : transfer.to
+      : skipped
+        ? cached
+          ? ("cache" as const)
+          : ("context" as const)
+        : tour.beat === 0
+          ? transfer.from
+          : transfer.to,
+    moving:
+      tour.beat > 0 && !atOutput(tour) && !skipped && (!blocked || transfer.kind === "notice"),
     skipped,
     blocked,
     applicationLookup,
@@ -333,13 +413,20 @@ export function scenePlan(tour: WalkthroughState) {
   };
 }
 
-/** The optional read completes its outward and return legs within one story stage. */
+/** Normal routes remain visible; an applicable failure notice adds only its own return lane. */
+export function sceneConnections(plan: ReturnType<typeof scenePlan>) {
+  const { from, to } = plan.transfer;
+  return from !== to && !REQUEST_CONNECTIONS.some(([a, b]) => a === from && b === to)
+    ? [...REQUEST_CONNECTIONS, [from, to] as [SceneNode, SceneNode]]
+    : REQUEST_CONNECTIONS;
+}
+
+/** Each request operation is one complete handoff; knowledge transformations stay continuous. */
 export function transferProgress(tour: WalkthroughState, progress: number) {
-  if (tour.phase !== "request" || tour.stage !== 5 || stageInput(tour).config.tool === "off")
-    return progress;
-  return tour.beat < 2 || stageInput(tour).config.tool !== "valid"
-    ? Math.min(1, progress * 2)
-    : Math.max(0, (progress - 0.5) * 2);
+  if (tour.phase === "knowledge") return progress;
+  if (tour.beat === 0) return 0;
+  if (atOutput(tour)) return 1;
+  return Math.max(0, Math.min(1, progress * walkthroughStep(tour).work.length - (tour.beat - 1)));
 }
 
 /** Each operation continues the same transformation; scrolling can review it in reverse. */

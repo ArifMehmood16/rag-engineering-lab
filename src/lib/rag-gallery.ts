@@ -1,4 +1,5 @@
 import { KNOWLEDGE_WALKTHROUGH, REQUEST_WALKTHROUGH } from "@/content/rag-walkthrough";
+import type { EngineState } from "./apollo-engine";
 import type { StoryStream } from "./rag-scroll-story";
 
 export interface StoryCard {
@@ -14,7 +15,11 @@ export interface GalleryPlace {
 }
 
 /** Every operation has a real card. The introduction explains the interaction before it starts. */
-export function storyCards(stream: StoryStream, count: number): StoryCard[] {
+export function storyCards(
+  stream: StoryStream,
+  count: number,
+  frames?: EngineState[],
+): StoryCard[] {
   const steps = stream === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH;
   const cards: StoryCard[] = [
     {
@@ -26,6 +31,20 @@ export function storyCards(stream: StoryStream, count: number): StoryCard[] {
     },
   ];
   steps.slice(0, count).forEach((step, stage) => {
+    const before = frames?.[stage];
+    const skipped =
+      stream === "request" && frames?.[stage + 1]?.results[stage]?.status === "skipped";
+    if (skipped && !(stage === 5 && !before?.ctx.usage.answerHit)) return;
+    if (skipped) {
+      cards.push({
+        id: `${stream}:${stage}:output`,
+        stage,
+        beat: step.work.length + 1,
+        kind: "output",
+        title: "No extra tool needed",
+      });
+      return;
+    }
     cards.push({
       id: `${stream}:${stage}:input`,
       stage,

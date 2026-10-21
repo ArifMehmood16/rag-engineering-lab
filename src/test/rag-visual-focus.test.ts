@@ -54,10 +54,10 @@ describe("readable routes and scene focus", () => {
     expect(
       Math.abs(midpoint("router", "cache")[1] - midpoint("cache", "router")[1]),
     ).toBeGreaterThan(0.5);
-    expect(new Set(Object.values(FLOW_STYLES).map((s) => s.color)).size).toBe(6);
+    expect(new Set(Object.values(FLOW_STYLES).map((s) => s.color)).size).toBe(7);
   });
   it("dims standby models and skipped work while retaining the active participants", () => {
-    const retrieval = scenePlan(storyTour("request", 3, 1, frames));
+    const retrieval = scenePlan(storyTour("request", 3, 3, frames));
     expect(nodeEmphasis(retrieval, "index")).toBeGreaterThan(0.8);
     expect(nodeEmphasis(retrieval, "retrieve")).toBe(1);
     expect(nodeEmphasis(retrieval, "model")).toBeLessThan(0.3);

@@ -1,5 +1,9 @@
 import type { EvidenceRecord } from "@/content/apollo";
-import { KNOWLEDGE_WALKTHROUGH, REQUEST_WALKTHROUGH } from "@/content/rag-walkthrough";
+import {
+  KNOWLEDGE_WALKTHROUGH,
+  REQUEST_WALKTHROUGH,
+  requestWalkthroughStep,
+} from "@/content/rag-walkthrough";
 import { advance, ENGINE_STAGES, initEngine, type EngineState } from "./apollo-engine";
 
 export interface WalkthroughState {
@@ -21,7 +25,9 @@ export function createWalkthrough(engine: EngineState, prepared = false): Walkth
   };
 }
 export const walkthroughStep = (state: WalkthroughState) =>
-  (state.phase === "knowledge" ? KNOWLEDGE_WALKTHROUGH : REQUEST_WALKTHROUGH)[state.stage]!;
+  state.phase === "knowledge"
+    ? KNOWLEDGE_WALKTHROUGH[state.stage]!
+    : requestWalkthroughStep(state.stage, stageInput(state), stageOutput(state));
 export const outputBeat = (state: WalkthroughState) => walkthroughStep(state).work.length + 1;
 export const atOutput = (state: WalkthroughState) => state.beat === outputBeat(state);
 export const latestEngine = (state: WalkthroughState) => state.frames[state.frames.length - 1]!;

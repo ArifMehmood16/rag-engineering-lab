@@ -225,6 +225,31 @@ const usable = (
 ): r is EvidenceRecord & { eligibility: "eligible" } =>
   Boolean(r && r.eligibility === "eligible" && scope === "public");
 
+/** A visible teaching policy, not a learned classifier or a measured model benchmark. */
+export function routeDecision(questionText: string, config: Pick<ApolloConfig, "profile">) {
+  const question = getApolloQuestion(questionText);
+  if (question.kind === "metadata")
+    return {
+      route: "application" as const,
+      reason:
+        "The question asks for a known crew record and its source. A direct application lookup needs no generated answer.",
+    };
+  if (config.profile !== "auto")
+    return {
+      route: config.profile,
+      reason: `This example explicitly selects the ${config.profile} profile. This is a configuration choice, not a model-quality measurement.`,
+    };
+  if (question.required.length > 2)
+    return {
+      route: "large" as const,
+      reason: `This multi-part question needs ${question.required.length} facts: who walked, who stayed in orbit, and the spacecraft. The lab's explicit policy reserves the large LLM for this synthesis.`,
+    };
+  return {
+    route: "small" as const,
+    reason: `This narrower question needs ${question.required.length} annotated facts. The lab's explicit policy selects the small LLM; retrieval must still supply those facts first.`,
+  };
+}
+
 export function initEngine(
   question: string,
   settings: Partial<ApolloConfig> = {},
@@ -350,29 +375,39 @@ export function advance(state: EngineState, records: EvidenceRecord[]): EngineSt
       r = result(["Preset question; no visitor input stored"], [ctx.question, question.note]);
       break;
     case "request": {
-      const ok = ctx.question.length > 5 && ctx.question.length < 300 && ctx.scope === "public";
+      const suspicious = config.injectionCheck && injection.test(ctx.question);
+      const ok =
+        ctx.question.length > 5 &&
+        ctx.question.length < 300 &&
+        ctx.scope === "public" &&
+        !suspicious;
       r = result(
-        [`${ctx.question.length} characters`, `Local scope fixture: ${ctx.scope}`],
+        [
+          `${ctx.question.length} characters`,
+          `Local scope fixture: ${ctx.scope}`,
+          "User message is untrusted input",
+        ],
         ok
           ? [
               "Length accepted",
+              "No known injection pattern matched",
               "Application scope allows public corpus",
               `Pin ${config.indexVersion}`,
             ]
-          : ["Application permission denied before cache or retrieval access"],
+          : [
+              suspicious
+                ? "Input rejected: instruction override / destructive-action attempt. No cache, retrieval, tool, or model was accessed."
+                : "Application permission denied before cache or retrieval access",
+            ],
         ok ? "done" : "blocked",
-        "Scope is simulated locally; this frontend is not an authentication service.",
+        "A limited teaching heuristic, not comprehensive injection detection. Application permissions and the read-only tool allowlist remain separate controls.",
       );
       if (!ok) ctx.outcome = "blocked";
       break;
     }
     case "cache": {
-      ctx.route =
-        question.kind === "metadata"
-          ? "application"
-          : config.profile === "large"
-            ? "large"
-            : "small";
+      const decision = routeDecision(ctx.question, config);
+      ctx.route = decision.route;
       const contract = [
         ctx.question,
         ctx.scope,
@@ -409,6 +444,8 @@ export function advance(state: EngineState, records: EvidenceRecord[]): EngineSt
         ["Scoped, versioned request contract", `Index: ${config.indexVersion}`],
         [
           `Route: ${ctx.route === "application" ? "application lookup — no model" : `${ctx.route} model profile — simulated`}`,
+          `Why: ${decision.reason}`,
+          "Selection is a plan. No model runs here; retrieval and context assembly happen before generation.",
           config.answerCache
             ? `Approved-answer cache: ${ctx.usage.answerHit ? "hit; release checks still run" : cached && !valid ? "invalidated by current eligibility" : "miss"}`
             : "Approved-answer cache: disabled",
@@ -570,6 +607,10 @@ export function advance(state: EngineState, records: EvidenceRecord[]): EngineSt
       break;
     }
     case "sufficiency": {
+      if (ctx.usage.answerHit) {
+        r = skip("Approved answer reused; citation and current-permission checks still run");
+        break;
+      }
       for (const fact of question.required)
         ctx.facets[fact] = ctx.context.filter(
           (id) => byId(id)?.kind === "source" && byId(id)?.facts?.includes(fact),

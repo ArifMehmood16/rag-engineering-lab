@@ -20,18 +20,18 @@ describe("on-path data labels", () => {
     );
   });
   it("uses real retrieval counts and does not imply a tool ran when disabled", () => {
-    expect(label("request", 3, 0).text).toBe("Query + stored passage vectors");
-    expect(label("request", 3, 3).text).toBe(
+    expect(label("request", 3, 0).text).toBe("This question + prepared knowledge index");
+    expect(label("request", 3, 4).text).toBe(
       `${frames[4]!.ctx.retrieved.length} ranked passage IDs + scores`,
     );
     expect(label("request", 5, 1).text).toBe("Tool disabled · no external action");
-    expect(label("request", 5, 3).text).toBe("No tool call · fixed workflow continues");
+    expect(label("request", 5, 4).text).toBe("No tool call · fixed workflow continues");
   });
   it("shows the real stopping result instead of a successful future output", () => {
     const failed = buildStoryFrames(initEngine(DEFAULT_QUESTION, { budget: 35 }), APOLLO_RECORDS);
     const stopped = flowLabel(storyTour("request", 6, 3, failed), record, APOLLO_RECORDS);
     expect(stopped.mode).toBe("output");
-    expect(stopped.text).toBe(failed.at(-1)!.results[6]!.output[0]);
+    expect(stopped.text).toBe("Returned to you: evidence gap");
     expect(stopped.text).not.toContain("Evidence covers");
   });
 });

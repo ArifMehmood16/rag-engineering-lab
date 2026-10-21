@@ -48,7 +48,7 @@ export function flowLabel(
       before.ctx.question,
       `Question + ${before.config.scope} scope`,
       "Validated question + cache contract",
-      "Query + stored passage vectors",
+      "This question + prepared knowledge index",
       `${before.ctx.retrieved.length} ranked candidates`,
       `${before.ctx.context.length} context passages`,
       `${before.ctx.context.length} passages + required facts`,
@@ -61,7 +61,9 @@ export function flowLabel(
     const outputs = [
       "Required facts identified",
       `Access scope: ${before.config.scope}`,
-      `Route: ${after?.ctx.route ?? "pending"}`,
+      after?.ctx.usage.answerHit
+        ? "Cache hit → output checks; no model call"
+        : `Plan: ${after?.ctx.route ?? "pending"} · retrieve before generation`,
       `${after?.ctx.retrieved.length ?? 0} ranked passage IDs + scores`,
       `${after?.ctx.context.length ?? 0} passages · ≈${after?.ctx.tokensUsed ?? 0} tokens`,
       before.config.tool === "off"
@@ -78,7 +80,7 @@ export function flowLabel(
         ? inputs[tour.stage]!
         : mode === "output"
           ? result?.status === "blocked"
-            ? (result.output[0] ?? "Stopped · no answer released")
+            ? `Returned to you: ${after?.ctx.outcome === "evidence_gap" ? "evidence gap" : "answer withheld"}`
             : result?.status === "skipped"
               ? tour.stage === 5 && before.config.tool === "off"
                 ? outputs[5]!

@@ -15,7 +15,7 @@ describe("the vertical learning gallery", () => {
       "output",
     ]);
     expect(new Set(cards.map((c) => c.id)).size).toBe(cards.length);
-    expect(storyCards("request", 7)).toHaveLength(29);
+    expect(storyCards("request", 7)).toHaveLength(33);
     expect(storyCards("request", 7).at(-1)).toMatchObject({ stage: 6, kind: "output" });
   });
   it("holds input and output cards and continuously scrubs the intervening operations", () => {
