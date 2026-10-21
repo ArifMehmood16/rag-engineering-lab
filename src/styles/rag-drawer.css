@@ -256,3 +256,78 @@
     animation: none;
   }
 }
+@media (max-width: 760px) {
+  .guided-lab {
+    padding-bottom: 10px;
+  }
+  .tour-phase-tabs {
+    width: auto;
+  }
+  .tour-stage-selector > button {
+    min-width: 0;
+  }
+  .tour-stage-heading {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+  .tour-stage-heading h2 {
+    font-size: 13px;
+  }
+  .tour-stage-heading > div > span {
+    font-size: 7px;
+  }
+  .tour-attention {
+    font-size: 7px;
+    max-width: 72px;
+    line-height: 1.5;
+  }
+  .tour-attention svg {
+    width: 12px;
+    flex-shrink: 0;
+  }
+  .rag-tour[data-output="true"] .tour-stage-layout {
+    grid-template-rows: 145px minmax(0, 1fr);
+  }
+  .tour-reader .tour-chunk-counter > span:last-child {
+    display: none;
+  }
+  .tour-reader .tour-chunk-picker {
+    gap: 3px;
+    margin-bottom: 5px;
+  }
+  .tour-reader .tour-chunk-picker button {
+    width: 22px;
+    height: 24px;
+    padding: 0;
+  }
+  .tour-reader .tour-result-summary {
+    font-size: 10px;
+    margin-bottom: 7px;
+    padding: 5px 0;
+  }
+  .tour-reader .tour-passage > p {
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 7px 0;
+  }
+  .tour-reader .tour-passage footer {
+    font-size: 9px;
+    line-height: 1.5;
+    gap: 3px;
+    padding-top: 5px;
+  }
+  .tour-reader .tour-passage footer > span:last-child {
+    font-size: 7px;
+  }
+  .tour-reader .tour-vector {
+    margin: 5px 0 7px;
+  }
+  .tour-reader .tour-vector > span {
+    padding: 3px 1px;
+    gap: 2px;
+  }
+  .tour-reader .tour-vector small {
+    font-size: 6px;
+  }
+}

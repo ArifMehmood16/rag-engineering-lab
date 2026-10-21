@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_QUESTION } from "@/content/apollo";
+import { APOLLO_RECORDS, DEFAULT_QUESTION } from "@/content/apollo";
 import { initEngine } from "@/lib/apollo-engine";
-import { createWalkthrough, outputBeat } from "@/lib/rag-walkthrough";
-import { scenePlan, travelPoint } from "@/lib/rag-scene";
+import { createWalkthrough, finishRequest, outputBeat } from "@/lib/rag-walkthrough";
+import { scenePlan, sceneProgressRange, travelPoint } from "@/lib/rag-scene";
 
 describe("the visual data path", () => {
   it("shows preparation transformations before any model work", () => {
@@ -17,6 +17,40 @@ describe("the visual data path", () => {
       expect(scenePlan({ ...state, beat: 0 }).moving).toBe(false);
       expect(scenePlan({ ...state, beat: outputBeat(state) }).moving).toBe(false);
     }
+  });
+  it("continues a transformation across substeps instead of restarting its journey", () => {
+    const tour = { ...createWalkthrough(initEngine(DEFAULT_QUESTION)), stage: 1 };
+    expect(sceneProgressRange(tour)).toEqual([0, 0]);
+    let previous = 0;
+    for (let beat = 1; beat < outputBeat(tour); beat++) {
+      const [from, to] = sceneProgressRange({ ...tour, beat });
+      expect(from).toBe(previous);
+      expect(to).toBeGreaterThan(from);
+      previous = to;
+    }
+    expect(previous).toBe(1);
+    expect(sceneProgressRange({ ...tour, beat: outputBeat(tour) })).toEqual([1, 1]);
+  });
+  it("never animates a tool execution when the configured workflow has no tool", () => {
+    const tour = finishRequest(
+      createWalkthrough(initEngine(DEFAULT_QUESTION), true),
+      APOLLO_RECORDS,
+    );
+    const tool = { ...tour, stage: 5, beat: 1 };
+    expect(scenePlan(tool).skipped).toBe(true);
+    expect(scenePlan(tool).moving).toBe(false);
+    const lookupFrame = {
+      ...tour.frames[7]!,
+      ctx: { ...tour.frames[7]!.ctx, route: "application" as const },
+    };
+    const lookup = {
+      ...tour,
+      stage: 7,
+      beat: 1,
+      frames: tour.frames.map((f, i) => (i === 7 ? lookupFrame : f)),
+    };
+    expect(scenePlan(lookup).transfer.to).toBe("check");
+    expect(scenePlan(lookup).applicationLookup).toBe(true);
   });
   it("keeps moving objects on their connection and at the target after completion", () => {
     const from: [number, number, number] = [-4, 0, 0];

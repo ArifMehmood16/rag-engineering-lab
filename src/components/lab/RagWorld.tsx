@@ -2,10 +2,17 @@ import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Edges, Line } from "@react-three/drei";
 import * as THREE from "three";
+import { RagFocus } from "./RagFocus";
 import type { EvidenceRecord } from "@/content/apollo";
 import { buildKnowledgeIndex } from "@/lib/knowledge-index";
 import { atOutput, stageInput, stageOutput, type WalkthroughState } from "@/lib/rag-walkthrough";
-import { scenePlan, travelPoint, type Point3, type SceneNode } from "@/lib/rag-scene";
+import {
+  scenePlan,
+  sceneProgressRange,
+  travelPoint,
+  type Point3,
+  type SceneNode,
+} from "@/lib/rag-scene";
 
 export interface RagWorldProps {
   tour: WalkthroughState;
@@ -358,7 +365,7 @@ function TravellingData({
   return (
     <group ref={group} position={from}>
       <Glow color={encode || vector ? "#a9a2ff" : CYAN} scale={2.5} opacity={0.6} />
-      <group ref={document}>
+      <group ref={document} scale={1.18}>
         <Paper color={plan.transfer.kind === "draft" ? VIOLET : CYAN} small={encode} />
       </group>
       {(split || plan.transfer.kind === "evidence") &&
@@ -392,13 +399,14 @@ function World(props: RagWorldProps) {
   const prep = tour.phase === "knowledge";
   const index = useMemo(() => buildKnowledgeIndex(records), [records]);
   const values = index.chunks.find((c) => c.id === record.id)?.vector ?? [];
+  const [begin, end] = sceneProgressRange(tour);
   const elapsed = useRef(0);
-  const progress = useRef(reduced || !plan.moving ? 1 : 0);
+  const progress = useRef(reduced ? end : begin);
   const { invalidate, size, camera } = useThree();
   const after = stageOutput(tour);
   useEffect(() => {
     elapsed.current = 0;
-    progress.current = reduced || !plan.moving ? 1 : 0;
+    progress.current = reduced || !plan.moving ? end : begin;
     invalidate();
   }, [tour.phase, tour.stage, tour.beat, record.id, replay, reduced, plan.moving, invalidate]);
   useEffect(() => {
@@ -411,9 +419,9 @@ function World(props: RagWorldProps) {
     invalidate();
   }, [size.width, size.height, camera, invalidate]);
   useFrame((_, delta) => {
-    if (!visible || paused || reduced || progress.current >= 1) return;
+    if (!visible || paused || reduced || !plan.moving || progress.current >= end) return;
     elapsed.current += Math.min(delta, 0.06);
-    progress.current = Math.min(1, elapsed.current / duration);
+    progress.current = begin + (end - begin) * Math.min(1, elapsed.current / duration);
     invalidate();
   });
   const active = (n: SceneNode) => plan.active === n;
@@ -454,27 +462,38 @@ function World(props: RagWorldProps) {
           </group>
 
           <group position={positions.chunks!}>
-            {index.chunks.map((c, i) => (
-              <group
-                key={c.id}
-                position={[
-                  ((i % 2) - 0.5) * 0.62,
-                  (Math.floor(i / 2) - 2) * 0.26,
-                  -0.15 - i * 0.045,
-                ]}
-                rotation={[0, -0.2, -0.05]}
-              >
-                <Paper
-                  small
-                  opacity={active("chunks") || tour.stage > 1 ? 0.85 : 0.24}
-                  color={c.id === record.id ? "#d3fffa" : CYAN}
-                />
-              </group>
-            ))}
+            {(tour.stage > 1 || (tour.stage === 1 && atOutput(tour))) &&
+              index.chunks.map((c, i) => (
+                <group
+                  key={c.id}
+                  position={[
+                    ((i % 2) - 0.5) * 0.62,
+                    (Math.floor(i / 2) - 2) * 0.26,
+                    -0.15 - i * 0.045,
+                  ]}
+                  rotation={[0, -0.2, -0.05]}
+                >
+                  <Paper
+                    small
+                    opacity={active("chunks") || tour.stage > 1 ? 0.85 : 0.24}
+                    color={c.id === record.id ? "#d3fffa" : CYAN}
+                  />
+                </group>
+              ))}
             {active("chunks") && <Glow color={CYAN} scale={3} opacity={0.35} />}
           </group>
           <group position={positions.vectors!}>
-            <VectorBars values={values} opacity={tour.stage >= 2 ? 1 : 0.2} />
+            {(tour.stage > 2 || (tour.stage === 2 && atOutput(tour))) && (
+              <VectorBars values={values} />
+            )}
+            <Line
+              points={[
+                [-0.6, -0.45, 0.1],
+                [0.6, -0.45, 0.1],
+              ]}
+              color="#385e7d"
+              lineWidth={1}
+            />
             {active("vectors") && <Glow color={CYAN} scale={2.5} opacity={0.5} />}
           </group>
 
@@ -489,6 +508,7 @@ function World(props: RagWorldProps) {
           {connection("index", "retrieve")}
           {connection("retrieve", "context")}
           {connection("context", "model")}
+          {plan.applicationLookup && connection("context", "check")}
           {connection("model", "check")}
           {(cacheEnabled || tour.stage === 2) && connection("router", "cache")}
           {tour.stage === 5 && connection("context", "tool")}
@@ -577,10 +597,14 @@ function World(props: RagWorldProps) {
         </>
       )}
       <group position={positions.model!} scale={1.12}>
-        <Entity active={!prep && tour.stage === 7 && !plan.skipped} progress={progress} />
+        <Entity
+          active={!prep && tour.stage === 7 && !plan.skipped && !plan.applicationLookup}
+          progress={progress}
+        />
       </group>
 
       <TravellingData tour={tour} values={values} progress={progress} />
+      <RagFocus tour={tour} progress={progress} reduced={reduced} />
     </>
   );
 }
@@ -618,7 +642,7 @@ export default function RagWorld(props: RagWorldProps) {
       dpr={[1, 2]}
       frameloop="demand"
       gl={{ antialias: true, alpha: false, powerPreference: "low-power" }}
-      fallback={<span>3D unavailable. Use the step reader to follow the same transformation.</span>}
+      aria-hidden
       onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
     >
       <World {...props} />

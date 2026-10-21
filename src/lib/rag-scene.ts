@@ -1,4 +1,10 @@
-import { atOutput, stageOutput, type WalkthroughState } from "./rag-walkthrough";
+import {
+  atOutput,
+  stageInput,
+  stageOutput,
+  walkthroughStep,
+  type WalkthroughState,
+} from "./rag-walkthrough";
 
 export type SceneNode =
   | "source"
@@ -64,9 +70,17 @@ const request: SceneTransfer[] = [
 
 export function scenePlan(tour: WalkthroughState) {
   const prep = tour.phase === "knowledge";
-  const transfer = (prep ? preparation : request)[tour.stage]!;
+  const input = stageInput(tour);
+  const applicationLookup = !prep && tour.stage === 7 && input.ctx.route === "application";
+  const transfer: SceneTransfer = applicationLookup
+    ? { from: "context", to: "check", kind: "draft" }
+    : (prep ? preparation : request)[tour.stage]!;
   const result = stageOutput(tour)?.results[tour.stage];
-  const skipped = !prep && result?.status === "skipped";
+  const skipped =
+    !prep &&
+    (result?.status === "skipped" ||
+      (tour.stage === 5 && input.config.tool === "off") ||
+      (tour.stage >= 3 && tour.stage <= 7 && input.ctx.usage.answerHit));
   const blocked = !prep && result?.status === "blocked";
   return {
     positions: prep ? PREPARATION_POSITIONS : REQUEST_POSITIONS,
@@ -75,7 +89,16 @@ export function scenePlan(tour: WalkthroughState) {
     moving: tour.beat > 0 && !atOutput(tour) && !skipped && !blocked,
     skipped,
     blocked,
+    applicationLookup,
   };
+}
+
+/** Each click continues the same transformation; replay restarts only its current segment. */
+export function sceneProgressRange(tour: WalkthroughState): [number, number] {
+  if (tour.beat === 0) return [0, 0];
+  if (atOutput(tour)) return [1, 1];
+  const count = walkthroughStep(tour).work.length;
+  return [(tour.beat - 1) / count, tour.beat / count];
 }
 
 /** Smooth, bounded travel with a small lift into the foreground. No hidden engine mutation. */

@@ -558,6 +558,7 @@ export function RagWalkthrough({
       id="rag-stage"
       className={cn("rag-tour", reduced && "tour-reduced")}
       aria-labelledby={titleId}
+      data-output={output}
     >
       <header className="tour-header">
         <div className="tour-phase-tabs" role="group" aria-label="Learning phase">

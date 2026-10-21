@@ -740,3 +740,35 @@
     line-height: 1.65;
   }
 }
+.scene-takeaway {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  background: linear-gradient(100deg, #102e33, #101827);
+  border-top: 1px solid #356564;
+}
+.scene-takeaway > span {
+  font: 7px var(--font-mono);
+  color: #7acbc2;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+.scene-takeaway p {
+  color: #c4e8e3;
+  font-size: 11px;
+  line-height: 1.55;
+}
+@media (max-width: 760px) {
+  .scene-takeaway {
+    padding: 6px 8px;
+    gap: 7px;
+  }
+  .scene-takeaway > span {
+    display: none;
+  }
+  .scene-takeaway p {
+    font-size: 8px;
+    line-height: 1.45;
+  }
+}

@@ -259,3 +259,24 @@ export const REQUEST_WALKTHROUGH: WalkthroughStep[] = [
     ],
   },
 ];
+
+/** One takeaway stays beside the scene while the full output is readable in the adjacent panel. */
+export const KNOWLEDGE_TAKEAWAYS = [
+  "The source identity stays attached to the text as it enters the system.",
+  "A chunk is a bounded passage with its own ID and a path back to the source.",
+  "The passage becomes numbers. These bars are its actual seven toy-vector values.",
+  "The index links numbers to passages and sources. It is ready before any question is asked.",
+];
+export const REQUEST_TAKEAWAYS = [
+  "The question defines which facts the system needs to find.",
+  "Application permissions decide which evidence this request may access.",
+  "Routing and cache checks determine which work this request can reuse.",
+  "Retrieval finds candidate passages. Similarity alone does not prove an answer.",
+  "Only selected passages enter the context. The token budget changes what the model can see.",
+  "A tool runs only when its arguments and application permissions allow it.",
+  "Missing evidence is a reason to stop before generating a factual answer.",
+  "The draft is still untrusted. Its claims must pass the following checks.",
+  "Claims must resolve to allowed passages that actually support them.",
+  "Source eligibility is checked again before anything reaches the user.",
+  "The user receives only the released result, with its evidence or a clear reason for stopping.",
+];

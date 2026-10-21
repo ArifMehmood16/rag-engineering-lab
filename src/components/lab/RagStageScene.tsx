@@ -1,6 +1,8 @@
 import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Pause, Play, RotateCcw, Sparkles } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
+import { KNOWLEDGE_TAKEAWAYS, REQUEST_TAKEAWAYS } from "@/content/rag-walkthrough";
+import { toyEmbedding } from "@/lib/apollo-engine";
 import { atOutput, walkthroughStep, type WalkthroughState } from "@/lib/rag-walkthrough";
 import { scenePlan, type SceneNode } from "@/lib/rag-scene";
 import { cn } from "@/lib/utils";
@@ -50,7 +52,11 @@ function SceneLabels({
           ? tour.phase === "knowledge"
             ? "Standby · no model call"
             : tour.stage === 7
-              ? "Fixture generation"
+              ? plan.skipped
+                ? "Generation skipped"
+                : plan.applicationLookup
+                  ? "Application lookup · no model"
+                  : "Fixture generation"
               : "LLM · simulated"
           : label[2];
         return (
@@ -74,7 +80,7 @@ function SceneLabels({
 
 // Keep WebGL and Three out of SSR and the ordinary lesson bundles.
 const RagWorld = lazy(() => import("./RagWorld"));
-function StaticWorld({ tour }: { tour: WalkthroughState }) {
+function StaticWorld({ tour, record }: { tour: WalkthroughState; record: EvidenceRecord }) {
   const kind = scenePlan(tour).transfer.kind;
   return (
     <div className="world-fallback" aria-label="Static system illustration">
@@ -85,13 +91,13 @@ function StaticWorld({ tour }: { tour: WalkthroughState }) {
       </div>
       <span>→</span>
       <div className="fallback-chunks">
-        {Array.from({ length: 6 }, (_, i) => (
+        {Array.from({ length: 10 }, (_, i) => (
           <i key={i} />
         ))}
       </div>
       <span>→</span>
       <div className="fallback-vectors">
-        {[0.3, 0.7, 0.4, 0.9, 0.2, 0.6, 0.35].map((n, i) => (
+        {toyEmbedding(record.text).map((n, i) => (
           <i key={i} style={{ height: `${n * 60}px` }} />
         ))}
       </div>
@@ -146,7 +152,7 @@ export function RagStageScene(
   }, []);
   const output = atOutput(tour);
   const plan = scenePlan(tour);
-  const fallback = <StaticWorld tour={tour} />;
+  const fallback = <StaticWorld tour={tour} record={props.record} />;
   return (
     <figure
       className={cn(
@@ -204,31 +210,40 @@ export function RagStageScene(
           </button>
         </div>
       </div>
-      <div className="scene-flow-caption" aria-hidden>
-        {tour.phase === "knowledge" ? (
-          <>
-            <span data-active={tour.stage === 0}>Documents</span>
-            <b>→</b>
-            <span data-active={tour.stage === 1}>Chunks</span>
-            <b>→</b>
-            <span data-active={tour.stage === 2}>Vectors</span>
-            <b>→</b>
-            <span data-active={tour.stage === 3}>Index</span>
-          </>
-        ) : (
-          <>
-            <span>Question</span>
-            <b>→</b>
-            <span data-active={tour.stage === 3}>Retrieve</span>
-            <b>→</b>
-            <span data-active={tour.stage === 4}>Context</span>
-            <b>→</b>
-            <span data-active={tour.stage === 7}>AI</span>
-            <b>→</b>
-            <span data-active={tour.stage >= 8}>Check & release</span>
-          </>
-        )}
-      </div>
+      {output ? (
+        <div className="scene-takeaway">
+          <span>WHAT CHANGED</span>
+          <p>
+            {(tour.phase === "knowledge" ? KNOWLEDGE_TAKEAWAYS : REQUEST_TAKEAWAYS)[tour.stage]}
+          </p>
+        </div>
+      ) : (
+        <div className="scene-flow-caption" aria-hidden>
+          {tour.phase === "knowledge" ? (
+            <>
+              <span data-active={tour.stage === 0}>Documents</span>
+              <b>→</b>
+              <span data-active={tour.stage === 1}>Chunks</span>
+              <b>→</b>
+              <span data-active={tour.stage === 2}>Vectors</span>
+              <b>→</b>
+              <span data-active={tour.stage === 3}>Index</span>
+            </>
+          ) : (
+            <>
+              <span>Question</span>
+              <b>→</b>
+              <span data-active={tour.stage === 3}>Retrieve</span>
+              <b>→</b>
+              <span data-active={tour.stage === 4}>Context</span>
+              <b>→</b>
+              <span data-active={tour.stage === 7}>AI</span>
+              <b>→</b>
+              <span data-active={tour.stage >= 8}>Check & release</span>
+            </>
+          )}
+        </div>
+      )}
     </figure>
   );
 }
