@@ -24,7 +24,6 @@ import {
   sceneConnections,
   transferProgress,
   sceneProgressRange,
-  travelPoint,
   createFlowSampler,
   type Point3,
   type SceneNode,
