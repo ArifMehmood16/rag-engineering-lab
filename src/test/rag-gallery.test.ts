@@ -4,11 +4,21 @@ import {
   gallerySelection,
   galleryReadingSelection,
   storyCards,
+  galleryEntryTarget,
 } from "@/lib/rag-gallery";
 
 describe("the vertical learning gallery", () => {
   const cards = storyCards("knowledge", 4);
   const centers = cards.map((_, i) => 250 + i * 300);
+  it("opens a tall card at its heading while short cards still centre", () => {
+    const bounds = [
+      { top: 24, height: 600 },
+      { top: 648, height: 180 },
+    ];
+    const centers = bounds.map((b) => b.top + b.height / 2);
+    expect(galleryEntryTarget(0, centers, bounds, 300)).toBe(8);
+    expect(galleryEntryTarget(1, centers, bounds, 300)).toBe(588);
+  });
   it("keeps a tall example in focus until the next example is more visible", () => {
     const long = cards.slice(0, 2);
     const bounds = [

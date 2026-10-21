@@ -139,3 +139,16 @@ export function galleryScrollTarget(place: GalleryPlace, centers: number[], heig
       : (centers[index + 1] ?? center + height) - center;
   return Math.max(0, center + (Math.max(-1, Math.min(1, place.offset)) * span) / 2 - height / 2);
 }
+
+/** Chapter jumps open tall cards at their headings rather than halfway through the text. */
+export function galleryEntryTarget(
+  index: number,
+  centers: number[],
+  bounds: { top: number; height: number }[],
+  height: number,
+) {
+  const card = bounds[index];
+  return card && card.height > height - 40
+    ? Math.max(0, card.top - 16)
+    : galleryScrollTarget({ index, offset: 0 }, centers, height);
+}

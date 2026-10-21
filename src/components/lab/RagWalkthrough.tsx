@@ -1,4 +1,5 @@
 import { FLOW_STYLES } from "@/lib/rag-scene";
+import { KNOWLEDGE_GUIDES, REQUEST_GUIDES } from "@/content/rag-step-guides";
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -10,10 +11,6 @@ import {
   MessageSquare,
   RotateCcw,
   Mouse,
-  ScanLine,
-  Binary,
-  FileText,
-  Scissors,
 } from "lucide-react";
 import type { EvidenceRecord } from "@/content/apollo";
 import {
@@ -98,7 +95,7 @@ export function RagWalkthrough(props: Props) {
   const count = stream === "knowledge" ? 4 : frames.length - 1;
   const cards = useMemo(() => storyCards(stream, count, frames), [stream, count, frames]);
   const stages = useMemo(() => [...new Set(cards.slice(1).map((c) => c.stage))], [cards]);
-  const gallery = useRagGallery(cards, stream, visible && concept === null, reduced);
+  const gallery = useRagGallery(cards, stream, visible && concept === null, reduced, true);
   const selected = Math.min(gallery.selected.index, cards.length - 1);
   const card = cards[selected]!;
   const { stage, beat } = card;
@@ -145,9 +142,8 @@ export function RagWalkthrough(props: Props) {
       cards.map((item) => {
         const snapshot = storyTour(stream, item.stage, item.beat, frames);
         const step = walkthroughStep(snapshot);
+        const guide = (stream === "knowledge" ? KNOWLEDGE_GUIDES : REQUEST_GUIDES)[item.stage]!;
         const final = item.stage === count - 1 && item.kind === "output";
-        const Icon =
-          stream === "knowledge" ? [FileText, Scissors, Binary, Database][item.stage]! : ScanLine;
         if (item.kind === "intro")
           return (
             <>
@@ -173,8 +169,8 @@ export function RagWalkthrough(props: Props) {
               </header>
               <div className="story-card-body gallery-intro-body">
                 <p>
-                  Read down this column. The card in the middle controls the scene beside it. The
-                  five learning views above explain the decisions and trade-offs.
+                  Scroll this column. Each step shows its input, the change, and the result. The
+                  scene settles so you can read; scrolling continues the story.
                 </p>
                 <p className="gallery-intro-context">
                   {stream === "knowledge"
@@ -182,8 +178,16 @@ export function RagWalkthrough(props: Props) {
                     : (scenario?.purpose ??
                       "Follow the configured question from input to answer. Routing selects a model for later; retrieval comes first.")}
                 </p>
+                <ol className="reading-method" aria-label="How to follow each step">
+                  <li>See the input</li>
+                  <li>Follow the change</li>
+                  <li>Read the result</li>
+                </ol>
                 {stream === "request" && scenario && (
-                  <p className="example-expectation">{scenario.expected}</p>
+                  <details className="step-thinking">
+                    <summary>What to look for</summary>
+                    <p>{scenario.expected}</p>
+                  </details>
                 )}
               </div>
               <footer className="story-card-footer">
@@ -203,10 +207,21 @@ export function RagWalkthrough(props: Props) {
                   {step.short}
                 </span>
                 <span className={`gallery-kind kind-${item.kind}`}>
-                  {item.kind === "work" ? `Work ${item.beat}/${step.work.length}` : item.kind}
+                  {item.kind === "work"
+                    ? `Change ${item.beat}/${step.work.length}`
+                    : item.kind === "output"
+                      ? "Result"
+                      : "Input"}
                 </span>
               </div>
               <h2>{item.kind === "work" ? step.work[item.beat - 1]!.title : item.title}</h2>
+              <div className="step-phase-rail" aria-label="Position within this step">
+                {(["input", "work", "output"] as const).map((phase) => (
+                  <span key={phase} aria-current={phase === item.kind ? "step" : undefined}>
+                    {phase === "work" ? "Change" : phase === "output" ? "Result" : "Input"}
+                  </span>
+                ))}
+              </div>
             </header>
             <div className="story-card-body">
               {item.kind === "input" ? (
@@ -230,7 +245,17 @@ export function RagWalkthrough(props: Props) {
                 </section>
               ) : item.kind === "work" ? (
                 <section aria-label="Step work" className="gallery-operation">
-                  <Icon size={25} aria-hidden />
+                  <div className="step-data-pair" aria-label="This step's data">
+                    <span>
+                      <small>Starts with</small>
+                      <strong>{guide.input}</strong>
+                    </span>
+                    <ArrowRight size={16} aria-hidden />
+                    <span>
+                      <small>Produces</small>
+                      <strong>{guide.output}</strong>
+                    </span>
+                  </div>
                   <p>{step.work[item.beat - 1]!.detail}</p>
                   {stream === "request" && item.stage === 5 && item.beat === 1 && (
                     <pre className="operation-code">
@@ -271,68 +296,60 @@ export function RagWalkthrough(props: Props) {
                 </section>
               )}
             </div>
-            <footer className="story-card-footer">
-              {item.kind === "output" ? (
+            {item.kind === "output" && (
+              <footer className="story-card-footer">
                 <p>
                   {(stream === "knowledge" ? KNOWLEDGE_TAKEAWAYS : REQUEST_TAKEAWAYS)[item.stage]}
                 </p>
-              ) : (
-                <div>
-                  <ArrowDown size={12} />
-                  <span>
-                    {item.kind === "input"
-                      ? "Scroll into the work"
-                      : stream === "knowledge"
-                        ? "Keep following this source"
-                        : "Keep following this question"}
-                  </span>
-                </div>
-              )}
-              {item.kind === "output" && !final && (
-                <div className="story-next">
-                  Next: {steps[stages[stages.indexOf(item.stage) + 1]!]!.short}
-                  {stream === "request"
-                    ? " · this same question continues"
-                    : " · continue building the index"}
-                </div>
-              )}
-              {final && (
-                <>
-                  <div>
-                    <Check size={13} />
-                    <span>
-                      {stageOutput(snapshot)?.halted ? "Request stopped here" : "Stream complete"}
-                    </span>
+                <details className="step-thinking">
+                  <summary>Pause and think</summary>
+                  <p>{guide.think}</p>
+                </details>
+                {!final && (
+                  <div className="story-next">
+                    Next: {steps[stages[stages.indexOf(item.stage) + 1]!]!.short}
                   </div>
-                  <div className="story-end-actions">
-                    {stream === "request" && (
+                )}
+                {final && (
+                  <>
+                    <div>
+                      <Check size={13} />
+                      <span>
+                        {stageOutput(snapshot)?.halted ? "Request stopped here" : "Stream complete"}
+                      </span>
+                    </div>
+                    <div className="story-end-actions">
+                      {stream === "request" && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            scenario
+                              ? onScenario(
+                                  scenario.id === "large-answer" ? "cache-hit" : scenario.id,
+                                )
+                              : repeat()
+                          }
+                        >
+                          <RotateCcw size={12} />
+                          {scenario?.id === "large-answer"
+                            ? "Repeat this question from cache"
+                            : scenario
+                              ? "Replay this example"
+                              : "Replay with warm caches"}
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() =>
-                          scenario
-                            ? onScenario(scenario.id === "large-answer" ? "cache-hit" : scenario.id)
-                            : repeat()
-                        }
+                        onClick={() => onStream(stream === "knowledge" ? "request" : "knowledge")}
                       >
-                        <RotateCcw size={12} />
-                        {scenario?.id === "large-answer"
-                          ? "Repeat this question from cache"
-                          : scenario
-                            ? "Replay this example"
-                            : "Replay with warm caches"}
+                        Explore {stream === "knowledge" ? "answering" : "knowledge building"}
+                        <ArrowRight size={12} />
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => onStream(stream === "knowledge" ? "request" : "knowledge")}
-                    >
-                      Explore {stream === "knowledge" ? "answering" : "knowledge building"}
-                      <ArrowRight size={12} />
-                    </button>
-                  </div>
-                </>
-              )}
-            </footer>
+                    </div>
+                  </>
+                )}
+              </footer>
+            )}
           </>
         );
       }),
@@ -459,7 +476,12 @@ export function RagWalkthrough(props: Props) {
           <div>
             <ArrowDownUp size={15} />
             <span>
-              Scroll the story<small>The centred card moves the system</small>
+              <span aria-live="polite">
+                {card.kind === "intro"
+                  ? "Start here"
+                  : `${walkthroughStep(tour).short} · ${card.kind === "work" ? "Change" : card.kind === "output" ? "Result" : "Input"}`}
+              </span>
+              <small>Scroll ↓ · input → change → result</small>
             </span>
           </div>
           <span>
