@@ -27,13 +27,7 @@ export const LESSONS: LessonMeta[] = [
     title: "Reduce Cost and Latency",
     concept: "Prompt caching and model routing",
     summary: "Embedding, retrieval, answer, prompt, and semantic caches — and conservative routing.",
-    status: "planned",
-    nextUp: [
-      "Interactive comparison of five cache types",
-      "Prompt-prefix demonstration (a prompt-cache hit still generates)",
-      "Cache-invalidation exercise and proposed cache-key example",
-      "Conservative routing simulator: missing evidence leads to a gap, not a larger model",
-    ],
+    status: "available",
   },
   {
     number: 3,

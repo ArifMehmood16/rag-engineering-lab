@@ -253,7 +253,7 @@ export function LessonContext() {
               {done ? "Mark as not complete" : "Mark lesson complete"}
             </button>
             <Link to="/lessons/$slug" params={{ slug: "cost-latency" }} className={btnVariants({ variant: "ghost" })}>
-              Next: Lesson 2 (planned) <ArrowRight className="size-4" aria-hidden />
+              Next: Lesson 2 <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
         </footer>

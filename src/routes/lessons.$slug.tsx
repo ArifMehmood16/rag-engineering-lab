@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Clock } from "lucide-react";
 import { getLesson } from "@/content/lessons";
 import { LessonContext } from "@/components/learn/LessonContext";
+import { LessonCost } from "@/components/learn/LessonCost";
 import { Badge, btnVariants } from "@/components/learn/ui";
 
 export const Route = createFileRoute("/lessons/$slug")({
@@ -32,7 +33,8 @@ export const Route = createFileRoute("/lessons/$slug")({
 function LessonPage() {
   const { slug } = Route.useLoaderData();
   const lesson = getLesson(slug)!;
-  if (lesson.status === "available") return <LessonContext />;
+  if (lesson.slug === "context") return <LessonContext />;
+  if (lesson.slug === "cost-latency") return <LessonCost />;
 
   return (
     <article className="mx-auto max-w-3xl px-5 py-14 lg:px-10">
