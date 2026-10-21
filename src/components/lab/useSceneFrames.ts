@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { useThree } from "@react-three/fiber";
 
 /** Brief demand-rendered transitions. Reading an unchanged card schedules no frames. */
@@ -11,6 +11,8 @@ export function useSceneFrames({
   settleAfter = 2500,
   resetKey,
   finishAt,
+  ambientTime,
+  ambientFps = 12,
 }: {
   wakeKey: string;
   visible: boolean;
@@ -20,6 +22,8 @@ export function useSceneFrames({
   settleAfter?: number;
   resetKey?: string;
   finishAt?: number;
+  ambientTime?: RefObject<number>;
+  ambientFps?: number;
 }) {
   const { invalidate } = useThree();
   const time = useRef(0);
@@ -29,21 +33,26 @@ export function useSceneFrames({
   useEffect(() => {
     if (!visible) return;
     invalidate();
-    if (paused || reduced || (finishAt !== undefined && time.current >= finishAt)) return;
+    if (paused || reduced) return;
+    const finished = () => finishAt !== undefined && time.current >= finishAt;
+    if (finished() && !ambientTime) return;
     let previous = performance.now();
     const deadline = previous + settleAfter;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
       const now = performance.now();
-      time.current += (now - previous) / 1000;
+      const transitioning = previous < deadline && !finished();
+      if (transitioning) time.current += (Math.min(now, deadline) - previous) / 1000;
+      if (ambientTime) ambientTime.current += (now - previous) / 1000;
       previous = now;
       if (finishAt !== undefined) time.current = Math.min(finishAt, time.current);
       invalidate();
-      if (now < deadline && (finishAt === undefined || time.current < finishAt))
-        timer = setTimeout(tick, 1000 / fps);
+      const keepTransitioning = now < deadline && !finished();
+      if (keepTransitioning || ambientTime)
+        timer = setTimeout(tick, 1000 / (keepTransitioning ? fps : ambientFps));
     };
-    timer = setTimeout(tick, 1000 / fps);
+    timer = setTimeout(tick, 1000 / (finished() ? ambientFps : fps));
     return () => clearTimeout(timer);
-  }, [wakeKey, visible, paused, reduced, fps, settleAfter, resetKey, finishAt, invalidate]);
+  }, [wakeKey, visible, paused, reduced, fps, settleAfter, resetKey, finishAt, ambientTime, ambientFps, invalidate]);
   return time;
 }
