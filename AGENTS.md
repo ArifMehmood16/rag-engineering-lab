@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,12 +8,14 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
 
 ## Project rules
+
 - Lesson prose, quizzes, and synthetic fixtures live in `src/content/`; components in `src/components/learn/` only render them — keeps content revisable without touching UI.
 - Lab logic is pure and deterministic in `src/lib/` with tests in `src/test/` — demonstrations must be reproducible, no model calls.
 - The site is static and read-only: no notes, progress, quiz answers, or stored visitor input; lab controls are aria-pressed toggle buttons — the user wants thinking points instead of input-taking.
 - Cross-lesson pages (/architecture, /roadmap, /writing) are separate routes fed from `src/content/`; lesson prev/next comes from the shared `LessonPager` in the lesson route — keeps navigation consistent as lessons change.
-- The home route `/` is THE INTELLIGENCE LAB (ORBIT, full-bleed, no sidebar); ORBIT 3D is React Three Fiber, lazy-loaded behind ClientOnly with a static SVG fallback for low-effects mode; the lesson overview lives at /overview — one WebGL stack keeps the bundle and behaviour coherent.
-- The lab experiment runs on a step-wise pure engine (`advance(state)` in `src/lib/apollo-engine.ts`) over fixtures in `src/content/apollo.ts`; ORBIT, inspector, and timeline render only from that engine state — keeps the animation honest and runs reproducible. Source-backed records hold verbatim excerpts with real URLs and section locators; synthetic records are labelled by `kind`.
+- The home route `/` explains the RAG system itself: documents → chunks → vectors → index, then question → retrieval → context → generator → verification → release. Use semantic HTML/SVG with state-driven data movement, responsive linear flow, and reduced-motion support. Apollo is example data, not the visual subject. Do not restore decorative orbital animation. The lesson overview lives at `/overview`.
+- The lab runs on the step-wise pure engine (`advance` in `src/lib/apollo-engine.ts`) over `src/content/apollo.ts`; diagram, inspector, and trace render from execution state. Generation and support judging use reviewed fixtures and must be labelled simulated. Source-backed records distinguish excerpts/paraphrases, retain real URLs/locators, and label synthetic test records by `kind`.
