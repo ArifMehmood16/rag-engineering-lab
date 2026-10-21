@@ -175,7 +175,7 @@ export function LessonGuard() {
         <footer className="flex flex-col gap-4 rounded-lg border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
           <Link to="/lessons/$slug" params={{ slug: "tools-agents" }} className={btnVariants({ variant: "ghost" })}>
-            Next: Lesson 5 (planned) <ArrowRight className="size-4" aria-hidden />
+            Next: Lesson 5 <ArrowRight className="size-4" aria-hidden />
           </Link>
         </footer>
       </div>

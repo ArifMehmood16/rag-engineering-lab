@@ -51,13 +51,7 @@ export const LESSONS: LessonMeta[] = [
     title: "Use Tools Deliberately",
     concept: "Tool calling, agents, and context management",
     summary: "Tools versus workflows versus agents, the tool-call loop, and context budgets.",
-    status: "planned",
-    nextUp: [
-      "Tool-call walkthrough with synthetic read-only tools",
-      "Invalid arguments, denials, timeouts, and empty results",
-      "Context-budget lab with qualifiers, duplicates, and contradictions",
-      "Why EvidenceLens starts with a bounded workflow",
-    ],
+    status: "available",
   },
 ];
 
