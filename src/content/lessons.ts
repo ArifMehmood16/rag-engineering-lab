@@ -32,16 +32,10 @@ export const LESSONS: LessonMeta[] = [
   {
     number: 3,
     slug: "evaluation",
-    title: "Measure What Matters",
+    title: "Measure Performance",
     concept: "Evaluations and LLM-as-judge",
     summary: "Separating retrieval, generation, and end-to-end evaluation; judge weaknesses.",
-    status: "planned",
-    nextUp: [
-      "Synthetic evaluation lab with labelled evidence and visible denominators",
-      "Failure injection showing which metric changes",
-      "Dataset design, leakage prevention, and holdout discipline",
-      "Infrastructure errors kept separate from correct abstention",
-    ],
+    status: "available",
   },
   {
     number: 4,

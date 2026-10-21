@@ -224,7 +224,7 @@ export function LessonCost() {
           <p className="text-sm text-muted-foreground">Ready for the next idea?</p>
           <div className="flex flex-wrap gap-2">
             <Link to="/lessons/$slug" params={{ slug: "evaluation" }} className={btnVariants({ variant: "ghost" })}>
-              Next: Lesson 3 (planned) <ArrowRight className="size-4" aria-hidden />
+              Next: Lesson 3 <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
         </footer>
