@@ -1,31 +1,49 @@
-import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import * as Dialog from "@radix-ui/react-dialog";
+import { useEffect, useState } from "react";
 import {
+  ArrowDown,
   ArrowUpRight,
-  ExternalLink,
+  Check,
+  ChevronDown,
+  Expand,
+  GitCompareArrows,
+  Layers,
   Pause,
   Play,
   RotateCcw,
   SkipForward,
+  SlidersHorizontal,
   Square,
-  Unplug,
+  X,
+  Zap,
 } from "lucide-react";
-import { BASE_STAGES } from "@/content/architecture";
-import { APOLLO_RECORDS, DEFAULT_QUESTION, type EvidenceRecord } from "@/content/apollo";
-import { LAB_EXPERIMENTS, ORBIT_DISCLAIMER } from "@/content/lab";
-import { getLesson } from "@/content/lessons";
-import { OrbitStatic } from "@/components/lab/OrbitStatic";
-import type { NodeState } from "@/components/lab/OrbitScene";
-import { Badge, ToggleChip, btnVariants } from "@/components/learn/ui";
-import { advance, ENGINE_STAGES, initEngine, type EngineState } from "@/lib/apollo-engine";
+import { APOLLO_RECORDS, APOLLO_QUESTIONS, DEFAULT_QUESTION } from "@/content/apollo";
+import {
+  DEFAULT_LEARNING_PATH,
+  EXPERIMENTS,
+  KNOWLEDGE_STAGES,
+  STAGE_EXPLANATIONS,
+  type ExperimentId,
+} from "@/content/rag-lab";
+import { LabControls } from "@/components/lab/LabControls";
+import { RagFlow } from "@/components/lab/RagFlow";
+import { EvidenceCard, RunInspector } from "@/components/lab/RunInspector";
+import { CompareRuns, OUTCOMES, RunReport } from "@/components/lab/RunReport";
+import { Badge, CopyButton, ToggleChip, btnVariants } from "@/components/learn/ui";
+import {
+  advance,
+  DEFAULT_CONFIG,
+  ENGINE_STAGES,
+  initEngine,
+  type ApolloConfig,
+  type EngineState,
+} from "@/lib/apollo-engine";
 import { cn } from "@/lib/utils";
 
-const OrbitScene = lazy(() => import("@/components/lab/OrbitScene"));
-
-const TITLE = "THE INTELLIGENCE LAB — An interactive AI engineering lab";
+const TITLE = "The Intelligence Lab — See how RAG works";
 const DESC =
-  "Run a local, source-backed Apollo 11 retrieval experiment around ORBIT and inspect every stage, from request checks to release.";
-
+  "Follow documents into an index, a question into retrieved context, and an LLM draft through verification. Five interactive AI engineering experiments.";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -39,499 +57,484 @@ export const Route = createFileRoute("/")({
   }),
   component: Lab,
 });
-
-// Engine stage → planned design stage (for the design context in the inspector).
-const DESIGN: Record<string, string> = {
-  question: "intake",
-  request: "auth",
-  retrieve: "retrieve",
-  assemble: "select",
-  sufficiency: "sufficiency",
-  draft: "generate",
-  verify: "verify",
-  eligibility: "release",
-  release: "release",
-};
 const SPEEDS = [0.5, 1, 2] as const;
-const pad = (i: number) => `S${String(i + 1).padStart(2, "0")}`;
-const KIND_LABEL: Record<EvidenceRecord["kind"], string> = {
-  source: "Source-backed",
-  "synthetic-distractor": "Synthetic distractor",
-  adversarial: "Adversarial fixture",
-};
 
-function NotConnected() {
-  return (
-    <Badge tone="planned">
-      <Unplug className="size-3" aria-hidden /> Not connected yet
-    </Badge>
-  );
-}
-
-function RecordCard({ r }: { r: EvidenceRecord }) {
-  return (
-    <div className="rounded-md border border-border bg-muted p-3 text-sm">
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="font-mono text-xs">{r.id}</span>
-        <Badge tone={r.kind === "source" ? "proposed" : "warn"}>{KIND_LABEL[r.kind]}</Badge>
-        <Badge tone={r.eligibility === "eligible" ? "neutral" : "warn"}>
-          {r.eligibility.replace("_", " ")}
-        </Badge>
-      </div>
-      <p className="mt-2">“{r.text}”</p>
-      <dl className="mt-2 grid gap-x-3 gap-y-0.5 text-xs text-muted-foreground sm:grid-cols-[6rem_1fr]">
-        <dt>Source</dt>
-        <dd>
-          {r.source.url ? (
-            <a
-              href={r.source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-primary hover:underline"
-            >
-              {r.source.publisher} · {r.source.title}{" "}
-              <ExternalLink className="size-3" aria-hidden />
-            </a>
-          ) : (
-            r.source.title
-          )}
-        </dd>
-        <dt>Locator</dt>
-        <dd>{r.locator}</dd>
-        <dt>Version</dt>
-        <dd>{r.version}</dd>
-        <dt>Mission</dt>
-        <dd>
-          {r.mission.name} · launch {r.mission.launch} · splashdown {r.mission.splashdown}
-        </dd>
-        <dt>Eligibility</dt>
-        <dd>{r.eligibilityReason}</dd>
-      </dl>
-    </div>
-  );
-}
-
-function Lab() {
+export function Lab() {
   const [engine, setEngine] = useState<EngineState>(() => initEngine(DEFAULT_QUESTION));
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
-  const [sel, setSel] = useState(0);
+  const [selected, setSelected] = useState(0);
+  const [knowledge, setKnowledge] = useState<number | null>(null);
+  const [knowledgeStep, setKnowledgeStep] = useState(3);
+  const [indexing, setIndexing] = useState(false);
+  const [experiment, setExperiment] = useState<ExperimentId>("retrieval");
   const [evidence, setEvidence] = useState<string | null>(null);
   const [reduced, setReduced] = useState(false);
   const [low, setLow] = useState(false);
-  const last = ENGINE_STAGES.length - 1;
-  const finished = engine.cursor >= last || engine.halted;
+  const [visible, setVisible] = useState(true);
+  const [compare, setCompare] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
+  const [focus, setFocus] = useState(false);
+  const finished = engine.halted || engine.cursor >= ENGINE_STAGES.length - 1;
+  const current = EXPERIMENTS.find((e) => e.id === experiment)!;
+  const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
 
   useEffect(() => {
-    setReduced(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = () => setReduced(media.matches);
+    const visibility = () => setVisible(!document.hidden);
+    motion();
+    visibility();
+    media.addEventListener("change", motion);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      media.removeEventListener("change", motion);
+      document.removeEventListener("visibilitychange", visibility);
+    };
   }, []);
-
   useEffect(() => {
-    if (!playing) return;
-    if (finished) {
-      setPlaying(false);
+    if (!playing || finished || !visible) return;
+    const timer = setTimeout(() => {
+      const next = advance(engine, APOLLO_RECORDS);
+      setEngine(next);
+      setSelected(next.cursor);
+      setKnowledge(null);
+      if (next.halted || next.cursor === ENGINE_STAGES.length - 1) setPlaying(false);
+    }, 1200 / speed);
+    return () => clearTimeout(timer);
+  }, [playing, finished, visible, engine, speed]);
+  useEffect(() => {
+    if (!indexing || !visible) return;
+    if (knowledgeStep >= 3) {
+      setIndexing(false);
       return;
     }
-    const t = setTimeout(() => {
-      const n = advance(engine, APOLLO_RECORDS);
-      setEngine(n);
-      setSel(n.cursor);
-    }, 1100 / speed);
-    return () => clearTimeout(t);
-  }, [playing, engine, speed, finished, last]);
+    const timer = setTimeout(() => {
+      setKnowledgeStep((n) => n + 1);
+      setKnowledge((n) => (n ?? 0) + 1);
+    }, 1000 / speed);
+    return () => clearTimeout(timer);
+  }, [indexing, knowledgeStep, visible, speed]);
 
-  const step = () => {
-    if (finished) return;
+  const inspect = (n: number) => {
+    setSelected(n);
+    setKnowledge(null);
+  };
+  const configure = (patch: Partial<ApolloConfig>) => {
     setPlaying(false);
-    const n = advance(engine, APOLLO_RECORDS);
-    setEngine(n);
-    setSel(n.cursor);
+    setIndexing(false);
+    setSelected(0);
+    setKnowledge(null);
+    setEngine((s) => initEngine(s.ctx.question, { ...s.config, ...patch }, s.memory));
+  };
+  const chooseQuestion = (id: string) => {
+    setPlaying(false);
+    setSelected(0);
+    setKnowledge(null);
+    setEngine((s) =>
+      initEngine(APOLLO_QUESTIONS.find((q) => q.id === id)!.text, s.config, s.memory),
+    );
+  };
+  const start = () => {
+    setIndexing(false);
+    setKnowledge(null);
+    if (finished) setEngine((s) => initEngine(s.ctx.question, s.config, s.memory));
+    setPlaying(true);
+  };
+  const step = () => {
+    setPlaying(false);
+    setIndexing(false);
+    const next = advance(engine, APOLLO_RECORDS);
+    setEngine(next);
+    inspect(next.cursor >= 0 ? next.cursor : 0);
+  };
+  const complete = () => {
+    setPlaying(false);
+    setIndexing(false);
+    setKnowledge(null);
+    let next = finished ? initEngine(engine.ctx.question, engine.config, engine.memory) : engine;
+    for (let n = 0; n < ENGINE_STAGES.length; n++) next = advance(next, APOLLO_RECORDS);
+    setEngine(next);
+    setSelected(next.cursor);
   };
   const reset = () => {
-    setPlaying(false);
     setEngine(initEngine(DEFAULT_QUESTION));
-    setSel(0);
-    setEvidence(null);
+    setPlaying(false);
+    setIndexing(false);
+    setKnowledgeStep(3);
+    setSelected(0);
+    setKnowledge(null);
+    setCompare(false);
   };
-  const run = () => {
-    if (finished) return;
-    if (engine.cursor === -1) {
-      setEngine(advance(engine, APOLLO_RECORDS));
-      setSel(0);
-    }
-    setPlaying(true);
-  };
-  const replay = () => {
-    setEngine(advance(initEngine(DEFAULT_QUESTION), APOLLO_RECORDS));
-    setSel(0);
-    setEvidence(null);
-    setPlaying(true);
-  };
-
-  const states: NodeState[] = useMemo(
-    () =>
-      ENGINE_STAGES.map((_, i) => {
-        const r = engine.results[i];
-        if (r) return r.status;
-        if (playing && i === engine.cursor + 1) return "active";
-        return "idle";
+  const applyPath = (path: (typeof DEFAULT_LEARNING_PATH)[number]) => {
+    setEngine(
+      initEngine(APOLLO_QUESTIONS.find((q) => q.id === (path.questionId ?? "crew"))!.text, {
+        ...DEFAULT_CONFIG,
+        ...path.config,
       }),
-    [engine, playing],
-  );
-
-  const stage = ENGINE_STAGES[sel]!;
-  const result = engine.results[sel];
-  const design = BASE_STAGES.find((b) => b.id === DESIGN[stage.id])!;
-  const lesson = getLesson(design.lesson)!;
-  const released = engine.ctx.released;
-  const evRec = evidence ? APOLLO_RECORDS.find((r) => r.id === evidence) : undefined;
-  const statusLabel = finished
-    ? engine.halted
-      ? "Halted"
-      : "Complete"
+    );
+    setExperiment(path.experiment);
+    setPlaying(false);
+    setIndexing(false);
+    setKnowledge(null);
+    setSelected(0);
+  };
+  const selectedRecord = APOLLO_RECORDS.find((r) => r.id === evidence);
+  const runLabel = finished
+    ? OUTCOMES[engine.ctx.outcome]
     : playing
-      ? "Running"
+      ? "Following the request"
       : engine.cursor === -1
-        ? "Ready"
+        ? "Ready to explore"
         : "Paused";
+  const narratedStage = ENGINE_STAGES[playing && !finished ? engine.cursor + 1 : selected]!;
+  const narration =
+    knowledge !== null
+      ? KNOWLEDGE_STAGES[knowledge]!
+      : { title: narratedStage.name, detail: STAGE_EXPLANATIONS[narratedStage.id]!.why };
+  const outline = `# ${current.subtitle}: a lab observation\n\n1. Misconception: [What did you expect?]\n2. Concept: ${current.title}.\n3. Observation: This local simulation ended with ${OUTCOMES[engine.ctx.outcome].toLowerCase()}. It selected ${engine.ctx.context.length} passages, used approximately ${engine.ctx.tokensUsed} context tokens, and made ${engine.ctx.usage.generationCalls} fixture-generation calls.\n4. Trade-off: [Which change helped, hurt, or made no difference?]\n5. Proposed EvidenceLens experiment: ${current.transfer}\n6. Unknown: No real model or production benchmark ran. [What would you measure next?]\n`;
 
   return (
-    <div className="mx-auto grid max-w-[1600px] gap-4 p-4 lg:grid-cols-[19rem_minmax(0,1fr)_23rem] lg:p-5">
-      <h1 className="sr-only">THE INTELLIGENCE LAB — Apollo 11 experiment</h1>
+    <div className={cn("rag-lab", (reduced || low) && "lab-low-motion", focus && "lab-focus")}>
+      <header className="lab-intro">
+        <div>
+          <p className="eyebrow">
+            <span className="live-indicator" /> The intelligence lab / interactive systems
+          </p>
+          <h1>
+            See how <span>RAG works.</span>
+          </h1>
+          <p>
+            Follow the evidence. Build the context. Inspect what the model receives—and what reaches
+            the user.
+          </p>
+        </div>
+        <div className="intro-badges">
+          <Badge tone="synthetic">Local simulation</Badge>
+          <span>Source-backed fixtures · no live LLM</span>
+          <span>Example data: 2 NASA pages</span>
+        </div>
+      </header>
 
-      {/* Left: question & experiment controls */}
-      <section
-        aria-labelledby="ctl-h"
-        className="glass order-3 space-y-5 rounded-xl p-4 lg:order-1 lg:max-h-[calc(56vh+12rem)] lg:overflow-y-auto"
-      >
-        <div>
-          <p className="hud-label" id="ctl-h">
-            01 · Question
-          </p>
-          <p className="mt-2 rounded-md border border-primary bg-primary-soft px-3 py-2 text-sm">
-            {DEFAULT_QUESTION}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Corpus: {APOLLO_RECORDS.filter((r) => r.kind === "source").length} source-backed NASA
-            excerpts, 1 synthetic distractor, 1 adversarial fixture.
-          </p>
-        </div>
-        <div>
-          <p className="hud-label">02 · Experiments</p>
-          <ul className="mt-2 space-y-2">
-            <li className="rounded-md border border-primary p-3">
-              <p className="text-sm font-semibold">Apollo 11 · grounded answer</p>
-              <div className="mt-1">
-                <Badge tone="proposed">Connected · local</Badge>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Full pipeline from request checks to release.
-              </p>
-            </li>
-            {LAB_EXPERIMENTS.map((e) => {
-              const l = getLesson(e.lesson)!;
-              return (
-                <li key={e.id} className="rounded-md border border-dashed border-border p-3">
-                  <p className="text-sm font-semibold">{e.title}</p>
-                  <div className="mt-1">
-                    <NotConnected />
-                  </div>
-                  <Link
-                    to="/lessons/$slug"
-                    params={{ slug: e.lesson }}
-                    className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                  >
-                    Working version in Lesson {l.number}{" "}
-                    <ArrowUpRight className="size-3" aria-hidden />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-        <div>
-          <p className="hud-label">03 · Display</p>
-          <div className="mt-2 space-y-2">
+      <nav className="experiment-nav" aria-label="Five AI engineering experiments">
+        {EXPERIMENTS.map((e) => (
+          <button
+            key={e.id}
+            type="button"
+            aria-pressed={experiment === e.id}
+            onClick={() => {
+              setExperiment(e.id);
+              setControlsOpen(true);
+            }}
+            className={cn(experiment === e.id && "selected")}
+          >
+            <span>{e.number}</span>
+            <div>
+              <strong>{e.title}</strong>
+              <small>{e.subtitle}</small>
+            </div>
+            <ArrowUpRight size={14} aria-hidden />
+          </button>
+        ))}
+      </nav>
+
+      <div className="lab-workspace">
+        <section
+          className={cn("lab-controls", controlsOpen && "controls-open")}
+          aria-label="Experiment configuration"
+        >
+          <button
+            className="mobile-controls-toggle"
+            type="button"
+            aria-expanded={controlsOpen}
+            onClick={() => setControlsOpen(!controlsOpen)}
+          >
+            <SlidersHorizontal size={15} />
+            <span>Configure {current.subtitle}</span>
+            <ChevronDown size={14} />
+          </button>
+          <LabControls
+            experiment={experiment}
+            config={engine.config}
+            questionId={questionId}
+            onQuestion={chooseQuestion}
+            onConfig={configure}
+          />
+          <details className="display-settings">
+            <summary>
+              Display & motion <ChevronDown size={13} />
+            </summary>
             <ToggleChip
               label="Reduced motion"
-              desc="Stop ORBIT’s movement"
+              desc="Keep every stage readable without moving packets"
               pressed={reduced}
               onChange={setReduced}
             />
             <ToggleChip
               label="Low effects"
-              desc="Static vector ORBIT, no 3D rendering"
+              desc="Disable glows and background patterns"
               pressed={low}
               onChange={setLow}
             />
-          </div>
-        </div>
-      </section>
+          </details>
+        </section>
 
-      {/* Center: ORBIT, controls, pipeline */}
-      <section aria-labelledby="orbit-h" className="order-1 flex min-w-0 flex-col lg:order-2">
-        <div className="flex flex-wrap items-baseline justify-between gap-3 px-1">
-          <h2 id="orbit-h" className="text-3xl font-semibold tracking-[0.12em] sm:text-4xl">
-            ORBIT
-          </h2>
-          <Badge tone="synthetic">Local simulation · source-backed fixtures</Badge>
-        </div>
-        <div
-          role="img"
-          aria-label={`ORBIT: ${ENGINE_STAGES.length} engine stages around a core. ${engine.results.length} of ${ENGINE_STAGES.length} completed. Status: ${statusLabel}.`}
-          className="relative mt-2 h-[42vh] min-h-[280px] overflow-hidden rounded-xl border border-border lg:h-[50vh]"
-        >
-          {low ? (
-            <OrbitStatic states={states} selected={sel} />
-          ) : (
-            <ClientOnly fallback={<OrbitStatic states={states} selected={sel} />}>
-              <Suspense fallback={<OrbitStatic states={states} selected={sel} />}>
-                <OrbitScene
-                  states={states}
-                  selected={sel}
-                  animate={!reduced}
-                  speed={speed}
-                  onSelect={setSel}
-                />
-              </Suspense>
-            </ClientOnly>
-          )}
-          <div className="pointer-events-none absolute inset-x-3 top-3 flex justify-between gap-2">
-            <span className="hud-label">Q · {DEFAULT_QUESTION}</span>
-            <span className="hud-label shrink-0 text-primary" aria-live="polite">
-              {statusLabel} · {engine.results.length}/{ENGINE_STAGES.length}
-            </span>
-          </div>
-          <p className="pointer-events-none absolute inset-x-3 bottom-3 text-[0.7rem] text-muted-foreground">
-            {ORBIT_DISCLAIMER} Generation is fixture-based; no real model is running.
-          </p>
-        </div>
-
-        <div
-          role="toolbar"
-          aria-label="Run controls"
-          className="glass mt-3 flex flex-wrap items-center gap-2 rounded-xl p-2"
-        >
-          <button
-            type="button"
-            className={btnVariants({ variant: "primary", size: "sm" })}
-            onClick={run}
-            disabled={playing || finished}
-          >
-            <Play className="size-4" aria-hidden /> Run
-          </button>
-          <button
-            type="button"
-            className={btnVariants({ size: "sm" })}
-            onClick={() => setPlaying(false)}
-            disabled={!playing}
-          >
-            <Pause className="size-4" aria-hidden /> Pause
-          </button>
-          <button
-            type="button"
-            className={btnVariants({ size: "sm" })}
-            onClick={step}
-            disabled={finished}
-          >
-            <SkipForward className="size-4" aria-hidden /> Next step
-          </button>
-          <button type="button" className={btnVariants({ size: "sm" })} onClick={replay}>
-            <RotateCcw className="size-4" aria-hidden /> Replay
-          </button>
-          <button type="button" className={btnVariants({ size: "sm" })} onClick={reset}>
-            <Square className="size-4" aria-hidden /> Reset
-          </button>
-          <div
-            role="radiogroup"
-            aria-label="Animation speed"
-            className="ml-auto flex items-center gap-1"
-          >
-            <span className="hud-label mr-1">Speed</span>
-            {SPEEDS.map((s) => (
-              <button
-                key={s}
-                type="button"
-                role="radio"
-                aria-checked={speed === s}
-                onClick={() => setSpeed(s)}
-                className={cn(
-                  "rounded px-2 py-1 font-mono text-xs",
-                  speed === s ? "bg-primary text-primary-foreground" : "hover:bg-muted",
-                )}
-              >
-                {s}×
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <nav aria-label="Pipeline stages" className="mt-3 overflow-x-auto pb-1">
-          <ol className="flex min-w-max gap-1.5">
-            {ENGINE_STAGES.map((s, i) => (
-              <li key={s.id}>
+        <section className="lab-main" aria-label="Working RAG pipeline">
+          <div className="run-toolbar" role="group" aria-label="Run controls">
+            <button
+              type="button"
+              onClick={start}
+              disabled={playing}
+              className={btnVariants({ variant: "primary", size: "sm" })}
+            >
+              <Play size={14} aria-hidden />
+              {finished ? "Repeat request" : engine.cursor >= 0 ? "Resume" : "Run the pipeline"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPlaying(false)}
+              disabled={!playing}
+              className={btnVariants({ size: "sm" })}
+            >
+              <Pause size={14} aria-hidden />
+              Pause
+            </button>
+            <button
+              type="button"
+              onClick={step}
+              disabled={finished || playing}
+              className={btnVariants({ size: "sm" })}
+            >
+              <SkipForward size={14} aria-hidden />
+              Step
+            </button>
+            <button
+              type="button"
+              onClick={complete}
+              disabled={playing}
+              className={btnVariants({ size: "sm" })}
+            >
+              <Zap size={14} aria-hidden />
+              {finished ? "Repeat instantly" : "Run to result"}
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className={btnVariants({ variant: "ghost", size: "sm" })}
+              title="Clear run and in-memory caches"
+            >
+              <Square size={13} aria-hidden />
+              Reset
+            </button>
+            <div className="speed-controls" role="group" aria-label="Playback speed">
+              {SPEEDS.map((s) => (
                 <button
+                  key={s}
                   type="button"
-                  aria-pressed={sel === i}
-                  onClick={() => setSel(i)}
-                  className={cn(
-                    "glass rounded-md px-3 py-2 text-left text-xs transition-colors",
-                    sel === i
-                      ? "border-primary text-primary shadow-[var(--glow-cyan)]"
-                      : "hover:bg-muted",
-                  )}
+                  aria-pressed={s === speed}
+                  onClick={() => setSpeed(s)}
                 >
-                  <span className="block font-mono text-[0.6rem] text-muted-foreground">
-                    {pad(i)} · {states[i]}
-                  </span>
-                  {s.name}
+                  {s}×
                 </button>
-              </li>
-            ))}
-          </ol>
-        </nav>
-      </section>
-
-      {/* Right: inspector */}
-      <aside
-        aria-labelledby="insp-h"
-        className="glass order-2 h-fit space-y-4 rounded-xl p-4 lg:order-3 lg:max-h-[calc(56vh+12rem)] lg:overflow-y-auto"
-      >
-        <div aria-live="polite">
-          <p className="hud-label">
-            Inspector · {pad(sel)} · {states[sel]}
-          </p>
-          <h2 id="insp-h" className="mt-1 text-2xl font-semibold">
-            {stage.name}
-          </h2>
-          {result ? (
-            <div className="mt-3 space-y-3 text-sm">
-              <div>
-                <p className="hud-label">Input</p>
-                <ul className="mt-1 space-y-0.5 font-mono text-[0.75rem]">
-                  {result.input.map((x) => (
-                    <li key={x}>› {x}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p className="hud-label">Output</p>
-                <ul className="mt-1 space-y-0.5 font-mono text-[0.75rem]">
-                  {result.output.map((x) => (
-                    <li
-                      key={x}
-                      className={x.startsWith("excluded") ? "text-accent-foreground" : undefined}
-                    >
-                      › {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              {result.note && (
-                <p className="rounded bg-info-soft px-2 py-1 text-xs text-info">{result.note}</p>
-              )}
-            </div>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Not executed yet. Press Run or Next step.
-            </p>
-          )}
-        </div>
-
-        {released && (
-          <div className="rounded-lg border border-primary bg-primary-soft p-3">
-            <p className="hud-label text-primary">Released answer</p>
-            <ul className="mt-2 space-y-2 text-sm">
-              {released.claims.map((c) => (
-                <li key={c.id}>
-                  {c.text}{" "}
-                  {c.cites.map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      aria-pressed={evidence === id}
-                      onClick={() => setEvidence(evidence === id ? null : id)}
-                      className="mr-1 rounded border border-primary px-1 font-mono text-[0.65rem] text-primary hover:bg-primary hover:text-primary-foreground"
-                    >
-                      {id}
-                    </button>
-                  ))}
-                </li>
               ))}
-            </ul>
-            {evRec && (
-              <div className="mt-3">
-                <RecordCard r={evRec} />
-              </div>
-            )}
-            <p className="mt-2 text-[0.7rem] text-muted-foreground">
-              A model might answer this correctly without retrieval. The value shown here is
-              traceable, checked evidence — not a claim that retrieval was needed to be right.
-            </p>
+            </div>
           </div>
-        )}
-
-        <div className="rounded-md border border-border p-3 text-sm">
-          <p className="hud-label">Design context · Lesson {lesson.number}</p>
-          <p className="mt-1 text-muted-foreground">{design.responsibility}</p>
-          <Link
-            to="/lessons/$slug"
-            params={{ slug: lesson.slug }}
-            className="mt-2 inline-flex items-center gap-1 font-medium text-primary hover:underline"
-          >
-            Inspect: {lesson.concept} <ArrowUpRight className="size-4" aria-hidden />
-          </Link>
-        </div>
-      </aside>
-
-      {/* Bottom: execution timeline + fixtures */}
-      <section aria-labelledby="tl-h" className="glass order-4 rounded-xl p-4 lg:col-span-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p id="tl-h" className="hud-label">
-            Execution timeline
+          <div className="pipeline-status" aria-live="polite">
+            <span className={cn("status-lamp", playing && "running", engine.halted && "stopped")} />
+            <strong>{runLabel}</strong>
+            <span>
+              {engine.results.length} / {ENGINE_STAGES.length} request stages
+            </span>
+            <button type="button" aria-pressed={focus} onClick={() => setFocus(!focus)}>
+              <Expand size={12} aria-hidden />
+              {focus ? "Exit focus" : "Focus on flow"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPlaying(false);
+                setKnowledgeStep(0);
+                setKnowledge(0);
+                setIndexing(true);
+              }}
+            >
+              <RotateCcw size={12} aria-hidden />
+              Replay knowledge preparation
+            </button>
+          </div>
+          <div className="flow-narration" aria-live="polite">
+            <span>
+              {indexing
+                ? "Preparing knowledge"
+                : playing
+                  ? "Now processing"
+                  : "Understand the stage"}
+            </span>
+            <strong>{narration.title}</strong>
+            <p>{narration.detail}</p>
+          </div>
+          <RagFlow
+            engine={engine}
+            records={APOLLO_RECORDS}
+            playing={playing && visible}
+            reduced={reduced || low}
+            selected={selected}
+            onSelect={inspect}
+            onKnowledge={setKnowledge}
+            knowledgeStep={knowledgeStep}
+            indexing={indexing && visible}
+          />
+          <p className="diagram-instruction">
+            <Layers size={14} aria-hidden />
+            Click a stage to inspect its data. The upper path prepares knowledge; the lower path
+            answers a question. Retrieval adds evidence to the prompt—it does not retrain the LLM.
           </p>
-          <span className="hud-label">Deterministic steps · no timings measured</span>
-        </div>
-        <ol className="mt-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 lg:grid-cols-9">
-          {ENGINE_STAGES.map((s, i) => (
-            <li key={s.id}>
+          <nav className="execution-timeline" aria-label="Detailed execution trace">
+            {ENGINE_STAGES.map((stage, i) => (
               <button
+                key={stage.id}
                 type="button"
-                onClick={() => setSel(i)}
-                className={cn(
-                  "w-full rounded border-t-2 px-2 pt-1.5 text-left",
-                  states[i] === "done"
-                    ? "border-primary"
-                    : states[i] === "blocked"
-                      ? "border-destructive"
-                      : states[i] === "active"
-                        ? "border-foreground"
-                        : "border-border",
-                  sel === i && "bg-muted",
-                )}
+                aria-pressed={knowledge === null && selected === i}
+                onClick={() => inspect(i)}
+                data-state={
+                  engine.results[i]?.status ??
+                  (playing && i === engine.cursor + 1 ? "active" : "waiting")
+                }
               >
-                <span className="block font-mono text-[0.6rem] text-muted-foreground">
-                  {pad(i)} · {states[i]}
+                <span>
+                  {String(i + 1).padStart(2, "0")}
+                  {engine.results[i]?.status === "done" && <Check size={10} />}
                 </span>
-                <span className="block truncate text-xs">{s.name}</span>
-                <span className="block truncate font-mono text-[0.6rem] text-muted-foreground">
-                  {engine.results[i]?.output[0] ?? "—"}
-                </span>
+                <strong>{stage.name}</strong>
+                <small>{engine.results[i]?.status ?? "waiting"}</small>
               </button>
-            </li>
-          ))}
-        </ol>
-        <details className="mt-4">
-          <summary className="cursor-pointer text-sm font-medium text-primary">
-            Inspect all {APOLLO_RECORDS.length} fixtures
-          </summary>
-          <div className="mt-3 grid gap-2 md:grid-cols-2">
-            {APOLLO_RECORDS.map((r) => (
-              <RecordCard key={r.id} r={r} />
+            ))}
+          </nav>
+          <div className="run-detail-grid">
+            <RunInspector
+              engine={engine}
+              records={APOLLO_RECORDS}
+              selected={selected}
+              knowledge={knowledge}
+              onEvidence={setEvidence}
+            />
+            <RunReport engine={engine} records={APOLLO_RECORDS} onEvidence={setEvidence} />
+          </div>
+        </section>
+      </div>
+
+      <div className="lab-bottom-grid">
+        <section className="lab-learning-path">
+          <p className="eyebrow">Not sure where to begin?</p>
+          <h2>Change one thing. Follow the consequence.</h2>
+          <div>
+            {DEFAULT_LEARNING_PATH.map((p, i) => (
+              <button key={p.title} type="button" onClick={() => applyPath(p)}>
+                <span>0{i + 1}</span>
+                <div>
+                  <strong>{p.title}</strong>
+                  <p>{p.description}</p>
+                </div>
+                <ArrowUpRight size={16} />
+              </button>
             ))}
           </div>
-        </details>
+        </section>
+        <section className="lab-transfer">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="eyebrow">Apply the concept</p>
+            <Badge tone="planned">EvidenceLens · design phase</Badge>
+          </div>
+          <h2>{current.subtitle}, in your RAG</h2>
+          <p>{current.transfer}</p>
+          <div className="thinking-point">
+            <span className="eyebrow">Thinking point</span>
+            <p>{current.thinking}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/lessons/$slug" params={{ slug: current.lesson }} className="lab-lesson-link">
+              Explore implementation details <ArrowUpRight size={14} />
+            </Link>
+            <CopyButton text={outline} label="Copy observation outline" />
+          </div>
+          <p className="control-note">
+            Read-only learning experience. Nothing you select is stored after leaving this page.
+          </p>
+        </section>
+      </div>
+
+      <section className="lab-comparison">
+        <button
+          className="compare-trigger"
+          type="button"
+          aria-expanded={compare}
+          onClick={() => setCompare(!compare)}
+        >
+          <GitCompareArrows size={18} />
+          <span>
+            <strong>Compare with the baseline</strong>
+            <small>Same question and data. Inspect the effect of your configuration.</small>
+          </span>
+          <ArrowDown size={16} className={cn(compare && "rotate-180")} />
+        </button>
+        {compare && <CompareRuns modified={engine} records={APOLLO_RECORDS} />}
       </section>
+      <details className="corpus-details">
+        <summary>
+          Inspect the example corpus{" "}
+          <span>
+            {APOLLO_RECORDS.length} records · source-backed passages and labelled test fixtures
+          </span>
+        </summary>
+        <div>
+          {APOLLO_RECORDS.map((r) => (
+            <EvidenceCard key={r.id} record={r} />
+          ))}
+        </div>
+      </details>
+      <footer className="lab-footer">
+        <span>THE INTELLIGENCE LAB</span>
+        <p>The system is the subject. The dataset makes its behavior inspectable.</p>
+        <Link to="/overview">
+          Five concepts, explained <ArrowUpRight size={13} />
+        </Link>
+      </footer>
+
+      <Dialog.Root
+        open={evidence !== null}
+        onOpenChange={(open) => {
+          if (!open) setEvidence(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm" />
+          <Dialog.Content className="evidence-dialog">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <Dialog.Title className="text-xl font-semibold">
+                  Trace back to the evidence
+                </Dialog.Title>
+                <Dialog.Description className="mt-1 text-sm text-muted-foreground">
+                  Original record, source identity, locator, and version.
+                </Dialog.Description>
+              </div>
+              <Dialog.Close
+                className={btnVariants({ variant: "ghost", size: "sm" })}
+                aria-label="Close evidence inspector"
+              >
+                <X size={18} />
+              </Dialog.Close>
+            </div>
+            {selectedRecord ? (
+              <EvidenceCard record={selectedRecord} />
+            ) : (
+              <p className="boundary-note">
+                This citation ID does not exist in the supplied context.
+              </p>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   );
 }
