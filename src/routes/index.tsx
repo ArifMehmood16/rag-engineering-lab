@@ -53,7 +53,7 @@ function Overview() {
         <ContextDrawer />
       </div>
       {allAvailableDone && (
-        <p className="mt-3 text-sm text-muted-foreground">You’ve completed every lesson available so far. Lessons 2–5 arrive in later increments.</p>
+        <p className="mt-3 text-sm text-muted-foreground">You’ve completed every lesson available so far. Lessons 3–5 arrive in later increments.</p>
       )}
 
       <div className="mt-6 flex items-start gap-2 text-sm text-muted-foreground">
