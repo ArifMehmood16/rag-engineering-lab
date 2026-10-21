@@ -5,7 +5,7 @@ import { ContextDrawer } from "@/components/learn/ContextDrawer";
 import { Badge, btnVariants } from "@/components/learn/ui";
 import { cn } from "@/lib/utils";
 
-const TITLE = "Overview — The Intelligence Lab: five AI engineering concepts";
+const TITLE = "Overview — RAG Learning: five AI engineering concepts";
 const DESC =
   "An interactive learning resource on RAG, caching and routing, evaluation, guardrails, and tool use, with the design-phase EvidenceLens project as a case study.";
 
