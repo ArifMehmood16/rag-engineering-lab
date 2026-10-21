@@ -111,7 +111,9 @@ export function EvalLab() {
           <tbody className="divide-y divide-border">
             {run.metrics.map((m, i) => {
               const b = base.metrics[i]!;
-              const changed = fmt(m) !== fmt(b) || m.ratio?.den !== b.ratio?.den;
+              const valueChanged = fmt(m) !== fmt(b);
+              const denChanged = m.ratio?.den !== b.ratio?.den;
+              const changed = valueChanged || denChanged;
               return (
                 <tr key={m.key} className={cn(changed && "bg-accent-soft")}>
                   <td className="px-3 py-2 font-medium">{m.name}</td>
@@ -120,7 +122,7 @@ export function EvalLab() {
                     {m.ratio ? `${m.ratio.num} / ${m.ratio.den}` : "graded"} <span className="font-sans text-muted-foreground">{m.denominatorNote}</span>
                   </td>
                   <td className="px-3 py-2 font-mono">{fmt(m)}</td>
-                  <td className="px-3 py-2">{changed ? <Badge tone="planned">Changed from {fmt(b)}</Badge> : <span className="text-xs text-muted-foreground">unchanged</span>}</td>
+                  <td className="px-3 py-2">{valueChanged ? <Badge tone="planned">Changed from {fmt(b)}</Badge> : denChanged ? <Badge tone="planned">Denominator was {b.ratio?.den}</Badge> : <span className="text-xs text-muted-foreground">unchanged</span>}</td>
                 </tr>
               );
             })}
