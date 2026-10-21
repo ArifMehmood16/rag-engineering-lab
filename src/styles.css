@@ -11,6 +11,7 @@
 @import "./styles/readability.css";
 @import "./styles/rag-journey.css";
 @import "./styles/rag-learning.css";
+@import "./styles/rag-theatre.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -19,7 +19,11 @@ export default defineConfig({
         if (transform && typeof transform === "object") {
           const original = transform.handler;
           transform.handler = function (code, id, ...args) {
-            if (/\/Rag(?:World|NeuralEntity|KnowledgeGlobe)\.tsx$/.test(id.split("?")[0] ?? ""))
+            if (
+              /\/Rag(?:World|TheatreWorld|NeuralEntity|KnowledgeGlobe)\.tsx$/.test(
+                id.split("?")[0] ?? "",
+              )
+            )
               return null;
             return original.call(this, code, id, ...args);
           };

@@ -362,6 +362,7 @@ export function RagWalkthrough(props: Props) {
       data-stage={stage}
       data-beat={beat}
       data-learning={concept ?? undefined}
+      data-theatre={learningScene?.theatre?.kind}
     >
       <RagStageScene
         tour={learningScene?.tour ?? tour}
@@ -373,6 +374,7 @@ export function RagWalkthrough(props: Props) {
         visible={visible}
         duration={4.2}
         scrollProgress={learningScene?.progress ?? gallery.selected.transfer}
+        {...(learningScene?.theatre ? { theatre: learningScene.theatre } : {})}
         {...(learningScene
           ? {
               annotationOverride: {
@@ -511,7 +513,7 @@ export function RagWalkthrough(props: Props) {
           <ArrowDown size={13} />
         </div>
       </div>
-      {concept && (
+      {concept && !learningScene?.theatre && (
         <aside className="learning-world-note">
           <span>
             {learningScene?.offline

@@ -107,6 +107,7 @@ describe("five visible concept views", () => {
       "0 exact-word overlap",
     );
     fireEvent.click(screen.getByLabelText("Learn Caching & routing"));
+    expect(screen.getByRole("img", { name: /^Prefix reuse scene:/ })).toBeInTheDocument();
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
       "process the prefix",
     );
@@ -141,6 +142,9 @@ describe("five visible concept views", () => {
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
       "Approved-answer cache",
     );
+    expect(screen.getByRole("img", { name: /^Prefix reuse scene:/ })).toHaveTextContent(
+      "LLM · idle",
+    );
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
     focusLearning(3);
     expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "1");
@@ -155,9 +159,20 @@ describe("five visible concept views", () => {
     render(<Lab />);
     fireEvent.click(screen.getByLabelText("Learn Evaluations & judges"));
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
-      "Three local fixtures",
+      "Three reviewed presets",
     );
-    expect(screen.getByText("OFFLINE OBSERVER · NO LIVE REQUEST STEP")).toBeInTheDocument();
+    expect(screen.getByText("OFFLINE EVALUATION / RECORDED FIXTURES")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /^Offline evaluation scene:/ })).toBeInTheDocument();
+    expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
+      "Q3 bypasses generation",
+    );
+    focusLearning(1);
+    expect(screen.getByRole("img", { name: /^Offline evaluation scene:/ })).toHaveTextContent(
+      "2/3 facts",
+    );
+    expect(screen.getByRole("img", { name: /^Offline evaluation scene:/ })).toHaveTextContent(
+      "LLM · idle",
+    );
     focusLearning(2);
     expect(screen.getByLabelText("Current concept example")).toHaveTextContent(
       "Fixed context: IDENTICAL",

@@ -27,6 +27,7 @@ import {
 import { flowLabel } from "@/lib/rag-flow-label";
 import { cn } from "@/lib/utils";
 import type { RagWorldProps } from "./RagWorld";
+import { RagTheatreFallback, RagTheatreOverlay } from "./RagTheatrePanel";
 
 // Keep WebGL and Three out of SSR and the ordinary lesson bundles.
 const RagWorld = lazy(() => import("./RagWorld"));
@@ -183,7 +184,11 @@ export function RagStageScene(
   }, []);
   const output = atOutput(tour);
   const plan = scenePlan(tour);
-  const fallback = <StaticWorld tour={tour} record={props.record} />;
+  const fallback = props.theatre ? (
+    <RagTheatreFallback scene={props.theatre} />
+  ) : (
+    <StaticWorld tour={tour} record={props.record} />
+  );
   return (
     <figure
       className={cn(
@@ -191,8 +196,13 @@ export function RagStageScene(
         tour.phase === "knowledge" && "scene-preparing",
         reduced && "scene-still",
         overview && "scene-overview",
+        props.theatre && "scene-theatre",
       )}
-      aria-label={`Visual RAG system: ${walkthroughStep(tour).title}`}
+      aria-label={
+        props.theatre
+          ? `3D ${props.theatre.kind} scene: ${props.theatre.title}`
+          : `Visual RAG system: ${walkthroughStep(tour).title}`
+      }
     >
       <figcaption>
         <span className="scene-live-dot" /> SYSTEM / 3D{" "}
@@ -214,7 +224,7 @@ export function RagStageScene(
             fallback
           )}
         </SceneBoundary>
-        {ready && !lowEffects && (
+        {ready && !lowEffects && !props.theatre && (
           <div className="scene-labels" aria-hidden>
             {Object.keys(plan.positions).map((key) => {
               const node = key as SceneNode;
@@ -306,6 +316,7 @@ export function RagStageScene(
                   ? "#e9a0a0"
                   : flowStyle(plan.transfer.from, plan.transfer.to).color,
               ...(ready && !lowEffects ? { opacity: 0 } : {}),
+              ...(props.theatre ? { display: "none" } : {}),
             } as CSSProperties
           }
         >
@@ -324,18 +335,21 @@ export function RagStageScene(
           <small>{annotation.payload}</small>
           <i />
         </div>
+        {props.theatre && <RagTheatreOverlay scene={props.theatre} />}
         <div className="scene-mode-label">
-          {plan.blocked
-            ? "RELEASE BLOCKED"
-            : plan.skipped
-              ? "STAGE SKIPPED"
-              : output
-                ? "OUTPUT READY"
-                : tour.beat === 0
-                  ? "INPUT READY"
-                  : plan.transfer.from === plan.transfer.to
-                    ? "PROCESSING THIS STEP"
-                    : "DATA IN MOTION"}
+          {props.theatre
+            ? "RECORDED VISUAL REPLAY"
+            : plan.blocked
+              ? "RELEASE BLOCKED"
+              : plan.skipped
+                ? "STAGE SKIPPED"
+                : output
+                  ? "OUTPUT READY"
+                  : tour.beat === 0
+                    ? "INPUT READY"
+                    : plan.transfer.from === plan.transfer.to
+                      ? "PROCESSING THIS STEP"
+                      : "DATA IN MOTION"}
           <span>{reduced ? "Motion reduced" : paused ? "Motion paused" : "Neon / depth view"}</span>
         </div>
         <div className="scene-motion-controls">
@@ -344,6 +358,7 @@ export function RagStageScene(
             aria-label={overview ? "Focus active stage" : "Show whole system"}
             title={overview ? "Focus active stage" : "Show whole system"}
             onClick={() => setOverview(!overview)}
+            disabled={Boolean(props.theatre)}
           >
             {overview ? <Focus size={14} /> : <Maximize2 size={14} />}
           </button>

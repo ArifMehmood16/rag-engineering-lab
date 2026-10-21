@@ -128,7 +128,7 @@ export function learningTheatre(
   else
     results = [
       result("Retrieved facts", ratioLabel(scores.retrieval)),
-      result("Supported citation links", ratioLabel(scores.citations)),
+      result("Citation support", ratioLabel(scores.citations)),
       result("Released facts", ratioLabel(scores.coverage)),
     ];
   return {
@@ -153,7 +153,7 @@ export function learningTheatre(
     claims: run.ctx.claims.length,
     cases: data.testSet.map((q, i) => ({
       id: `Q${i + 1}`,
-      label: q.id,
+      label: ["Crew roles", "Paraphrase", "Outside corpus"][i]!,
       expected: q.expected,
       pass: q.pass,
       calls: q.run.ctx.usage.generationCalls,

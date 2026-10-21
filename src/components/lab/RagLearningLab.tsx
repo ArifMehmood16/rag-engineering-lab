@@ -16,13 +16,13 @@ import { LEARNING_LENSES } from "@/content/rag-learning";
 import {
   answerSchema,
   buildLearningExamples,
-  evaluationRow,
   learningDeck,
-  ratioLabel,
   type LearningExamples,
 } from "@/lib/rag-learning";
 import type { WalkthroughState } from "@/lib/rag-walkthrough";
 import { useRagGallery } from "./useRagGallery";
+import { learningTheatre, type LearningTheatre } from "@/lib/rag-theatre";
+import { RagTheatreCard } from "./RagTheatrePanel";
 
 const LEARNING_ICONS = {
   retrieval: Database,
@@ -38,6 +38,7 @@ export type LearningScene = {
   question: string;
   offline: boolean;
   mode: "input" | "work" | "output";
+  theatre: LearningTheatre | null;
 };
 
 export function RagLearningDock({
@@ -99,68 +100,6 @@ function Receipt({ label, value }: { label: string; value: string | number }) {
     <div className="learning-receipt">
       <strong>{value}</strong>
       <span>{label}</span>
-    </div>
-  );
-}
-function Prompt({ hit }: { hit: boolean }) {
-  return (
-    <div
-      className="prompt-ribbon"
-      aria-label="Model input split into stable prefix and variable content"
-    >
-      <div className={hit ? "prefix-block prefix-reused" : "prefix-block"}>
-        <span>{hit ? "REUSED PROCESSING" : "PROCESS ONCE"} · 160 ASSUMED TOKENS</span>
-        <strong>Policy + response schema + fixed examples</strong>
-        <small>Identical leading prefix · same simulated model profile</small>
-      </div>
-      <div className="variable-block">
-        <span>PROCESS FOR THIS REQUEST</span>
-        <strong>Question + selected evidence</strong>
-        <small>Variable content follows the stable prefix</small>
-      </div>
-      <ArrowDown size={18} />
-      <div className="generation-block">
-        Generate a new answer <strong>1 model call</strong>
-      </div>
-    </div>
-  );
-}
-function ResultTable({ data, records }: { data: LearningExamples; records: EvidenceRecord[] }) {
-  const rows = [
-    ["Baseline", data.baseline],
-    ["Retrieval miss", data.missing],
-    ["Wrong generated claim", data.wrong],
-  ] as const;
-  return (
-    <div className="learning-table-wrap">
-      <table className="learning-table">
-        <caption>Same question and corpus · one controlled fault per row</caption>
-        <thead>
-          <tr>
-            <th>Run</th>
-            <th>Retrieved facts</th>
-            <th>Supported citation links</th>
-            <th>Released facts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([label, run]) => {
-            const s = evaluationRow(run, records);
-            return (
-              <tr key={label}>
-                <th>{label}</th>
-                <td>{ratioLabel(s.retrieval)}</td>
-                <td>{ratioLabel(s.citations)}</td>
-                <td>{ratioLabel(s.coverage)}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      <p className="learning-note">
-        Ratios show numerator / applicable denominator. N/A means no draft or applicable
-        observations, not a perfect score.
-      </p>
     </div>
   );
 }
@@ -240,194 +179,6 @@ function LearningVisual({
         <p>
           The LLM gets readable evidence alongside the question and instructions. Stored vectors
           help find text; they are not the answer payload.
-        </p>
-      </>
-    );
-  }
-  if (id === "efficiency") {
-    const run = page === 0 ? data.cold : data.warm;
-    if (page < 2)
-      return (
-        <>
-          <p>
-            {page === 0
-              ? "This independent request retrieves evidence and processes a stable prompt prefix for the first time."
-              : "Repeat the same setup. Only prefix processing is reused; retrieval, new generation, verification, and permissions still run."}
-          </p>
-          <Prompt hit={page === 1} />
-          <div className="learning-receipts">
-            <Receipt
-              label="Prefix tokens reused · assumed"
-              value={run.ctx.usage.cachedPrefixTokens}
-            />
-            <Receipt label="New generation calls" value={run.ctx.usage.generationCalls} />
-          </div>
-          {page === 1 && (
-            <p className="learning-note">
-              Put a changing timestamp first and the repeated fixture reuses{" "}
-              {data.changing.ctx.usage.cachedPrefixTokens} prefix tokens. Stable content must remain
-              at the beginning.
-            </p>
-          )}
-        </>
-      );
-    if (page === 2)
-      return (
-        <>
-          <Flow items={["Exact scoped question", "Approved-answer cache", "Checks", "You"]} />
-          <div className="learning-receipts">
-            <Receipt label="New generation calls" value={data.approved.ctx.usage.generationCalls} />
-            <Receipt label="Search calls" value={data.approved.ctx.usage.retrievalCalls} />
-          </div>
-          <p>
-            An approved answer is reused, including its claims and citations. Current permissions
-            and citation checks still apply. This cache belongs to the application; prompt-prefix
-            reuse is model-side processing.
-          </p>
-          <p className="learning-note">
-            Embedding caches reuse vectors; retrieval caches reuse candidate lists. Neither stores
-            an approved final answer.
-          </p>
-        </>
-      );
-    return (
-      <>
-        <div className="learning-table-wrap">
-          <table className="learning-table">
-            <caption>Controlled repeat · identical question, evidence, and large profile</caption>
-            <thead>
-              <tr>
-                <th>Path</th>
-                <th>Prefix reused</th>
-                <th>Model calls</th>
-                <th>Modelled work</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                ["Cold prefix", data.cold],
-                ["Warm prefix", data.warm],
-                ["Approved answer", data.approved],
-              ].map(([label, r]) => {
-                const run = r as typeof data.cold;
-                return (
-                  <tr key={label as string}>
-                    <th>{label as string}</th>
-                    <td>{run.ctx.usage.cachedPrefixTokens}</td>
-                    <td>{run.ctx.usage.generationCalls}</td>
-                    <td>{run.ctx.usage.workUnits}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <p>
-          The multi-part, three-fact question selects the large profile. A narrower two-fact
-          question selects the small profile. Selection happens before retrieval; model execution
-          happens after context is ready.
-        </p>
-        <p className="learning-note">
-          Explicit teaching policy, not measured model quality. Model work units are fictional; they
-          exclude cache lookup, retrieval, and validation costs. They are not currency or measured
-          latency. The details report shows the formula.
-        </p>
-      </>
-    );
-  }
-  if (id === "evaluation") {
-    if (page === 0)
-      return (
-        <>
-          <p>
-            Offline evaluation observes completed runs. It is separate from the checks that decide
-            whether one live answer can be released.
-          </p>
-          <div className="test-set">
-            {data.testSet.map((q) => (
-              <div key={q.id}>
-                <code>{q.id}</code>
-                <p>{q.question}</p>
-                <span>Expected: {q.expected}</span>
-                <strong>{q.pass ? "PASS" : "FAIL"}</strong>
-              </div>
-            ))}
-          </div>
-          <Flow
-            items={[
-              "Reviewed questions",
-              "Versioned configuration",
-              "Repeatable runs",
-              "Compare results",
-            ]}
-          />
-          <p className="learning-note">
-            Three local fixtures, not a benchmark. Synthetic questions need review and correct
-            labels before inclusion. Rerun the set after changing a prompt, retrieval setting,
-            model, or guardrail.
-          </p>
-        </>
-      );
-    if (page === 1)
-      return (
-        <>
-          <p>
-            Remove a required passage while holding the question and remaining settings fixed.
-            Retrieval loses evidence before generation can help.
-          </p>
-          <ResultTable data={data} records={records} />
-          <p>
-            The evidence-gap outcome protects the user, but this answerable test case still fails
-            the end-to-end task. A safe refusal and a useful answer are different measurements.
-          </p>
-        </>
-      );
-    if (page === 2)
-      return (
-        <>
-          <div className="learning-status">
-            Fixed context:{" "}
-            {JSON.stringify(data.baseline.ctx.context) === JSON.stringify(data.wrong.ctx.context)
-              ? "IDENTICAL"
-              : "DIFFERENT"}{" "}
-            in baseline and generated-claim fault
-          </div>
-          <p>
-            Retrieval finds the same facts. Only the generated claim changes to “Michael Collins
-            walked on the Moon.” This isolates a generation failure.
-          </p>
-          <ResultTable data={data} records={records} />
-          <p>
-            Always keep retrieval quality, answer quality, and user-visible outcomes separate; one
-            overall score cannot locate the fault.
-          </p>
-        </>
-      );
-    return (
-      <>
-        <span className="learning-status">SIMULATED LLM-AS-JUDGE EXAMPLE · no model call</span>
-        <blockquote className="judge-claim">Claim: {data.wrong.ctx.claims[0]?.text}</blockquote>
-        <div className="judge-rubric">
-          <div>
-            <strong>Claim support</strong>
-            <span>FAIL</span>
-            <p>The reviewed source places Collins in lunar orbit, not on the surface.</p>
-          </div>
-          <div>
-            <strong>Citation resolution</strong>
-            <span>PASS</span>
-            <p>The supplied ID resolves. Existence alone does not establish support.</p>
-          </div>
-          <div>
-            <strong>Completeness</strong>
-            <span>FAIL</span>
-            <p>Not every required fact is expressed correctly.</p>
-          </div>
-        </div>
-        <p className="learning-note">
-          Verdicts come from reviewed fixture rules, not a live LLM. A real judge can be wrong or
-          follow malicious evidence. Version its rubric and model, compare with human-reviewed
-          labels, and inspect disagreements.
         </p>
       </>
     );
@@ -624,6 +375,10 @@ export function RagLearningLab({
   const data = useMemo(() => buildLearningExamples(records), [records]);
   const pages = useMemo(() => learningDeck(concept, data, records), [concept, data, records]);
   const cards = useMemo(() => pages.map((p) => p.card), [pages]);
+  const theatres = useMemo(
+    () => pages.map((_, i) => learningTheatre(concept, i, data, records)),
+    [concept, pages, data, records],
+  );
   const gallery = useRagGallery(cards, "request", visible, reduced, true);
   const index = Math.min(gallery.selected.index, pages.length - 1);
   const page = pages[index]!;
@@ -636,6 +391,7 @@ export function RagLearningLab({
       title: page.offline ? "Offline evaluation · observe completed runs" : page.card.title,
       question: page.run.ctx.question,
       offline: page.offline,
+      theatre: theatres[index] ?? null,
       mode:
         page.offline || page.card.kind === "output"
           ? "output"
@@ -644,7 +400,17 @@ export function RagLearningLab({
             : "work",
     });
     if (index === pages.length - 1 && visible) onExplore(concept);
-  }, [page, index, pages.length, gallery.selected.transfer, onScene, onExplore, concept, visible]);
+  }, [
+    page,
+    index,
+    pages.length,
+    gallery.selected.transfer,
+    onScene,
+    onExplore,
+    concept,
+    visible,
+    theatres,
+  ]);
   return (
     <div
       className="story-gallery-shell learning-gallery"
@@ -691,6 +457,7 @@ export function RagLearningLab({
                 else gallery.elements.current.delete(p.card.id);
               }}
               className="story-card gallery-card learning-card"
+              data-theatre-card={theatres[i]?.kind}
               data-focused={i === index}
               data-learning-card={i}
               aria-label={i === index ? "Current concept example" : p.card.title}
@@ -706,10 +473,21 @@ export function RagLearningLab({
                 <h2>{p.card.title}</h2>
               </header>
               <div className="story-card-body">
-                <LearningVisual id={concept} page={i} data={data} records={records} />
+                {theatres[i] ? (
+                  <RagTheatreCard scene={theatres[i]!} />
+                ) : (
+                  <LearningVisual id={concept} page={i} data={data} records={records} />
+                )}
               </div>
               <footer className="story-card-footer">
-                {i === pages.length - 1 ? (
+                {i === pages.length - 1 && theatres[i] ? (
+                  <>
+                    <p>{theatres[i]!.takeaway}</p>
+                    <a className="learning-apply" href={`/lessons/${lesson}`}>
+                      Implementation notes <ArrowRight size={13} />
+                    </a>
+                  </>
+                ) : i === pages.length - 1 ? (
                   <>
                     <strong>Take away</strong>
                     <p>{lens.takeaway}</p>

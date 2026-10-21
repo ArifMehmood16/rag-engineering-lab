@@ -6,6 +6,8 @@ import { RagFocus } from "./RagFocus";
 import { RagNeuralEntity } from "./RagNeuralEntity";
 import { RagKnowledgeGlobe } from "./RagKnowledgeGlobe";
 import { cameraPose, sceneRegion } from "@/lib/rag-camera";
+import { RagTheatreWorld } from "./RagTheatreWorld";
+import type { LearningTheatre } from "@/lib/rag-theatre";
 import type { Line2 } from "three-stdlib";
 import type { EvidenceRecord } from "@/content/apollo";
 import { buildKnowledgeIndex } from "@/lib/knowledge-index";
@@ -38,6 +40,7 @@ export interface RagWorldProps {
   flowLabel?: React.RefObject<HTMLDivElement | null>;
   overview?: boolean;
   labels?: React.RefObject<Map<SceneNode, HTMLDivElement>>;
+  theatre?: LearningTheatre;
 }
 const CYAN = "#64fff1";
 const VIOLET = "#bc83ff";
@@ -1075,7 +1078,16 @@ export default function RagWorld(props: RagWorldProps) {
       aria-hidden
       onCreated={({ camera }) => camera.lookAt(0, 0, 0)}
     >
-      <World {...props} />
+      {props.theatre ? (
+        <RagTheatreWorld
+          scene={props.theatre}
+          reduced={props.reduced}
+          paused={props.paused}
+          visible={props.visible}
+        />
+      ) : (
+        <World {...props} />
+      )}
     </Canvas>
   );
 }
