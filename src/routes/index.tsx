@@ -14,7 +14,6 @@ import {
 import { APOLLO_RECORDS, APOLLO_QUESTIONS, DEFAULT_QUESTION } from "@/content/apollo";
 import { DEFAULT_LEARNING_PATH, EXPERIMENTS, type ExperimentId } from "@/content/rag-lab";
 import { LabControls } from "@/components/lab/LabControls";
-import { RagFlow } from "@/components/lab/RagFlow";
 import { RagWalkthrough } from "@/components/lab/RagWalkthrough";
 import { EvidenceCard, RunInspector } from "@/components/lab/RunInspector";
 import { CompareRuns, OUTCOMES, RunReport } from "@/components/lab/RunReport";
@@ -58,7 +57,7 @@ export function Lab() {
   const [low, setLow] = useState(false);
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
-  const [controlsOpen, setControlsOpen] = useState(false);
+  const [details, setDetails] = useState<"configure" | "trace" | "learn" | null>(null);
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
   const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
 
@@ -152,206 +151,231 @@ export function Lab() {
         onEvidence={setEvidence}
         onReset={reset}
         reduced={reduced || low}
-        visible={visible}
+        lowEffects={low}
+        visible={visible && details === null}
       />
-      <div className="lab-experiments-heading">
-        <p className="eyebrow">Explore after the walkthrough</p>
-        <h2>Change one setting. Repeat the same system.</h2>
-      </div>
-
-      <nav className="experiment-nav" aria-label="Five AI engineering experiments">
-        {EXPERIMENTS.map((e) => (
-          <button
-            key={e.id}
-            type="button"
-            aria-pressed={experiment === e.id}
-            onClick={() => {
-              setExperiment(e.id);
-              setControlsOpen(true);
-            }}
-            className={cn(experiment === e.id && "selected")}
-          >
-            <span>{e.number}</span>
-            <div>
-              <strong>{e.title}</strong>
-              <small>{e.subtitle}</small>
-            </div>
-            <ArrowUpRight size={14} aria-hidden />
-          </button>
-        ))}
-      </nav>
-
-      <div className="lab-workspace">
-        <section
-          className={cn("lab-controls", controlsOpen && "controls-open")}
-          aria-label="Experiment configuration"
-        >
-          <button
-            className="mobile-controls-toggle"
-            type="button"
-            aria-expanded={controlsOpen}
-            onClick={() => setControlsOpen(!controlsOpen)}
-          >
-            <SlidersHorizontal size={15} />
-            <span>Configure {current.subtitle}</span>
-            <ChevronDown size={14} />
-          </button>
-          <LabControls
-            experiment={experiment}
-            config={engine.config}
-            questionId={questionId}
-            onQuestion={chooseQuestion}
-            onConfig={configure}
-          />
-          <a href="#rag-stage" className="back-to-system">
-            Return to the system <ArrowUpRight size={13} />
-          </a>
-          <details className="display-settings">
-            <summary>
-              Display & motion <ChevronDown size={13} />
-            </summary>
-            <ToggleChip
-              label="Reduced motion"
-              desc="Keep every stage readable without moving packets"
-              pressed={reduced}
-              onChange={setReduced}
-            />
-            <ToggleChip
-              label="Low effects"
-              desc="Disable glows and background patterns"
-              pressed={low}
-              onChange={setLow}
-            />
-          </details>
-        </section>
-
-        <section className="lab-main" aria-label="Experiment results and details">
-          <details className="expanded-flow">
-            <summary>Open the expanded system diagram</summary>
-            <RagFlow
-              engine={engine}
-              records={APOLLO_RECORDS}
-              playing={false}
-              reduced={reduced || low}
-              selected={selected}
-              onSelect={inspect}
-              onKnowledge={setKnowledge}
-              knowledgeStep={prepared ? 3 : (knowledge ?? 0)}
-              indexing={false}
-            />
-          </details>
-          <p className="diagram-instruction">
-            <Layers size={14} aria-hidden />
-            Detailed results and evidence stay available here. The guided frame above shows each
-            transformation together.
-          </p>
-          <nav className="execution-timeline" aria-label="Detailed execution trace">
-            {ENGINE_STAGES.map((stage, i) => (
-              <button
-                key={stage.id}
-                type="button"
-                aria-pressed={knowledge === null && selected === i}
-                onClick={() => inspect(i)}
-                data-state={engine.results[i]?.status ?? "waiting"}
-              >
-                <span>
-                  {String(i + 1).padStart(2, "0")}
-                  {engine.results[i]?.status === "done" && <Check size={10} />}
-                </span>
-                <strong>{stage.name}</strong>
-                <small>{engine.results[i]?.status ?? "waiting"}</small>
-              </button>
-            ))}
-          </nav>
-          <div className="run-detail-grid">
-            <RunInspector
-              engine={engine}
-              records={APOLLO_RECORDS}
-              selected={selected}
-              knowledge={knowledge}
-              onEvidence={setEvidence}
-            />
-            <RunReport engine={engine} records={APOLLO_RECORDS} onEvidence={setEvidence} />
-          </div>
-        </section>
-      </div>
-
-      <div className="lab-bottom-grid">
-        <section className="lab-learning-path">
-          <p className="eyebrow">Not sure where to begin?</p>
-          <h2>Change one thing. Follow the consequence.</h2>
-          <div>
-            {DEFAULT_LEARNING_PATH.map((p, i) => (
-              <button key={p.title} type="button" onClick={() => applyPath(p)}>
-                <span>0{i + 1}</span>
-                <div>
-                  <strong>{p.title}</strong>
-                  <p>{p.description}</p>
-                </div>
-                <ArrowUpRight size={16} />
-              </button>
-            ))}
-          </div>
-        </section>
-        <section className="lab-transfer">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="eyebrow">Apply the concept</p>
-            <Badge tone="planned">EvidenceLens · design phase</Badge>
-          </div>
-          <h2>{current.subtitle}, in your RAG</h2>
-          <p>{current.transfer}</p>
-          <div className="thinking-point">
-            <span className="eyebrow">Thinking point</span>
-            <p>{current.thinking}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link to="/lessons/$slug" params={{ slug: current.lesson }} className="lab-lesson-link">
-              Explore implementation details <ArrowUpRight size={14} />
-            </Link>
-            <CopyButton text={outline} label="Copy observation outline" />
-          </div>
-          <p className="control-note">
-            Read-only learning experience. Nothing you select is stored after leaving this page.
-          </p>
-        </section>
-      </div>
-
-      <section className="lab-comparison">
-        <button
-          className="compare-trigger"
-          type="button"
-          aria-expanded={compare}
-          onClick={() => setCompare(!compare)}
-        >
-          <GitCompareArrows size={18} />
-          <span>
-            <strong>Compare with the baseline</strong>
-            <small>Same question and data. Inspect the effect of your configuration.</small>
-          </span>
-          <ArrowDown size={16} className={cn(compare && "rotate-180")} />
-        </button>
-        {compare && <CompareRuns modified={engine} records={APOLLO_RECORDS} />}
-      </section>
-      <details className="corpus-details">
-        <summary>
-          Inspect the example corpus{" "}
-          <span>
-            {APOLLO_RECORDS.length} records · source-backed passages and labelled test fixtures
-          </span>
-        </summary>
+      <div className="lab-utility-bar">
+        <span>One system. Every transformation.</span>
         <div>
-          {APOLLO_RECORDS.map((r) => (
-            <EvidenceCard key={r.id} record={r} />
-          ))}
+          <button type="button" onClick={() => setDetails("configure")}>
+            <SlidersHorizontal size={13} /> Explore details
+          </button>
+          <button type="button" onClick={() => setDetails("trace")}>
+            <Layers size={13} /> Inspect run
+          </button>
+          <Link to="/overview">
+            Five concepts <ArrowUpRight size={13} />
+          </Link>
         </div>
-      </details>
-      <footer className="lab-footer">
-        <span>THE INTELLIGENCE LAB</span>
-        <p>The system is the subject. The dataset makes its behavior inspectable.</p>
-        <Link to="/overview">
-          Five concepts, explained <ArrowUpRight size={13} />
-        </Link>
-      </footer>
+      </div>
+      <Dialog.Root
+        open={details !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetails(null);
+        }}
+      >
+        <Dialog.Portal>
+          <Dialog.Overlay className="lab-drawer-overlay" />
+          <Dialog.Content className="lab-detail-drawer">
+            <header className="drawer-header">
+              <div>
+                <Dialog.Title>Explore the lab</Dialog.Title>
+                <Dialog.Description>
+                  Change a setting, inspect a result, or go deeper.
+                </Dialog.Description>
+              </div>
+              <Dialog.Close aria-label="Return to animation">
+                <X size={18} />
+              </Dialog.Close>
+            </header>
+            <div className="drawer-tabs" role="group" aria-label="Lab details">
+              {(["configure", "trace", "learn"] as const).map((tab) => (
+                <button
+                  type="button"
+                  key={tab}
+                  aria-pressed={details === tab}
+                  onClick={() => setDetails(tab)}
+                >
+                  {tab === "configure"
+                    ? "Experiments"
+                    : tab === "trace"
+                      ? "Run & evidence"
+                      : "Go deeper"}
+                </button>
+              ))}
+            </div>
+            <div className="drawer-content">
+              {details === "configure" && (
+                <>
+                  <nav className="drawer-experiments" aria-label="Five AI engineering experiments">
+                    {EXPERIMENTS.map((e) => (
+                      <button
+                        type="button"
+                        key={e.id}
+                        aria-pressed={experiment === e.id}
+                        title={e.title}
+                        onClick={() => setExperiment(e.id)}
+                      >
+                        <span>{e.number}</span>
+                        <span className="sr-only">
+                          {" "}
+                          {e.title} {e.subtitle}
+                        </span>
+                      </button>
+                    ))}
+                  </nav>
+                  <LabControls
+                    experiment={experiment}
+                    config={engine.config}
+                    questionId={questionId}
+                    onQuestion={chooseQuestion}
+                    onConfig={configure}
+                  />
+                  <details className="display-settings">
+                    <summary>
+                      Display & motion <ChevronDown size={13} />
+                    </summary>
+                    <ToggleChip
+                      label="Reduced motion"
+                      desc="Show the same data without animated transfers"
+                      pressed={reduced}
+                      onChange={setReduced}
+                    />
+                    <ToggleChip
+                      label="Low effects"
+                      desc="Use a static scene without WebGL effects"
+                      pressed={low}
+                      onChange={setLow}
+                    />
+                  </details>
+                </>
+              )}
+              {details === "trace" && (
+                <>
+                  <nav className="execution-timeline" aria-label="Detailed execution trace">
+                    {ENGINE_STAGES.map((stage, i) => (
+                      <button
+                        key={stage.id}
+                        type="button"
+                        aria-pressed={knowledge === null && selected === i}
+                        onClick={() => inspect(i)}
+                        data-state={engine.results[i]?.status ?? "waiting"}
+                      >
+                        <span>
+                          {String(i + 1).padStart(2, "0")}
+                          {engine.results[i]?.status === "done" && <Check size={10} />}
+                        </span>
+                        <strong>{stage.name}</strong>
+                        <small>{engine.results[i]?.status ?? "waiting"}</small>
+                      </button>
+                    ))}
+                  </nav>
+                  <div className="run-detail-grid">
+                    <RunInspector
+                      engine={engine}
+                      records={APOLLO_RECORDS}
+                      selected={selected}
+                      knowledge={knowledge}
+                      onEvidence={setEvidence}
+                    />
+                    <RunReport engine={engine} records={APOLLO_RECORDS} onEvidence={setEvidence} />
+                  </div>
+                  <section className="lab-comparison">
+                    <button
+                      className="compare-trigger"
+                      type="button"
+                      aria-expanded={compare}
+                      onClick={() => setCompare(!compare)}
+                    >
+                      <GitCompareArrows size={18} />
+                      <span>
+                        <strong>Compare with the baseline</strong>
+                        <small>
+                          Same question and data. Inspect the effect of your configuration.
+                        </small>
+                      </span>
+                      <ArrowDown size={16} className={cn(compare && "rotate-180")} />
+                    </button>
+                    {compare && <CompareRuns modified={engine} records={APOLLO_RECORDS} />}
+                  </section>
+                </>
+              )}
+              {details === "learn" && (
+                <>
+                  <div className="drawer-learning">
+                    <section className="lab-learning-path">
+                      <p className="eyebrow">Not sure where to begin?</p>
+                      <h2>Change one thing. Follow the consequence.</h2>
+                      <div>
+                        {DEFAULT_LEARNING_PATH.map((p, i) => (
+                          <button
+                            key={p.title}
+                            type="button"
+                            onClick={() => {
+                              applyPath(p);
+                              setDetails(null);
+                            }}
+                          >
+                            <span>0{i + 1}</span>
+                            <div>
+                              <strong>{p.title}</strong>
+                              <p>{p.description}</p>
+                            </div>
+                            <ArrowUpRight size={16} />
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                    <section className="lab-transfer">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="eyebrow">Apply the concept</p>
+                        <Badge tone="planned">EvidenceLens · design phase</Badge>
+                      </div>
+                      <h2>{current.subtitle}, in your RAG</h2>
+                      <p>{current.transfer}</p>
+                      <div className="thinking-point">
+                        <span className="eyebrow">Thinking point</span>
+                        <p>{current.thinking}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                          to="/lessons/$slug"
+                          params={{ slug: current.lesson }}
+                          className="lab-lesson-link"
+                        >
+                          Explore implementation details <ArrowUpRight size={14} />
+                        </Link>
+                        <CopyButton text={outline} label="Copy observation outline" />
+                      </div>
+                      <p className="control-note">
+                        Read-only learning experience. Nothing you select is stored after leaving
+                        this page.
+                      </p>
+                    </section>
+                  </div>
+                  <details className="corpus-details">
+                    <summary>
+                      Inspect the example corpus{" "}
+                      <span>
+                        {APOLLO_RECORDS.length} records · source-backed passages and labelled test
+                        fixtures
+                      </span>
+                    </summary>
+                    <div>
+                      {APOLLO_RECORDS.map((r) => (
+                        <EvidenceCard key={r.id} record={r} />
+                      ))}
+                    </div>
+                  </details>
+                </>
+              )}
+            </div>
+            <Dialog.Close className="drawer-return">
+              Return to animation <ArrowUpRight size={13} />
+            </Dialog.Close>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
 
       <Dialog.Root
         open={evidence !== null}

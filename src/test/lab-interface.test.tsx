@@ -30,11 +30,38 @@ function renderPreparedLab() {
   fireEvent.click(screen.getByRole("button", { name: "Use prepared index" }));
 }
 
+function openSettings() {
+  fireEvent.click(screen.getByRole("button", { name: "Explore details" }));
+}
+function closeDetails() {
+  fireEvent.click(screen.getByLabelText("Return to animation"));
+}
+function inspectRun() {
+  fireEvent.click(screen.getByRole("button", { name: "Inspect run" }));
+}
+
 describe("RAG lab interface", () => {
+  it("keeps the default lab focused and opens deeper tools on demand", () => {
+    render(<Lab />);
+    expect(
+      screen.queryByRole("region", { name: "What reached the user?" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Detailed execution trace" }),
+    ).not.toBeInTheDocument();
+    openSettings();
+    expect(screen.getByRole("dialog")).toHaveTextContent("Explore the lab");
+    expect(screen.getByRole("button", { name: "35 tokens" })).toBeInTheDocument();
+    closeDetails();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "35 tokens" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next sub-step" })).toBeInTheDocument();
+  });
   it("runs the pipeline and exposes citations without a model or an input form", () => {
     renderPreparedLab();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Run to result" }));
+    inspectRun();
     const report = screen.getByRole("region", { name: "What reached the user?" });
     expect(within(report).getByText("Supported answer")).toBeInTheDocument();
     fireEvent.click(within(report).getByRole("button", { name: "Inspect citation A11-OV-HL8" }));
@@ -44,8 +71,11 @@ describe("RAG lab interface", () => {
 
   it("changing the real context budget produces an evidence gap", () => {
     renderPreparedLab();
+    openSettings();
     fireEvent.click(screen.getByRole("button", { name: "35 tokens" }));
+    closeDetails();
     fireEvent.click(screen.getByRole("button", { name: "Run to result" }));
+    inspectRun();
     const report = screen.getByRole("region", { name: "What reached the user?" });
     expect(within(report).getByText("Evidence gap")).toBeInTheDocument();
     expect(
@@ -55,10 +85,13 @@ describe("RAG lab interface", () => {
 
   it("repeats a prompt-cached request while generation still runs", () => {
     renderPreparedLab();
+    openSettings();
     fireEvent.click(screen.getByRole("button", { name: /02 Spend less work/ }));
     fireEvent.click(screen.getByRole("button", { name: /Prompt-prefix cache/ }));
+    closeDetails();
     fireEvent.click(screen.getByRole("button", { name: "Run to result" }));
     fireEvent.click(screen.getByRole("button", { name: "Repeat instantly" }));
+    inspectRun();
     fireEvent.click(screen.getByRole("button", { name: /08 Draft generation done/ }));
     const inspector = screen.getByRole("complementary", { name: "Selected stage inspector" });
     expect(inspector).toHaveTextContent("hit; generation still ran");
@@ -69,9 +102,12 @@ describe("RAG lab interface", () => {
 
   it("keeps bad drafts out of the released answer and exposes a controlled comparison", () => {
     renderPreparedLab();
+    openSettings();
     fireEvent.click(screen.getByRole("button", { name: /04 Control the boundary/ }));
     fireEvent.click(screen.getByRole("button", { name: "Invent a citation ID" }));
+    closeDetails();
     fireEvent.click(screen.getByRole("button", { name: "Run to result" }));
+    inspectRun();
     const report = screen.getByRole("region", { name: "What reached the user?" });
     expect(report).toHaveTextContent("Withheld by a check");
     expect(
@@ -151,6 +187,22 @@ describe("RAG lab interface", () => {
     expect(screen.getByRole("button", { name: "Next stage" })).toBeEnabled();
   });
 
+  it("pauses the walkthrough while deeper details have attention", () => {
+    vi.useFakeTimers();
+    render(<Lab />);
+    const input = screen.getByRole("region", { name: "Step input" });
+    fireEvent.click(screen.getByRole("button", { name: "Play this step" }));
+    openSettings();
+    act(() => vi.advanceTimersByTime(60000));
+    expect(input).toHaveAttribute("data-attention", "true");
+    closeDetails();
+    act(() => vi.advanceTimersByTime(6000));
+    expect(screen.getByRole("region", { name: "Step work" })).toHaveAttribute(
+      "data-attention",
+      "true",
+    );
+  });
+
   it("counts viewed outputs once and starts exploration fresh on the next lab load", () => {
     renderPreparedLab();
     const progress = () => screen.getByRole("progressbar", { name: "Stages explored this visit" });
@@ -159,10 +211,13 @@ describe("RAG lab interface", () => {
     expect(progress()).toHaveAttribute("aria-valuenow", "1");
     fireEvent.click(screen.getByRole("button", { name: "Repeat instantly" }));
     expect(progress()).toHaveAttribute("aria-valuenow", "1");
+    fireEvent.click(screen.getByRole("button", { name: "Browse stages" }));
     fireEvent.click(screen.getByRole("button", { name: /Retrieve$/ }));
     expect(progress()).toHaveAttribute("aria-valuenow", "2");
+    openSettings();
     fireEvent.click(screen.getByRole("button", { name: /02 Spend less work/ }));
     fireEvent.click(screen.getByRole("button", { name: /Prompt-prefix cache/ }));
+    closeDetails();
     expect(progress()).toHaveAttribute("aria-valuenow", "2");
     cleanup();
     render(<Lab />);
