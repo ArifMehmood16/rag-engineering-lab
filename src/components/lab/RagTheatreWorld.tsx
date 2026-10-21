@@ -169,7 +169,7 @@ function Route({
     const phase = (time.current / 10 + offset) % 1;
     signal.current.position.copy(curve.getPoint(phase));
     // Hand off to the fixed source/result labels before moving IDs overlap them.
-    signal.current.visible = !packetLabel || (phase > 0.08 && phase < 0.8);
+    signal.current.visible = !packetLabel || (phase > 0.19 && phase < 0.8);
   });
   return (
     <group>
