@@ -219,3 +219,9 @@
 .site-footer a:hover {
   text-decoration: underline;
 }
+
+@media (min-width: 1024px) {
+  .site-footer {
+    grid-column: 1 / -1;
+  }
+}
