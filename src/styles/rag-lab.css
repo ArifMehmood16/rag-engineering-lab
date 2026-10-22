@@ -40,7 +40,9 @@
     box-shadow: 0 0 40px color-mix(in oklab, var(--primary) 55%, transparent);
   }
 }
-.lab-low-motion .tour-glow,
+.lab-low-motion .tour-glow {
+  animation: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .tour-glow {
     animation: none;
