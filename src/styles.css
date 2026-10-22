@@ -222,6 +222,6 @@
 
 @media (min-width: 1024px) {
   .site-footer {
-    grid-column: 1 / -1;
+    grid-column: 2;
   }
 }
