@@ -21,7 +21,6 @@ import {
   travelPoint,
   flowRoute,
   flowStyle,
-  nodeEmphasis,
   type SceneNode,
 } from "@/lib/rag-scene";
 import { flowLabel } from "@/lib/rag-flow-label";

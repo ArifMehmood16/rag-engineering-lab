@@ -404,12 +404,14 @@ function Connection({
     const segments = Math.max(48, Math.min(640, Math.ceil(curve.getLength() / 0.08)));
     return {
       curve,
-      arrowPoint: curve.getPointAt(reverse ? 0.035 : 0.965),
-      arrowTangent: curve.getTangentAt(reverse ? 0.035 : 0.965).multiplyScalar(reverse ? -1 : 1),
+      arrowPoint: curve.getPointAt(0.965),
+      arrowTangent: curve.getTangentAt(0.965),
+      reversePoint: curve.getPointAt(0.035),
+      reverseTangent: curve.getTangentAt(0.035).multiplyScalar(-1),
       tube: new THREE.TubeGeometry(curve, segments, 0.026, 6, false),
       points: curve.getSpacedPoints(segments),
     };
-  }, [from, to, via, reverse]);
+  }, [from, to, via]);
   useEffect(() => () => geometry.tube.dispose(), [geometry]);
   const line = useRef<Line2>(null),
     arrow = useRef<THREE.Mesh>(null);
@@ -419,8 +421,8 @@ function Connection({
   useFrame(() => {
     if (line.current && moving) line.current.material.dashOffset = time.current * (reverse ? 0.5 : -0.5);
     if (arrow.current) {
-      arrow.current.position.copy(geometry.arrowPoint);
-      arrow.current.quaternion.setFromUnitVectors(axis, geometry.arrowTangent);
+      arrow.current.position.copy(reverse ? geometry.reversePoint : geometry.arrowPoint);
+      arrow.current.quaternion.setFromUnitVectors(axis, reverse ? geometry.reverseTangent : geometry.arrowTangent);
       // Arrowheads stay readable at a consistent pixel size through camera zoom.
       const pixel =
         (2 *
