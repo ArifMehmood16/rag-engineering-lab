@@ -207,6 +207,25 @@ export function Lab() {
           </Link>
         </div>
       </div>
+      <footer className="lab-page-footer">
+        <span>© 2026 Arif Mehmood</span>
+        <span className="lab-page-footer-brand">RAG Learning · AI Learning Lab</span>
+        <nav aria-label="Author links">
+          <a
+            href="https://www.linkedin.com/in/aarif9516/"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <Linkedin size={12} aria-hidden />
+            <span>LinkedIn</span>
+          </a>
+          <a href="https://github.com/ArifMehmood16" target="_blank" rel="noreferrer noopener">
+            <Github size={12} aria-hidden />
+            <span>GitHub</span>
+          </a>
+        </nav>
+      </footer>
+
       <Dialog.Root
         open={details !== null}
         onOpenChange={(open) => {
