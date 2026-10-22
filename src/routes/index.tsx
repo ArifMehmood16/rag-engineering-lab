@@ -7,7 +7,12 @@ import {
   Check,
   ChevronDown,
   GitCompareArrows,
+  Github,
   Layers,
+  Linkedin,
+  Menu,
+  Mouse,
+  PanelBottom,
   SlidersHorizontal,
   X,
 } from "lucide-react";
@@ -165,6 +170,43 @@ export function Lab() {
           <span>Example data: 2 NASA pages</span>
         </div>
       </header>
+
+      <section className="lab-tips" aria-label="Where to start">
+        <p className="eyebrow">New here? Three things to know</p>
+        <div className="lab-tips-grid">
+          <div className="lab-tip">
+            <Mouse size={16} aria-hidden />
+            <div>
+              <strong>Scroll to move the story</strong>
+              <p>
+                The card column is the lesson. Scroll — or use ↓ / Page Down — to step through
+                input → change → result. The scene follows the card you are reading.
+              </p>
+            </div>
+          </div>
+          <div className="lab-tip">
+            <Menu size={16} aria-hidden />
+            <div>
+              <strong>Menu, top left</strong>
+              <p>
+                Opens the five lessons, the overview, the architecture map, implementation
+                priorities, and writing exercises.
+              </p>
+            </div>
+          </div>
+          <div className="lab-tip">
+            <PanelBottom size={16} aria-hidden />
+            <div>
+              <strong>Bottom buttons</strong>
+              <p>
+                <em>Explore details</em> changes experiment settings, <em>Inspect run</em> shows
+                the stage-by-stage trace and evidence, and <em>Five concepts</em> opens the full
+                lessons.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <RagWalkthrough
         conceptsExplored={conceptsExplored}
@@ -442,6 +484,22 @@ export function Lab() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
+
+      <footer className="lab-footer">
+        <span>© 2026 Arif Mehmood · RAG Learning — AI Learning Lab</span>
+        <nav aria-label="Author links">
+          <a
+            href="https://www.linkedin.com/in/aarif9516/"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            <Linkedin size={13} aria-hidden /> LinkedIn
+          </a>
+          <a href="https://github.com/ArifMehmood16" target="_blank" rel="noreferrer noopener">
+            <Github size={13} aria-hidden /> GitHub
+          </a>
+        </nav>
+      </footer>
     </div>
   );
 }
