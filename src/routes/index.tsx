@@ -472,9 +472,7 @@ export function Lab() {
       <LabTour
         step={tour}
         reduced={reduced || low}
-        onNext={() =>
-          setTour((s) => (s === null || s >= TOUR_STEPS.length - 1 ? null : s + 1))
-        }
+        onNext={() => setTour((s) => (s === null || s >= TOUR_STEPS.length - 1 ? null : s + 1))}
         onClose={() => setTour(null)}
       />
     </div>
