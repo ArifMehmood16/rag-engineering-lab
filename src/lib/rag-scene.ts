@@ -48,7 +48,7 @@ export const PREPARATION_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   model: [7.6, 0.8, -0.5],
 };
 // An aligned request spine, upper service row, and lower small-model branch.
-// The shared coordinates give every optional route a reserved corridor.
+// Each component pair shares one reserved corridor for both traffic directions.
 export const REQUEST_POSITIONS: Partial<Record<SceneNode, Point3>> = {
   question: [-9.6, 0, 0.4],
   input: [-7.4, 0, 0.4],
@@ -210,6 +210,22 @@ const PATH_BENDS: Partial<Record<string, Point3[]>> = {
   ],
 };
 const STRAIGHT_PATH: Point3[] = [];
+/** Keep execution legs directed, but render one physical connection per pair. */
+export function sharedConnections(connections: [SceneNode, SceneNode][]) {
+  const seen = new Set<string>();
+  return connections.filter(([from, to]) => {
+    const key = [from, to].sort().join(":");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function canonicalConnection(from: SceneNode, to: SceneNode) {
+  return [...REQUEST_CONNECTIONS, ...FAILURE_CONNECTIONS].find(
+    ([a, b]) => (a === from && b === to) || (a === to && b === from),
+  );
+}
 export const flowWaypoints = (from: SceneNode, to: SceneNode) =>
   PATH_BENDS[`${from}:${to}`] ?? STRAIGHT_PATH;
 
@@ -235,9 +251,15 @@ export function flowRoute(
   positions: Partial<Record<SceneNode, Point3>>,
   from: SceneNode,
   to: SceneNode,
-) {
-  const start = positions[from]!;
-  const end = positions[to]!;
+): { from: Point3; to: Point3; via: Point3[] } {
+  const canonical = canonicalConnection(from, to);
+  if (canonical && canonical[0] !== from) {
+    const route = flowRoute(positions, to, from);
+    return { from: route.to, to: route.from, via: [...route.via].reverse() };
+  }
+  const start = positions[from];
+  const end = positions[to];
+  if (!start || !end) throw new Error(`Missing scene position: ${from} → ${to}`);
   if (from === to) return { from: start, to: end, via: STRAIGHT_PATH };
   const via = flowWaypoints(from, to);
   const port = (center: Point3, toward: Point3, radius: number): Point3 => {
@@ -283,15 +305,29 @@ export function flowStyle(from: SceneNode, to: SceneNode) {
 }
 
 export function nodeEmphasis(
-  plan: ReturnType<typeof scenePlan>,
-  node: SceneNode,
-  overview = false,
+  _plan: ReturnType<typeof scenePlan>,
+  _node: SceneNode,
+  _overview = false,
 ) {
-  if (overview) return 0.9;
-  if (node === plan.active) return 1;
-  if (!plan.skipped && !plan.blocked && (node === plan.transfer.from || node === plan.transfer.to))
-    return 0.85;
-  return 0.2;
+  // Stage activity selects annotations, never dims a fully visible entity.
+  return 1;
+}
+
+/** Normal light for complete bounds; fade only where an entity crosses the scene edge. */
+export function viewportEmphasis(
+  bounds: { left: number; right: number; top: number; bottom: number },
+  region: { x: number; y: number; width: number; height: number },
+) {
+  const clearance = Math.min(
+    bounds.left - (region.x - region.width / 2),
+    region.x + region.width / 2 - bounds.right,
+    bounds.top - (region.y - region.height / 2),
+    region.y + region.height / 2 - bounds.bottom,
+  );
+  if (clearance >= 0) return 1;
+  const extent = Math.max(1, Math.min(bounds.right - bounds.left, bounds.bottom - bounds.top));
+  const visible = Math.max(0, Math.min(1, 1 + clearance / extent));
+  return 0.2 + 0.8 * visible * visible * (3 - 2 * visible);
 }
 
 export function requestModel(tour: WalkthroughState): "model" | "small" | "context" {
@@ -406,9 +442,11 @@ export function scenePlan(tour: WalkthroughState) {
 /** Normal routes remain visible; an applicable failure notice adds only its own return lane. */
 export function sceneConnections(plan: ReturnType<typeof scenePlan>) {
   const { from, to } = plan.transfer;
-  return from !== to && !REQUEST_CONNECTIONS.some(([a, b]) => a === from && b === to)
-    ? [...REQUEST_CONNECTIONS, [from, to] as [SceneNode, SceneNode]]
-    : REQUEST_CONNECTIONS;
+  return sharedConnections(
+    from !== to && !REQUEST_CONNECTIONS.some(([a, b]) => a === from && b === to)
+      ? [...REQUEST_CONNECTIONS, [from, to] as [SceneNode, SceneNode]]
+      : REQUEST_CONNECTIONS,
+  );
 }
 
 /** Each request operation is one complete handoff; knowledge transformations stay continuous. */

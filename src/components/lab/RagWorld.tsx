@@ -19,6 +19,8 @@ import {
   flowRoute,
   flowStyle,
   nodeEmphasis,
+  NODE_RADIUS,
+  viewportEmphasis,
   REQUEST_CONNECTIONS,
   FAILURE_CONNECTIONS,
   sceneConnections,
@@ -47,14 +49,16 @@ export interface RagWorldProps {
 }
 const CYAN = "#64fff1";
 const VIOLET = "#bc83ff";
-/** A per-entity GPU dimmer: geometry remains in place while unrelated objects recede. */
+/** Camera-edge GPU dimmer; fully visible objects keep normal illumination. */
 function EntityFocus({
   strength,
+  node,
   instant,
   children,
   ...transform
 }: {
-  strength: number;
+  strength: React.RefObject<Map<SceneNode, number>>;
+  node: SceneNode;
   instant: boolean;
   children: ReactNode;
   position: Point3;
@@ -62,10 +66,10 @@ function EntityFocus({
   scale?: number;
 }) {
   const group = useRef<THREE.Group>(null);
-  const light = useRef({ value: strength });
+  const light = useRef({ value: 1 });
   const patched = useRef(new Map<THREE.Material, () => void>());
   useLayoutEffect(() => {
-    if (instant) light.current.value = strength;
+    if (instant) light.current.value = strength.current.get(node) ?? 1;
     group.current?.traverse((object) => {
       const source = (object as THREE.Mesh).material;
       if (!source) return;
@@ -99,9 +103,10 @@ function EntityFocus({
     };
   }, []);
   useFrame((_, delta) => {
+    const target = strength.current.get(node) ?? 1;
     light.current.value = instant
-      ? strength
-      : THREE.MathUtils.lerp(light.current.value, strength, 1 - Math.exp(-delta * 5));
+      ? target
+      : THREE.MathUtils.lerp(light.current.value, target, 1 - Math.exp(-delta * 5));
   });
   return (
     <group ref={group} {...transform}>
@@ -370,6 +375,7 @@ function Connection({
   time,
   color = CYAN,
   via = [],
+  reverse = false,
 }: {
   from: Point3;
   to: Point3;
@@ -379,6 +385,7 @@ function Connection({
   emphasis: number;
   time: React.RefObject<number>;
   color?: string;
+  reverse?: boolean;
 }) {
   const { camera, size } = useThree();
   const geometry = useMemo(() => {
@@ -399,6 +406,8 @@ function Connection({
       curve,
       arrowPoint: curve.getPointAt(0.965),
       arrowTangent: curve.getTangentAt(0.965),
+      reversePoint: curve.getPointAt(0.035),
+      reverseTangent: curve.getTangentAt(0.035).multiplyScalar(-1),
       tube: new THREE.TubeGeometry(curve, segments, 0.026, 6, false),
       points: curve.getSpacedPoints(segments),
     };
@@ -410,10 +419,14 @@ function Connection({
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const signal = useMemo(() => new THREE.Color(color).multiplyScalar(1.8), [color]);
   useFrame(() => {
-    if (line.current && moving) line.current.material.dashOffset = -time.current * 0.5;
+    if (line.current && moving)
+      line.current.material.dashOffset = time.current * (reverse ? 0.5 : -0.5);
     if (arrow.current) {
-      arrow.current.position.copy(geometry.arrowPoint);
-      arrow.current.quaternion.setFromUnitVectors(axis, geometry.arrowTangent);
+      arrow.current.position.copy(reverse ? geometry.reversePoint : geometry.arrowPoint);
+      arrow.current.quaternion.setFromUnitVectors(
+        axis,
+        reverse ? geometry.reverseTangent : geometry.arrowTangent,
+      );
       // Arrowheads stay readable at a consistent pixel size through camera zoom.
       const pixel =
         (2 *
@@ -426,7 +439,7 @@ function Connection({
       mesh.visible = moving;
       if (!moving) return;
       const t = (time.current * 0.17 - i * 0.019 + 10) % 1;
-      geometry.curve.getPointAt(t, mesh.position);
+      geometry.curve.getPointAt(reverse ? 1 - t : t, mesh.position);
     });
   });
   return (
@@ -463,7 +476,7 @@ function Connection({
         toneMapped={false}
         depthWrite={false}
       />
-      <mesh ref={arrow}>
+      <mesh ref={arrow} visible={active}>
         <coneGeometry args={[0.11, 0.3, 16]} />
         <meshBasicMaterial
           color={active ? signal : color}
@@ -722,6 +735,7 @@ function World(props: RagWorldProps) {
     }
   }, -2);
   const projected = useMemo(() => new THREE.Vector3(), []);
+  const entityLights = useRef(new Map<SceneNode, number>());
   const lastProjection = useRef({ matrix: new THREE.Matrix4(), progress: -1, dirty: true });
   useLayoutEffect(() => {
     lastProjection.current.dirty = true;
@@ -733,6 +747,25 @@ function World(props: RagWorldProps) {
     last.dirty = false;
     last.progress = progress.current;
     last.matrix.copy(camera.matrixWorld);
+    const region = sceneRegion(size.width, size.height, tour.phase === "request");
+    // Reproject bounds only when the camera/selection changes, not on ambient ticks.
+    for (const [name, point] of Object.entries(plan.positions)) {
+      const node = name as SceneNode;
+      const radius = NODE_RADIUS[node] ?? 0.75;
+      const bounds = { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity };
+      for (const dx of [-radius, radius])
+        for (const dy of [-radius, radius])
+          for (const dz of [-radius, radius]) {
+            projected.set(point[0] + dx, point[1] + dy, point[2] + dz).project(camera);
+            const x = (projected.x * 0.5 + 0.5) * size.width;
+            const y = (-projected.y * 0.5 + 0.5) * size.height;
+            bounds.left = Math.min(bounds.left, x);
+            bounds.right = Math.max(bounds.right, x);
+            bounds.top = Math.min(bounds.top, y);
+            bounds.bottom = Math.max(bounds.bottom, y);
+          }
+      entityLights.current.set(node, viewportEmphasis(bounds, region));
+    }
     if (props.flowLabel?.current) {
       const point = sampleTransfer(transferProgress(tour, progress.current));
       projected.set(point[0], point[1], point[2] + 0.1).project(camera);
@@ -792,7 +825,7 @@ function World(props: RagWorldProps) {
         : rawX;
       const rawY = (-projected.y * 0.5 + 0.5) * size.height;
       const y =
-        overview || nodeEmphasis(plan, node) > 0.5
+        overview || active(node)
           ? THREE.MathUtils.clamp(
               rawY,
               region.y - region.height / 2 + dimensions.height / 2 + 6,
@@ -805,7 +838,9 @@ function World(props: RagWorldProps) {
         y > region.y - region.height / 2 &&
         y < region.y + region.height / 2;
       element.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
-      element.style.opacity = projected.z < 1 && inArea ? String(0.4 + emphasis(node) * 0.6) : "0";
+      const light = entityLights.current.get(node) ?? 1;
+      element.dataset["visibility"] = light === 1 ? "full" : "edge";
+      element.style.opacity = projected.z < 1 && inArea ? String(light) : "0";
     });
   });
   const active = (n: SceneNode) => plan.active === n;
@@ -825,12 +860,14 @@ function World(props: RagWorldProps) {
     );
   }, [positions, prep]);
   const connection = (from: SceneNode, to: SceneNode) => {
-    const focused = plan.transfer.from === from && plan.transfer.to === to;
+    const reverse = plan.transfer.from === to && plan.transfer.to === from;
+    const focused = reverse || (plan.transfer.from === from && plan.transfer.to === to);
     const nearby = from === plan.active || to === plan.active;
     return (
       <Connection
         key={`${from}-${to}`}
         {...routes[`${from}:${to}`]!}
+        reverse={reverse}
         color={focused && plan.transfer.kind === "notice" ? "#e9a0a0" : flowStyle(from, to).color}
         emphasis={overview ? 0.65 : focused ? 1 : nearby ? 0.18 : 0}
         active={plan.moving && focused}
@@ -868,7 +905,8 @@ function World(props: RagWorldProps) {
           {connection("chunks", "vectors")}
           {connection("vectors", "index")}
           <EntityFocus
-            strength={emphasis("source")}
+            strength={entityLights}
+            node="source"
             instant={reduced || paused}
             position={positions.source!}
             rotation={[0.04, -0.22, -0.08]}
@@ -881,7 +919,8 @@ function World(props: RagWorldProps) {
           </EntityFocus>
 
           <EntityFocus
-            strength={emphasis("chunks")}
+            strength={entityLights}
+            node="chunks"
             instant={reduced || paused}
             position={positions.chunks!}
           >
@@ -907,7 +946,8 @@ function World(props: RagWorldProps) {
             {active("chunks") && <Glow color={CYAN} scale={3} opacity={0.35} />}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("vectors")}
+            strength={entityLights}
+            node="vectors"
             instant={reduced || paused}
             position={positions.vectors!}
           >
@@ -926,7 +966,8 @@ function World(props: RagWorldProps) {
           </EntityFocus>
 
           <EntityFocus
-            strength={emphasis("index")}
+            strength={entityLights}
+            node="index"
             instant={reduced || paused}
             position={positions.index!}
           >
@@ -943,7 +984,8 @@ function World(props: RagWorldProps) {
         <>
           {sceneConnections(plan).map(([from, to]) => connection(from, to))}
           <EntityFocus
-            strength={emphasis("index")}
+            strength={entityLights}
+            node="index"
             instant={reduced || paused}
             position={positions.index!}
           >
@@ -956,7 +998,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("question")}
+            strength={entityLights}
+            node="question"
             instant={reduced || paused}
             position={positions.question!}
           >
@@ -966,14 +1009,16 @@ function World(props: RagWorldProps) {
             {active("question") && <Glow scale={2} opacity={0.3} color="#a5ffcb" />}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("input")}
+            strength={entityLights}
+            node="input"
             instant={reduced || paused}
             position={positions.input!}
           >
             <Portal shield color={tour.stage === 1 && plan.blocked ? "#ff878d" : CYAN} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("small")}
+            strength={entityLights}
+            node="small"
             instant={reduced || paused}
             position={positions.small!}
             scale={0.48}
@@ -986,7 +1031,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("router")}
+            strength={entityLights}
+            node="router"
             instant={reduced || paused}
             position={positions.router!}
           >
@@ -1001,7 +1047,8 @@ function World(props: RagWorldProps) {
             </mesh>
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("retrieve")}
+            strength={entityLights}
+            node="retrieve"
             instant={reduced || paused}
             position={positions.retrieve!}
           >
@@ -1019,7 +1066,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("context")}
+            strength={entityLights}
+            node="context"
             instant={reduced || paused}
             position={positions.context!}
           >
@@ -1039,14 +1087,16 @@ function World(props: RagWorldProps) {
             ))}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("cache")}
+            strength={entityLights}
+            node="cache"
             instant={reduced || paused}
             position={positions.cache!}
           >
             <CacheStore active={active("cache")} enabled={stageInput(tour).config.answerCache} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("tool")}
+            strength={entityLights}
+            node="tool"
             instant={reduced || paused}
             position={positions.tool!}
             scale={0.9}
@@ -1054,7 +1104,8 @@ function World(props: RagWorldProps) {
             <ToolConsole active={tour.stage === 5 && stageInput(tour).config.tool !== "off"} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("check")}
+            strength={entityLights}
+            node="check"
             instant={reduced || paused}
             position={positions.check!}
           >
@@ -1063,7 +1114,8 @@ function World(props: RagWorldProps) {
         </>
       )}
       <EntityFocus
-        strength={emphasis("model")}
+        strength={entityLights}
+        node="model"
         instant={reduced || paused}
         position={positions.model!}
         scale={1.12}

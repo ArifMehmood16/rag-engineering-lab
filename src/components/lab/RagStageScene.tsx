@@ -21,7 +21,6 @@ import {
   travelPoint,
   flowRoute,
   flowStyle,
-  nodeEmphasis,
   type SceneNode,
 } from "@/lib/rag-scene";
 import { flowLabel } from "@/lib/rag-flow-label";
@@ -44,15 +43,14 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
           aria-label="Question flow: user, input checks, router, cache, model branches, tools, output checks, and return to user"
         >
           {sceneConnections(plan).map(([from, to]) => {
-            const active = plan.moving && plan.transfer.from === from && plan.transfer.to === to;
+            const reverse = plan.transfer.from === to && plan.transfer.to === from;
+            const focused = reverse || (plan.transfer.from === from && plan.transfer.to === to);
+            const active = plan.moving && focused;
             const route = flowRoute(plan.positions, from, to);
             const style =
-              plan.transfer.kind === "notice" &&
-              plan.transfer.from === from &&
-              plan.transfer.to === to
+              plan.transfer.kind === "notice" && focused
                 ? { color: "#e9a0a0" }
                 : flowStyle(from, to);
-            const focused = plan.transfer.from === from && plan.transfer.to === to;
             const points = Array.from({ length: 80 }, (_, n) =>
               travelPoint(route.from, route.to, n / 79, route.via),
             );
@@ -65,7 +63,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
                     markerHeight="5"
                     refX="4"
                     refY="2.5"
-                    orient="auto"
+                    orient="auto-start-reverse"
                     markerUnits="strokeWidth"
                   >
                     <path d="M0,0 L5,2.5 L0,5" fill={style.color} />
@@ -76,7 +74,8 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
                   fill="none"
                   stroke={style.color}
                   strokeWidth={active ? 0.045 : 0.03}
-                  markerEnd={`url(#${marker}-${from}-${to})`}
+                  markerEnd={active && !reverse ? `url(#${marker}-${from}-${to})` : undefined}
+                  markerStart={active && reverse ? `url(#${marker}-${from}-${to})` : undefined}
                 />
               </g>
             );
@@ -87,11 +86,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
             const radius =
               node === "model" ? 1.05 : node === "index" ? 0.9 : node === "small" ? 0.5 : 0.27;
             return (
-              <g
-                key={node}
-                transform={`translate(${x},${-y})`}
-                opacity={0.4 + nodeEmphasis(plan, node) * 0.6}
-              >
+              <g key={node} transform={`translate(${x},${-y})`} opacity={1}>
                 <circle
                   r={radius}
                   fill="#0b1c2c"
@@ -297,7 +292,7 @@ export function RagStageScene(
                   }}
                   className={cn("world-label", plan.active === node && "world-label-active")}
                   data-node={node}
-                  data-relevance={nodeEmphasis(plan, node) > 0.5 ? "current" : "idle"}
+                  data-relevance="visible"
                   style={{ opacity: 0 }}
                 >
                   {plan.active === node && <span className="world-focus-arrow">↓</span>}

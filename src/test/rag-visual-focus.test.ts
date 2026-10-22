@@ -14,6 +14,8 @@ import {
   nodeEmphasis,
   scenePlan,
   travelPoint,
+  sharedConnections,
+  viewportEmphasis,
 } from "@/lib/rag-scene";
 
 describe("readable routes and scene focus", () => {
@@ -44,17 +46,19 @@ describe("readable routes and scene focus", () => {
       }
     }
   });
-  it("separates outward and return lanes and uses distinct colours", () => {
-    const midpoint = (from: "router" | "cache" | "context" | "tool", to: typeof from) => {
-      const route = flowRoute(REQUEST_POSITIONS, from, to);
-      return travelPoint(route.from, route.to, 0.5, route.via);
-    };
-    expect(
-      Math.abs(midpoint("context", "tool")[1] - midpoint("tool", "context")[1]),
-    ).toBeGreaterThan(0.6);
-    expect(
-      Math.abs(midpoint("router", "cache")[1] - midpoint("cache", "router")[1]),
-    ).toBeGreaterThan(0.5);
+  it("shares exactly one physical route for both traffic directions", () => {
+    const pairs = sharedConnections([...REQUEST_CONNECTIONS, ...FAILURE_CONNECTIONS]);
+    expect(pairs.length).toBeLessThan(REQUEST_CONNECTIONS.length + FAILURE_CONNECTIONS.length);
+    expect(new Set(pairs.map((pair) => [...pair].sort().join(":"))).size).toBe(pairs.length);
+    for (const [from, to] of pairs) {
+      const forward = flowRoute(REQUEST_POSITIONS, from, to);
+      const reverse = flowRoute(REQUEST_POSITIONS, to, from);
+      for (const t of [0, 0.1, 0.3, 0.5, 0.8, 1]) {
+        const a = travelPoint(forward.from, forward.to, t, forward.via);
+        const b = travelPoint(reverse.from, reverse.to, 1 - t, reverse.via);
+        a.forEach((value, axis) => expect(value).toBeCloseTo(b[axis] ?? 0, 5));
+      }
+    }
     expect(new Set(Object.values(FLOW_STYLES).map((s) => s.color)).size).toBe(7);
   });
   it("keeps rounded service rails inside their corridor without spline overshoot", () => {
@@ -78,14 +82,23 @@ describe("readable routes and scene focus", () => {
     expect(xs).toEqual([...xs].sort((a, b) => a - b));
     expect(REQUEST_POSITIONS.index![1]).toBe(REQUEST_POSITIONS.tool![1]);
   });
-  it("dims standby models and skipped work while retaining the active participants", () => {
+  it("keeps visible standby and skipped entities normally illuminated", () => {
     const retrieval = scenePlan(storyTour("request", 3, 3, frames));
     expect(nodeEmphasis(retrieval, "index")).toBeGreaterThan(0.8);
     expect(nodeEmphasis(retrieval, "retrieve")).toBe(1);
-    expect(nodeEmphasis(retrieval, "model")).toBeLessThan(0.3);
+    expect(nodeEmphasis(retrieval, "model")).toBe(1);
     expect(nodeEmphasis(retrieval, "model", true)).toBeGreaterThan(0.8);
     const noTool = scenePlan(storyTour("request", 5, 1, frames));
-    expect(nodeEmphasis(noTool, "tool")).toBeLessThan(0.3);
+    expect(nodeEmphasis(noTool, "tool")).toBe(1);
+  });
+  it("dims only bounds crossing the visible region, symmetrically on entry and exit", () => {
+    const region = { x: 100, y: 100, width: 200, height: 200 };
+    expect(viewportEmphasis({ left: 20, right: 60, top: 20, bottom: 60 }, region)).toBe(1);
+    const entering = viewportEmphasis({ left: -20, right: 20, top: 20, bottom: 60 }, region);
+    const leaving = viewportEmphasis({ left: 180, right: 220, top: 20, bottom: 60 }, region);
+    expect(entering).toBeCloseTo(0.6);
+    expect(leaving).toBe(entering);
+    expect(viewportEmphasis({ left: -60, right: -20, top: 20, bottom: 60 }, region)).toBe(0.2);
   });
   it("fits the complete active route and changes zoom between input and output", () => {
     const input = storyTour("request", 5, 0, frames);
