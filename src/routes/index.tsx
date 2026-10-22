@@ -507,9 +507,9 @@ export function Lab() {
                 <div>
                   <strong>Bottom buttons</strong>
                   <p>
-                    <em>Explore details</em> changes experiment settings, <em>Inspect run</em>{" "}
-                    shows the stage-by-stage trace and evidence, and <em>Five concepts</em> opens
-                    the full lessons.
+                    <em>Explore details</em> changes experiment settings, <em>Inspect run</em> shows
+                    the stage-by-stage trace and evidence, and <em>Five concepts</em> opens the full
+                    lessons.
                   </p>
                 </div>
               </div>

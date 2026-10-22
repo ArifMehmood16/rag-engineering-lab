@@ -124,8 +124,16 @@
   }
   body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in oklab, var(--info) 14%, transparent), transparent 70%),
-      radial-gradient(ellipse 50% 40% at 90% 100%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
+      radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        color-mix(in oklab, var(--info) 14%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 90% 100%,
+        color-mix(in oklab, var(--accent) 10%, transparent),
+        transparent 70%
+      );
     background-attachment: fixed;
   }
   :focus-visible {
