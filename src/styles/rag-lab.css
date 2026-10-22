@@ -22,7 +22,56 @@
 .rag-lab {
   max-width: 1800px;
   margin: 0 auto;
-  padding: 30px 24px 20px;
+  padding: 30px 24px 76px;
+}
+.lab-tips {
+  margin: 0 0 26px;
+}
+.lab-tips > .eyebrow {
+  margin: 0 0 10px;
+  font-size: 12px;
+  letter-spacing: 0.17em;
+}
+.lab-tips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.lab-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+}
+.lab-tip > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--primary);
+}
+.lab-tip strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.lab-tip p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.lab-tip em {
+  font-style: normal;
+  color: var(--foreground);
+  font-weight: 500;
+}
+@media (max-width: 900px) {
+  .lab-tips-grid {
+    grid-template-columns: 1fr;
+  }
 }
 .lab-intro {
   display: flex;
@@ -1403,10 +1452,19 @@
   font: 12px var(--font-mono);
   letter-spacing: 0.12em;
 }
+.lab-footer nav {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 .lab-footer a {
   display: flex;
-  gap: 4px;
+  align-items: center;
+  gap: 5px;
   color: var(--primary);
+}
+.lab-footer a:hover {
+  text-decoration: underline;
 }
 @media (max-width: 1100px) {
   .rag-lab {

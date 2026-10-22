@@ -481,7 +481,8 @@
   position: fixed;
   pointer-events: none;
   bottom: 14px;
-  right: 24px;
+  /* Clears the Lovable badge pinned to the bottom-right of published pages. */
+  right: 116px;
   left: 24px;
   z-index: 6;
   justify-content: flex-end;
