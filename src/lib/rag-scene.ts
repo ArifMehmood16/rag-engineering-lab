@@ -442,9 +442,11 @@ export function scenePlan(tour: WalkthroughState) {
 /** Normal routes remain visible; an applicable failure notice adds only its own return lane. */
 export function sceneConnections(plan: ReturnType<typeof scenePlan>) {
   const { from, to } = plan.transfer;
-  return sharedConnections(from !== to && !REQUEST_CONNECTIONS.some(([a, b]) => a === from && b === to)
-    ? [...REQUEST_CONNECTIONS, [from, to] as [SceneNode, SceneNode]]
-    : REQUEST_CONNECTIONS);
+  return sharedConnections(
+    from !== to && !REQUEST_CONNECTIONS.some(([a, b]) => a === from && b === to)
+      ? [...REQUEST_CONNECTIONS, [from, to] as [SceneNode, SceneNode]]
+      : REQUEST_CONNECTIONS,
+  );
 }
 
 /** Each request operation is one complete handoff; knowledge transformations stay continuous. */

@@ -48,8 +48,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
             const active = plan.moving && focused;
             const route = flowRoute(plan.positions, from, to);
             const style =
-              plan.transfer.kind === "notice" &&
-              focused
+              plan.transfer.kind === "notice" && focused
                 ? { color: "#e9a0a0" }
                 : flowStyle(from, to);
             const points = Array.from({ length: 80 }, (_, n) =>
@@ -87,11 +86,7 @@ function StaticWorld({ tour, record }: { tour: WalkthroughState; record: Evidenc
             const radius =
               node === "model" ? 1.05 : node === "index" ? 0.9 : node === "small" ? 0.5 : 0.27;
             return (
-              <g
-                key={node}
-                transform={`translate(${x},${-y})`}
-                opacity={1}
-              >
+              <g key={node} transform={`translate(${x},${-y})`} opacity={1}>
                 <circle
                   r={radius}
                   fill="#0b1c2c"

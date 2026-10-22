@@ -419,10 +419,14 @@ function Connection({
   const axis = useMemo(() => new THREE.Vector3(0, 1, 0), []);
   const signal = useMemo(() => new THREE.Color(color).multiplyScalar(1.8), [color]);
   useFrame(() => {
-    if (line.current && moving) line.current.material.dashOffset = time.current * (reverse ? 0.5 : -0.5);
+    if (line.current && moving)
+      line.current.material.dashOffset = time.current * (reverse ? 0.5 : -0.5);
     if (arrow.current) {
       arrow.current.position.copy(reverse ? geometry.reversePoint : geometry.arrowPoint);
-      arrow.current.quaternion.setFromUnitVectors(axis, reverse ? geometry.reverseTangent : geometry.arrowTangent);
+      arrow.current.quaternion.setFromUnitVectors(
+        axis,
+        reverse ? geometry.reverseTangent : geometry.arrowTangent,
+      );
       // Arrowheads stay readable at a consistent pixel size through camera zoom.
       const pixel =
         (2 *
@@ -1111,7 +1115,7 @@ function World(props: RagWorldProps) {
       )}
       <EntityFocus
         strength={entityLights}
-            node="model"
+        node="model"
         instant={reduced || paused}
         position={positions.model!}
         scale={1.12}
