@@ -557,11 +557,11 @@ function LabTour({
     <div
       className="lab-tour-tip"
       role="dialog"
-      aria-label={`Tip ${step + 1} of ${TOUR_STEPS.length}: ${current.title}`}
+      aria-label={`Tip ${at + 1} of ${TOUR_STEPS.length}: ${current.title}`}
       style={{ left, top }}
     >
       <p className="eyebrow">
-        Tip {step + 1} of {TOUR_STEPS.length}
+        Tip {at + 1} of {TOUR_STEPS.length}
       </p>
       <strong>{current.title}</strong>
       <p>{current.text}</p>
@@ -570,7 +570,7 @@ function LabTour({
           End tour
         </button>
         <button type="button" className="lab-tour-next" onClick={onNext}>
-          {step === TOUR_STEPS.length - 1 ? "Done" : "Next"}
+          {at === TOUR_STEPS.length - 1 ? "Done" : "Next"}
         </button>
       </div>
     </div>
