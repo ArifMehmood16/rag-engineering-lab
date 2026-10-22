@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -11,9 +11,6 @@ import {
   Info,
   Layers,
   Linkedin,
-  Menu,
-  Mouse,
-  PanelBottom,
   SlidersHorizontal,
   X,
 } from "lucide-react";
@@ -74,7 +71,7 @@ export function Lab() {
   const [low, setLow] = useState(false);
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
-  const [tips, setTips] = useState(true);
+  const [tour, setTour] = useState<number | null>(0);
   const [details, setDetails] = useState<"configure" | "trace" | "learn" | null>(null);
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
   const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
