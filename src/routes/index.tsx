@@ -542,6 +542,7 @@ function LabTour({
 
   const current = step === null ? undefined : TOUR_STEPS[step];
   if (!current || !rect || rect.width === 0) return null;
+  const at = step ?? 0;
   const left = Math.min(
     Math.max(12, rect.left + rect.width / 2 - TOUR_TIP_WIDTH / 2),
     window.innerWidth - TOUR_TIP_WIDTH - 12,
