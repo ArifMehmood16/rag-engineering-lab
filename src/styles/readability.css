@@ -207,8 +207,10 @@
   }
   .story-gallery-shell {
     top: 45svh;
-    bottom: 65px;
+    /* Ends above the floating button bar so its top edge never clips card text. */
+    bottom: 84px;
   }
+
   .story-navigation {
     top: 74px;
   }
@@ -283,7 +285,7 @@
     height: 25px;
   }
   .lab-utility-bar {
-    bottom: 8px;
+    bottom: 32px;
     padding: 0;
     font-size: 13px;
     gap: 12px;

@@ -405,4 +405,23 @@ describe("RAG card gallery", () => {
     expect(currentRegion("Step output")).toHaveTextContent("UNKNOWN-SPAN");
     expect(screen.queryByRole("link", { name: "Jump to Answer" })).not.toBeInTheDocument();
   });
+  it("keeps the author footer on the lab page with working profile links", () => {
+    render(<Lab />);
+    const authored = screen
+      .getAllByRole("contentinfo")
+      .filter((el) => el.textContent?.includes("© 2026 Arif Mehmood"));
+    expect(authored).toHaveLength(1);
+    const footer = authored.at(0);
+    if (!footer) throw new Error("lab page footer carrying the author copyright is missing");
+    expect(footer).toHaveTextContent("RAG Learning · AI Learning Lab");
+    const links = within(footer).getAllByRole("link");
+    expect(links.map((l) => l.getAttribute("href"))).toEqual([
+      "https://www.linkedin.com/in/aarif9516/",
+      "https://github.com/ArifMehmood16",
+    ]);
+    links.forEach((l) => expect(l).toHaveAttribute("target", "_blank"));
+  });
 });
+
+
+

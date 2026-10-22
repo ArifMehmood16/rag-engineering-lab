@@ -1527,6 +1527,58 @@
 .lab-footer a:hover {
   text-decoration: underline;
 }
+/* The lab page never scrolls, so its footer stays pinned as a thin strip along the bottom edge. */
+.lab-page-footer {
+  position: fixed;
+  z-index: 5;
+  bottom: 0;
+  left: 0;
+  right: 116px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 24px 7px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgb(3 5 16 / 0.88));
+  color: #7d97bb;
+  font: 12px var(--font-mono);
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 3px #01020a;
+}
+.lab-page-footer nav {
+  display: flex;
+  gap: 14px;
+}
+.lab-page-footer a {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #9fd7ea;
+}
+.lab-page-footer a:hover {
+  color: #cdf3ff;
+  text-decoration: underline;
+}
+@media (max-width: 1199px) {
+  .lab-page-footer-brand {
+    display: none;
+  }
+}
+@media (max-width: 999px) {
+  .lab-page-footer {
+    left: 10px;
+    right: 120px;
+    padding: 8px 0 4px;
+    gap: 10px;
+  }
+
+  .lab-page-footer a span {
+    display: none;
+  }
+}
+
 @media (max-width: 1100px) {
   .rag-lab {
     padding: 24px 16px;
