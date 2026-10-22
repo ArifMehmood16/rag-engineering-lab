@@ -528,7 +528,7 @@ function LabTour({
     const target = document.querySelector(TOUR_STEPS[step].selector);
     if (!target) return;
     target.classList.add("tour-glow");
-    target.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+    target.scrollIntoView?.({ block: "center", behavior: reduced ? "auto" : "smooth" });
     const update = () => setRect(target.getBoundingClientRect());
     update();
     window.addEventListener("resize", update);
