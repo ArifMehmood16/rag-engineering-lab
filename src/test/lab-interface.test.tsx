@@ -411,8 +411,10 @@ describe("RAG card gallery", () => {
       .getAllByRole("contentinfo")
       .filter((el) => el.textContent?.includes("© 2026 Arif Mehmood"));
     expect(authored).toHaveLength(1);
-    expect(authored[0]).toHaveTextContent("RAG Learning · AI Learning Lab");
-    const links = within(authored[0]).getAllByRole("link");
+    const footer = authored.at(0);
+    if (!footer) throw new Error("lab page footer carrying the author copyright is missing");
+    expect(footer).toHaveTextContent("RAG Learning · AI Learning Lab");
+    const links = within(footer).getAllByRole("link");
     expect(links.map((l) => l.getAttribute("href"))).toEqual([
       "https://www.linkedin.com/in/aarif9516/",
       "https://github.com/ArifMehmood16",
@@ -420,5 +422,6 @@ describe("RAG card gallery", () => {
     links.forEach((l) => expect(l).toHaveAttribute("target", "_blank"));
   });
 });
+
 
 
