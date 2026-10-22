@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Circle, Clock, Menu, X } from "lucide-react";
+import { Circle, Clock, Github, Linkedin, Menu, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { LESSONS } from "@/content/lessons";
 import { AppBrand } from "./AppBrand";
@@ -164,6 +164,24 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main id="main" className="min-w-0">
         {children}
       </main>
+
+      {!lab && (
+        <footer className="site-footer">
+          <span>© 2026 Arif Mehmood · RAG Learning — AI Learning Lab</span>
+          <nav aria-label="Author links">
+            <a
+              href="https://www.linkedin.com/in/aarif9516/"
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              <Linkedin className="size-3.5" aria-hidden /> LinkedIn
+            </a>
+            <a href="https://github.com/ArifMehmood16" target="_blank" rel="noreferrer noopener">
+              <Github className="size-3.5" aria-hidden /> GitHub
+            </a>
+          </nav>
+        </footer>
+      )}
     </div>
   );
 }

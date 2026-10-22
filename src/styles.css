@@ -124,8 +124,16 @@
   }
   body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in oklab, var(--info) 14%, transparent), transparent 70%),
-      radial-gradient(ellipse 50% 40% at 90% 100%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
+      radial-gradient(
+        ellipse 80% 50% at 50% -10%,
+        color-mix(in oklab, var(--info) 14%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 50% 40% at 90% 100%,
+        color-mix(in oklab, var(--accent) 10%, transparent),
+        transparent 70%
+      );
     background-attachment: fixed;
   }
   :focus-visible {
@@ -188,4 +196,40 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-muted-foreground);
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 20px 32px 64px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-muted-foreground);
+  font-size: 12px;
+}
+.site-footer > span {
+  font-family: var(--font-mono);
+  letter-spacing: 0.12em;
+}
+.site-footer nav {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.site-footer a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-primary);
+}
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 1024px) {
+  .site-footer {
+    grid-column: 2;
+  }
 }
