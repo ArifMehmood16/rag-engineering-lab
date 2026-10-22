@@ -524,8 +524,9 @@ function LabTour({
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useLayoutEffect(() => {
-    if (step === null) return;
-    const target = document.querySelector(TOUR_STEPS[step].selector);
+    const current = step === null ? undefined : TOUR_STEPS[step];
+    if (!current) return;
+    const target = document.querySelector(current.selector);
     if (!target) return;
     target.classList.add("tour-glow");
     target.scrollIntoView?.({ block: "center", behavior: reduced ? "auto" : "smooth" });
