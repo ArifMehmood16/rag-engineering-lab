@@ -25,19 +25,30 @@
   padding: 30px 24px 20px;
 }
 .tour-glow {
+  position: relative;
+  z-index: 41;
   outline: 2px solid var(--primary);
-  outline-offset: 4px;
+  outline-offset: 5px;
   border-radius: 12px;
-  box-shadow: 0 0 32px color-mix(in oklab, var(--primary) 45%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--primary) 70%, transparent),
+    0 0 26px color-mix(in oklab, var(--primary) 60%, transparent),
+    0 0 70px color-mix(in oklab, var(--primary) 35%, transparent);
   animation: tour-glow-pulse 2.2s ease-in-out infinite;
 }
 @keyframes tour-glow-pulse {
   0%,
   100% {
-    box-shadow: 0 0 18px color-mix(in oklab, var(--primary) 30%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--primary) 55%, transparent),
+      0 0 14px color-mix(in oklab, var(--primary) 40%, transparent),
+      0 0 44px color-mix(in oklab, var(--primary) 22%, transparent);
   }
   50% {
-    box-shadow: 0 0 40px color-mix(in oklab, var(--primary) 55%, transparent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--primary) 85%, transparent),
+      0 0 34px color-mix(in oklab, var(--primary) 75%, transparent),
+      0 0 96px color-mix(in oklab, var(--primary) 45%, transparent);
   }
 }
 .lab-low-motion .tour-glow {
@@ -48,34 +59,52 @@
     animation: none;
   }
 }
+/* Dip: darken everything except the highlighted element while a tour tip is open. */
+.lab-tour-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background: radial-gradient(
+    circle var(--tour-r, 200px) at var(--tour-x, 50%) var(--tour-y, 50%),
+    transparent 0,
+    transparent 62%,
+    rgb(0 0 0 / 0.62) 100%
+  );
+}
+/* Tip card: deliberately off-theme so it reads as guidance, not app UI. */
 .lab-tour-tip {
   position: fixed;
   z-index: 60;
   width: 320px;
   padding: 16px 18px;
-  border: 1px solid color-mix(in oklab, var(--primary) 40%, var(--border));
+  border: 1px solid #9fdcec;
+  border-left: 4px solid #0891b2;
   border-radius: 12px;
-  background: color-mix(in oklab, var(--card) 92%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 18px 60px #000c;
+  background: #f2fafc;
+  color: #0c3540;
+  box-shadow:
+    0 2px 6px rgb(8 145 178 / 0.25),
+    0 22px 70px rgb(0 0 0 / 0.65);
 }
 .lab-tour-tip .eyebrow {
   margin: 0 0 6px;
   font-size: 12px;
   letter-spacing: 0.17em;
-  color: var(--primary);
+  color: #0e7490;
 }
 .lab-tour-tip strong {
   display: block;
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 6px;
+  color: #083344;
 }
 .lab-tour-tip > p:not(.eyebrow) {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
-  color: var(--muted-foreground);
+  color: #33565f;
 }
 .lab-tour-actions {
   display: flex;
@@ -88,22 +117,22 @@
   padding: 7px 10px;
   border-radius: 8px;
   font-size: 12px;
-  color: var(--muted-foreground);
+  color: #4a6b74;
 }
 .lab-tour-skip:hover {
-  background: var(--muted);
-  color: var(--foreground);
+  background: #dceff4;
+  color: #083344;
 }
 .lab-tour-next {
   padding: 8px 16px;
   border-radius: 8px;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: #0891b2;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
 }
 .lab-tour-next:hover {
-  filter: brightness(1.1);
+  background: #0e7490;
 }
 .lab-intro {
   display: flex;

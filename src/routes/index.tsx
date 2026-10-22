@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState, type CSSProperties } from "react";
 import {
   ArrowDown,
   ArrowUpRight,
@@ -554,26 +554,38 @@ function LabTour({
       ? Math.max(12, rect.top - TOUR_TIP_HEIGHT - 14)
       : below;
 
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const radius = Math.hypot(rect.width, rect.height) / 2 + 26;
+  const veilStyle = {
+    "--tour-x": `${cx}px`,
+    "--tour-y": `${cy}px`,
+    "--tour-r": `${radius}px`,
+  } as CSSProperties;
+
   return (
-    <div
-      className="lab-tour-tip"
-      role="dialog"
-      aria-label={`Tip ${at + 1} of ${TOUR_STEPS.length}: ${current.title}`}
-      style={{ left, top }}
-    >
-      <p className="eyebrow">
-        Tip {at + 1} of {TOUR_STEPS.length}
-      </p>
-      <strong>{current.title}</strong>
-      <p>{current.text}</p>
-      <div className="lab-tour-actions">
-        <button type="button" className="lab-tour-skip" onClick={onClose}>
-          End tour
-        </button>
-        <button type="button" className="lab-tour-next" onClick={onNext}>
-          {at === TOUR_STEPS.length - 1 ? "Done" : "Next"}
-        </button>
+    <>
+      <div className="lab-tour-dim" aria-hidden="true" style={veilStyle} />
+      <div
+        className="lab-tour-tip"
+        role="dialog"
+        aria-label={`Tip ${at + 1} of ${TOUR_STEPS.length}: ${current.title}`}
+        style={{ left, top }}
+      >
+        <p className="eyebrow">
+          Tip {at + 1} of {TOUR_STEPS.length}
+        </p>
+        <strong>{current.title}</strong>
+        <p>{current.text}</p>
+        <div className="lab-tour-actions">
+          <button type="button" className="lab-tour-skip" onClick={onClose}>
+            End tour
+          </button>
+          <button type="button" className="lab-tour-next" onClick={onNext}>
+            {at === TOUR_STEPS.length - 1 ? "Done" : "Next"}
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
