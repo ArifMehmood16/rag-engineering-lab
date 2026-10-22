@@ -469,54 +469,111 @@ export function Lab() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {tips && (
-        <div className="lab-tips-popup" role="dialog" aria-label="Where to start">
-          <div className="lab-tips-card">
-            <header>
-              <p className="eyebrow">New here? Three things to know</p>
-              <button type="button" aria-label="Close tips" onClick={() => setTips(false)}>
-                <X size={16} />
-              </button>
-            </header>
-            <div className="lab-tips-grid">
-              <div className="lab-tip">
-                <Mouse size={16} aria-hidden />
-                <div>
-                  <strong>Scroll to move the story</strong>
-                  <p>
-                    The card column is the lesson. Scroll — or use ↓ / Page Down — to step through
-                    input → change → result. The scene follows the card you are reading.
-                  </p>
-                </div>
-              </div>
-              <div className="lab-tip">
-                <Menu size={16} aria-hidden />
-                <div>
-                  <strong>Menu, top right</strong>
-                  <p>
-                    Opens the five lessons, the overview, the architecture map, implementation
-                    priorities, and writing exercises.
-                  </p>
-                </div>
-              </div>
-              <div className="lab-tip">
-                <PanelBottom size={16} aria-hidden />
-                <div>
-                  <strong>Bottom buttons</strong>
-                  <p>
-                    <em>Explore details</em> changes experiment settings, <em>Inspect run</em> shows
-                    the stage-by-stage trace and evidence, and <em>Five concepts</em> opens the full
-                    lessons.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <button type="button" className="lab-tips-start" onClick={() => setTips(false)}>
-              Start exploring <ArrowDown size={13} />
-            </button>
-          </div>
-        </div>
-      )}
+      <LabTour
+        step={tour}
+        reduced={reduced || low}
+        onNext={() =>
+          setTour((s) => (s === null || s >= TOUR_STEPS.length - 1 ? null : s + 1))
+        }
+        onClose={() => setTour(null)}
+      />
+    </div>
+  );
+}
+
+const TOUR_STEPS = [
+  {
+    selector: ".story-streams",
+    title: "Pick a stream",
+    text: "Build knowledge watches documents become a searchable index. Answer a question follows one question to a checked answer. Each stream works on its own.",
+  },
+  {
+    selector: ".learning-dock",
+    title: "Five concepts",
+    text: "Context, Caching, Evals, Guardrails, and Agents. Open any concept to watch a recorded example run beside the scene.",
+  },
+  {
+    selector: ".story-gallery-shell",
+    title: "Scroll to move the story",
+    text: "This card column is the lesson. Scroll — or use ↓ / Page Down — to step through input → change → result. The scene follows the card you are reading.",
+  },
+  {
+    selector: ".lab-utility-bar",
+    title: "Bottom buttons",
+    text: "Explore details changes experiment settings, Inspect run shows the stage-by-stage trace and evidence, and Five concepts opens the full lessons.",
+  },
+  {
+    selector: 'button[aria-label="Open lesson menu"]',
+    title: "Menu, top right",
+    text: "Opens the five lessons, the overview, the architecture map, implementation priorities, and writing exercises.",
+  },
+] as const;
+
+const TOUR_TIP_WIDTH = 320;
+const TOUR_TIP_HEIGHT = 200;
+
+function LabTour({
+  step,
+  reduced,
+  onNext,
+  onClose,
+}: {
+  step: number | null;
+  reduced: boolean;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useLayoutEffect(() => {
+    if (step === null) return;
+    const target = document.querySelector(TOUR_STEPS[step].selector);
+    if (!target) return;
+    target.classList.add("tour-glow");
+    target.scrollIntoView({ block: "center", behavior: reduced ? "auto" : "smooth" });
+    const update = () => setRect(target.getBoundingClientRect());
+    update();
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      target.classList.remove("tour-glow");
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [step, reduced]);
+
+  if (step === null || !rect || rect.width === 0) return null;
+  const current = TOUR_STEPS[step];
+  const left = Math.min(
+    Math.max(12, rect.left + rect.width / 2 - TOUR_TIP_WIDTH / 2),
+    window.innerWidth - TOUR_TIP_WIDTH - 12,
+  );
+  const below = rect.bottom + 14;
+  const top =
+    below + TOUR_TIP_HEIGHT > window.innerHeight
+      ? Math.max(12, rect.top - TOUR_TIP_HEIGHT - 14)
+      : below;
+
+  return (
+    <div
+      className="lab-tour-tip"
+      role="dialog"
+      aria-label={`Tip ${step + 1} of ${TOUR_STEPS.length}: ${current.title}`}
+      style={{ left, top }}
+    >
+      <p className="eyebrow">
+        Tip {step + 1} of {TOUR_STEPS.length}
+      </p>
+      <strong>{current.title}</strong>
+      <p>{current.text}</p>
+      <div className="lab-tour-actions">
+        <button type="button" className="lab-tour-skip" onClick={onClose}>
+          End tour
+        </button>
+        <button type="button" className="lab-tour-next" onClick={onNext}>
+          {step === TOUR_STEPS.length - 1 ? "Done" : "Next"}
+        </button>
+      </div>
     </div>
   );
 }
