@@ -899,7 +899,8 @@ function World(props: RagWorldProps) {
           {connection("chunks", "vectors")}
           {connection("vectors", "index")}
           <EntityFocus
-            strength={emphasis("source")}
+            strength={entityLights}
+            node="source"
             instant={reduced || paused}
             position={positions.source!}
             rotation={[0.04, -0.22, -0.08]}
@@ -912,7 +913,8 @@ function World(props: RagWorldProps) {
           </EntityFocus>
 
           <EntityFocus
-            strength={emphasis("chunks")}
+            strength={entityLights}
+            node="chunks"
             instant={reduced || paused}
             position={positions.chunks!}
           >
@@ -938,7 +940,8 @@ function World(props: RagWorldProps) {
             {active("chunks") && <Glow color={CYAN} scale={3} opacity={0.35} />}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("vectors")}
+            strength={entityLights}
+            node="vectors"
             instant={reduced || paused}
             position={positions.vectors!}
           >
@@ -957,7 +960,8 @@ function World(props: RagWorldProps) {
           </EntityFocus>
 
           <EntityFocus
-            strength={emphasis("index")}
+            strength={entityLights}
+            node="index"
             instant={reduced || paused}
             position={positions.index!}
           >
@@ -974,7 +978,8 @@ function World(props: RagWorldProps) {
         <>
           {sceneConnections(plan).map(([from, to]) => connection(from, to))}
           <EntityFocus
-            strength={emphasis("index")}
+            strength={entityLights}
+            node="index"
             instant={reduced || paused}
             position={positions.index!}
           >
@@ -987,7 +992,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("question")}
+            strength={entityLights}
+            node="question"
             instant={reduced || paused}
             position={positions.question!}
           >
@@ -997,14 +1003,16 @@ function World(props: RagWorldProps) {
             {active("question") && <Glow scale={2} opacity={0.3} color="#a5ffcb" />}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("input")}
+            strength={entityLights}
+            node="input"
             instant={reduced || paused}
             position={positions.input!}
           >
             <Portal shield color={tour.stage === 1 && plan.blocked ? "#ff878d" : CYAN} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("small")}
+            strength={entityLights}
+            node="small"
             instant={reduced || paused}
             position={positions.small!}
             scale={0.48}
@@ -1017,7 +1025,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("router")}
+            strength={entityLights}
+            node="router"
             instant={reduced || paused}
             position={positions.router!}
           >
@@ -1032,7 +1041,8 @@ function World(props: RagWorldProps) {
             </mesh>
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("retrieve")}
+            strength={entityLights}
+            node="retrieve"
             instant={reduced || paused}
             position={positions.retrieve!}
           >
@@ -1050,7 +1060,8 @@ function World(props: RagWorldProps) {
             />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("context")}
+            strength={entityLights}
+            node="context"
             instant={reduced || paused}
             position={positions.context!}
           >
@@ -1070,14 +1081,16 @@ function World(props: RagWorldProps) {
             ))}
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("cache")}
+            strength={entityLights}
+            node="cache"
             instant={reduced || paused}
             position={positions.cache!}
           >
             <CacheStore active={active("cache")} enabled={stageInput(tour).config.answerCache} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("tool")}
+            strength={entityLights}
+            node="tool"
             instant={reduced || paused}
             position={positions.tool!}
             scale={0.9}
@@ -1085,7 +1098,8 @@ function World(props: RagWorldProps) {
             <ToolConsole active={tour.stage === 5 && stageInput(tour).config.tool !== "off"} />
           </EntityFocus>
           <EntityFocus
-            strength={emphasis("check")}
+            strength={entityLights}
+            node="check"
             instant={reduced || paused}
             position={positions.check!}
           >
@@ -1094,7 +1108,8 @@ function World(props: RagWorldProps) {
         </>
       )}
       <EntityFocus
-        strength={emphasis("model")}
+        strength={entityLights}
+            node="model"
         instant={reduced || paused}
         position={positions.model!}
         scale={1.12}

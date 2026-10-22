@@ -251,7 +251,7 @@ export function flowRoute(
   positions: Partial<Record<SceneNode, Point3>>,
   from: SceneNode,
   to: SceneNode,
-) {
+): { from: Point3; to: Point3; via: Point3[] } {
   const canonical = canonicalConnection(from, to);
   if (canonical && canonical[0] !== from) {
     const route = flowRoute(positions, to, from);
