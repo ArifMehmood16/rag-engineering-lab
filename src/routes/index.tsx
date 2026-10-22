@@ -193,7 +193,7 @@ export function Lab() {
       <div className="lab-utility-bar">
         <span>One system. Every transformation.</span>
         <div>
-          <button type="button" onClick={() => setTips(true)}>
+          <button type="button" onClick={() => setTour(0)}>
             <Info size={13} /> Tips
           </button>
           <button type="button" onClick={() => setDetails("configure")}>
