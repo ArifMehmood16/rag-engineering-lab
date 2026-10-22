@@ -207,8 +207,10 @@
   }
   .story-gallery-shell {
     top: 45svh;
-    bottom: 65px;
+    /* Ends above the floating button bar so its top edge never clips card text. */
+    bottom: 84px;
   }
+
   .story-navigation {
     top: 74px;
   }
