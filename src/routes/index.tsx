@@ -8,6 +8,7 @@ import {
   ChevronDown,
   GitCompareArrows,
   Github,
+  Info,
   Layers,
   Linkedin,
   Menu,
@@ -73,6 +74,7 @@ export function Lab() {
   const [low, setLow] = useState(false);
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
+  const [tips, setTips] = useState(true);
   const [details, setDetails] = useState<"configure" | "trace" | "learn" | null>(null);
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
   const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
@@ -171,43 +173,6 @@ export function Lab() {
         </div>
       </header>
 
-      <section className="lab-tips" aria-label="Where to start">
-        <p className="eyebrow">New here? Three things to know</p>
-        <div className="lab-tips-grid">
-          <div className="lab-tip">
-            <Mouse size={16} aria-hidden />
-            <div>
-              <strong>Scroll to move the story</strong>
-              <p>
-                The card column is the lesson. Scroll — or use ↓ / Page Down — to step through
-                input → change → result. The scene follows the card you are reading.
-              </p>
-            </div>
-          </div>
-          <div className="lab-tip">
-            <Menu size={16} aria-hidden />
-            <div>
-              <strong>Menu, top left</strong>
-              <p>
-                Opens the five lessons, the overview, the architecture map, implementation
-                priorities, and writing exercises.
-              </p>
-            </div>
-          </div>
-          <div className="lab-tip">
-            <PanelBottom size={16} aria-hidden />
-            <div>
-              <strong>Bottom buttons</strong>
-              <p>
-                <em>Explore details</em> changes experiment settings, <em>Inspect run</em> shows
-                the stage-by-stage trace and evidence, and <em>Five concepts</em> opens the full
-                lessons.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <RagWalkthrough
         conceptsExplored={conceptsExplored}
         onConceptExplore={exploreConcept}
@@ -231,6 +196,9 @@ export function Lab() {
       <div className="lab-utility-bar">
         <span>One system. Every transformation.</span>
         <div>
+          <button type="button" onClick={() => setTips(true)}>
+            <Info size={13} /> Tips
+          </button>
           <button type="button" onClick={() => setDetails("configure")}>
             <SlidersHorizontal size={13} /> Explore details
           </button>
@@ -425,6 +393,25 @@ export function Lab() {
                       </p>
                     </section>
                   </div>
+                  <footer className="lab-footer">
+                    <span>© 2026 Arif Mehmood · RAG Learning — AI Learning Lab</span>
+                    <nav aria-label="Author links">
+                      <a
+                        href="https://www.linkedin.com/in/aarif9516/"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        <Linkedin size={13} aria-hidden /> LinkedIn
+                      </a>
+                      <a
+                        href="https://github.com/ArifMehmood16"
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        <Github size={13} aria-hidden /> GitHub
+                      </a>
+                    </nav>
+                  </footer>
                   <details className="corpus-details">
                     <summary>
                       Inspect the example corpus{" "}
@@ -485,21 +472,54 @@ export function Lab() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <footer className="lab-footer">
-        <span>© 2026 Arif Mehmood · RAG Learning — AI Learning Lab</span>
-        <nav aria-label="Author links">
-          <a
-            href="https://www.linkedin.com/in/aarif9516/"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            <Linkedin size={13} aria-hidden /> LinkedIn
-          </a>
-          <a href="https://github.com/ArifMehmood16" target="_blank" rel="noreferrer noopener">
-            <Github size={13} aria-hidden /> GitHub
-          </a>
-        </nav>
-      </footer>
+      {tips && (
+        <div className="lab-tips-popup" role="dialog" aria-label="Where to start">
+          <div className="lab-tips-card">
+            <header>
+              <p className="eyebrow">New here? Three things to know</p>
+              <button type="button" aria-label="Close tips" onClick={() => setTips(false)}>
+                <X size={16} />
+              </button>
+            </header>
+            <div className="lab-tips-grid">
+              <div className="lab-tip">
+                <Mouse size={16} aria-hidden />
+                <div>
+                  <strong>Scroll to move the story</strong>
+                  <p>
+                    The card column is the lesson. Scroll — or use ↓ / Page Down — to step through
+                    input → change → result. The scene follows the card you are reading.
+                  </p>
+                </div>
+              </div>
+              <div className="lab-tip">
+                <Menu size={16} aria-hidden />
+                <div>
+                  <strong>Menu, top right</strong>
+                  <p>
+                    Opens the five lessons, the overview, the architecture map, implementation
+                    priorities, and writing exercises.
+                  </p>
+                </div>
+              </div>
+              <div className="lab-tip">
+                <PanelBottom size={16} aria-hidden />
+                <div>
+                  <strong>Bottom buttons</strong>
+                  <p>
+                    <em>Explore details</em> changes experiment settings, <em>Inspect run</em>{" "}
+                    shows the stage-by-stage trace and evidence, and <em>Five concepts</em> opens
+                    the full lessons.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button type="button" className="lab-tips-start" onClick={() => setTips(false)}>
+              Start exploring <ArrowDown size={13} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
