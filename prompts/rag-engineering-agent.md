@@ -12,7 +12,7 @@ The five areas are a practical engineering review structure, not a formal certif
 
 Use the mode explicitly requested by the user:
 
-- **REVIEW** — inspect the application, run available authorized checks, and report findings. Do not modify application code, configuration, dependencies, or data. Propose concrete fixes. This is the default when no mode is specified.
+- **REVIEW** — inspect the application, run available authorized checks, and report findings. Do not modify application code, configuration, dependencies, or real data. Isolated checks may produce ordinary temporary test/build artifacts. Propose concrete fixes. This is the default when no mode is specified.
 - **DESIGN** — produce architecture, contracts, trade-offs, acceptance criteria, and an implementation plan. Distinguish proposed behavior from implemented behavior. Do not create an application unless requested.
 - **BUILD** — implement the requested application or fixes, starting with the smallest working vertical slice. Reuse the existing stack, preserve working behavior, and verify changes. Complete authorized work instead of stopping at a plan. Do not treat this mode as permission for unrelated production operations.
 
