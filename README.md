@@ -23,6 +23,14 @@ Build a knowledge index, follow a question to its checked answer, and inspect th
 - **Guardrails and permissions:** inspect input screening, untrusted document instructions, output schemas, citation support, access denial, and release-time eligibility. Model-response checks and application permissions have different jobs.
 - **Tools and context:** follow a validated source-passage read and see what survives a context budget. This is a bounded application workflow; the lab does not assume RAG needs an autonomous agent.
 
+## Build or review your own RAG application
+
+Use the **[reusable RAG engineering agent prompt](prompts/rag-engineering-agent.md)** with your coding assistant. Copy the whole file into a conversation, or place it in your target application and explicitly ask the assistant to read it. It is independent of this lab's UI, fixtures, stack, and example data.
+
+Choose **REVIEW** to validate an existing system, **DESIGN** to work from architecture and requirements, or **BUILD** to implement a grounded application or prioritized fixes. The prompt assesses all five areas, requires project-specific evidence and acceptance checks, and distinguishes essential boundaries from optional caching, routing, judges, and agents. It does not certify production readiness from a checklist or a simulated score.
+
+[Copy-and-paste examples and usage guide](prompts/README.md). No agent framework or plugin is required, and the file does not replace your project's existing instructions.
+
 ## Try the lab
 
 1. Choose **Build knowledge** or **Answer a question**. Both streams are independent and available immediately; the answer stream uses a prepared fixture index.
@@ -107,6 +115,7 @@ The app uses **React 19, TypeScript, TanStack Start/Router, Three.js, React Thre
 - `src/components/learn/`: lesson renderers and interactive explanations.
 - `src/routes/`: file-based application routes.
 - `src/test/`: behaviour and regression tests.
+- `prompts/`: portable instructions for designing, building, and validating your own RAG application.
 
 The live request path and the offline evaluation bench are separate. Animation observes stored snapshots; replaying or reverse-scrolling does not call a model or alter recorded results. [Architecture and data flow](docs/ARCHITECTURE.md).
 
@@ -118,6 +127,7 @@ Apollo 11 is a familiar example corpus, not the subject of the app. Source recor
 
 ## Documentation
 
+- [Reusable RAG engineering prompt](prompts/rag-engineering-agent.md) and [usage examples](prompts/README.md): evidence-based Review, Design, and Build modes across the five areas.
 - [Lab guide](docs/LAB_GUIDE.md): complete streams, examples, controls, motion, and simulation details.
 - [Architecture](docs/ARCHITECTURE.md): engine, snapshots, scene boundaries, and routes.
 - [Contributing](CONTRIBUTING.md): setup, changes, verification, and screenshot workflow.

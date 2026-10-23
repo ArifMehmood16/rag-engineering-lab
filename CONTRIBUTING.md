@@ -21,10 +21,13 @@ No API keys or database are required. Keep the minimum-release-age policy in `bu
 - Lesson renderers: `src/components/learn/`.
 - File-based routes: `src/routes/`.
 - Behaviour and regression checks: `src/test/`.
+- Portable build/review instructions and usage examples: `prompts/`.
 
 Read `AGENTS.md` before implementation. Keep the two streams independent, follow a single question to its answer or safe stop, and retain provenance with every source-backed claim. Label synthetic evidence, estimated costs, generated fixtures, and simulated model/provider behaviour explicitly.
 
 A learning scene must observe results rather than execute requests while rendering. Evaluations stay outside the live request path. Application code enforces tool permissions and release checks; an LLM instruction is not authorization.
+
+Reusable prompts must work in the target application without assuming the lab's stack, fixture corpus, or simulated validators. Preserve explicit Review/Design/Build scope, evidence-based findings, and justified exclusions for optional capabilities. Keep the canonical prompt self-contained; do not overwrite this repository's `AGENTS.md` with portable instructions. For documentation-only prompt changes, check formatting, local links, and the mode/coverage instructions rather than adding tests that mirror prose.
 
 ## Verify a change
 
