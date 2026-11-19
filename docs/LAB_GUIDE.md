@@ -4,6 +4,8 @@
 
 ## Explore the lab
 
+Select **Compare Keyword and Hybrid** at the top of the lab to run the same Apollo 11 question twice with a six-candidate limit and fresh state. The comparison uses public NASA passages. Select a passage ID or an answer citation to inspect its text and source.
+
 The introductory card starts with a zoomed-out system view. Question stations follow an aligned spine, with rounded service lanes above and model/answer-return corridors below. Scroll into an operation to focus it; the overview control remains available.
 
 - **Find all five learnings immediately:** Context, Caching, Evals, Guardrails, and Tools are named controls above the 3D world, with all five visible on narrow screens too. Each opens a short, natively scrollable learning view with controlled examples, a result, a takeaway, and a link to applying it in EvidenceLens. Back to flow restores the existing stream and its reading position. These views do not modify the active request, warm its caches, or mark its engine stages as viewed.

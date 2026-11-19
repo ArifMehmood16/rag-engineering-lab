@@ -95,6 +95,41 @@ function focusLearning(index: number) {
   });
 }
 
+it("runs the public Apollo comparison in one click without changing the current experiment", () => {
+  render(<Lab />);
+  focusCard(2, "output");
+  const trigger = screen.getByRole("button", { name: "Compare Keyword and Hybrid" });
+  fireEvent.click(trigger);
+
+  const dialog = within(screen.getByRole("dialog", { name: "Compare Keyword and Hybrid" }));
+  expect(dialog.getByText(/Who walked on the Moon during Apollo 11/)).toBeInTheDocument();
+  expect(dialog.getByText(/6-candidate limit/)).toBeInTheDocument();
+  expect(dialog.queryByRole("textbox")).not.toBeInTheDocument();
+  expect(dialog.queryByRole("button", { name: /Inspect passage SYN-/ })).not.toBeInTheDocument();
+
+  const keyword = within(dialog.getByRole("region", { name: "Keyword" }));
+  expect(keyword.getByText(/Missing evidence for who walked on the Moon/)).toBeInTheDocument();
+  expect(keyword.getByText("Simulated generation calls")).toHaveTextContent("0");
+  expect(keyword.queryByRole("button", { name: "Inspect passage A11-OV-HL8" })).toBeNull();
+  fireEvent.click(keyword.getByRole("button", { name: "Inspect passage A11-LA-CAP" }));
+  expect(keyword.getByText(/descended in Eagle/)).toBeInTheDocument();
+
+  const hybrid = within(dialog.getByRole("region", { name: "Hybrid" }));
+  expect(hybrid.getByText("Simulated generation calls")).toHaveTextContent("1");
+  expect(hybrid.getByText(/Neil Armstrong and Buzz Aldrin walked on the Moon/)).toBeInTheDocument();
+  fireEvent.click(hybrid.getByRole("button", { name: /^Inspect citation A11-OV-HL8/ }));
+  expect(hybrid.getByText(/Armstrong stepped onto the moon/)).toBeInTheDocument();
+  expect(hybrid.getByRole("link", { name: "NASA · Apollo 11 Mission Overview" })).toHaveAttribute(
+    "href",
+    "https://www.nasa.gov/missions/apollo/apollo-11/apollo-11-mission-overview/",
+  );
+
+  fireEvent.click(dialog.getByRole("button", { name: "Close search comparison" }));
+  expect(screen.queryByRole("dialog", { name: "Compare Keyword and Hybrid" })).toBeNull();
+  expect(current()).toHaveTextContent("Embeddings · the result");
+  expect(conceptsProgress()).toHaveAttribute("aria-valuenow", "0");
+});
+
 describe("five visible concept views", () => {
   it("offers named concepts and returns to the exact independent stream positions", () => {
     render(<Lab />);
@@ -422,6 +457,3 @@ describe("RAG card gallery", () => {
     links.forEach((l) => expect(l).toHaveAttribute("target", "_blank"));
   });
 });
-
-
-

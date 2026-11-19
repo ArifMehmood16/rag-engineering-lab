@@ -17,6 +17,7 @@ import {
 import { APOLLO_RECORDS, APOLLO_QUESTIONS } from "@/content/apollo";
 import { DEFAULT_LEARNING_PATH, EXPERIMENTS, type ExperimentId } from "@/content/rag-lab";
 import { LabControls } from "@/components/lab/LabControls";
+import { ApolloSearchComparison } from "@/components/lab/ApolloSearchComparison";
 import { RagWalkthrough } from "@/components/lab/RagWalkthrough";
 import { EvidenceCard, RunInspector } from "@/components/lab/RunInspector";
 import { CompareRuns, OUTCOMES, RunReport } from "@/components/lab/RunReport";
@@ -71,6 +72,7 @@ export function Lab() {
   const [low, setLow] = useState(false);
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
+  const [apolloComparisonOpen, setApolloComparisonOpen] = useState(false);
   const [tour, setTour] = useState<number | null>(0);
   const [details, setDetails] = useState<"configure" | "trace" | "learn" | null>(null);
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
@@ -163,10 +165,13 @@ export function Lab() {
             Scroll through knowledge building or follow a question. Each stream works independently.
           </p>
         </div>
-        <div className="intro-badges">
-          <Badge tone="synthetic">Local simulation</Badge>
-          <span>Source-backed fixtures · no live LLM</span>
-          <span>Example data: 2 NASA pages</span>
+        <div className="lab-intro-actions">
+          <div className="intro-badges">
+            <Badge tone="synthetic">Local simulation</Badge>
+            <span>Source-backed fixtures · no live LLM</span>
+            <span>Example data: 2 NASA pages</span>
+          </div>
+          <ApolloSearchComparison onOpenChange={setApolloComparisonOpen} />
         </div>
       </header>
 
@@ -188,7 +193,7 @@ export function Lab() {
         onEvidence={setEvidence}
         reduced={reduced || low}
         lowEffects={low}
-        visible={visible && details === null}
+        visible={visible && details === null && !apolloComparisonOpen}
       />
       <div className="lab-utility-bar">
         <span>One system. Every transformation.</span>

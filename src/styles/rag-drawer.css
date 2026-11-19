@@ -23,6 +23,88 @@
 .lab-utility-bar a:hover {
   color: #b8fff1;
 }
+.lab-intro-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.apollo-comparison-dialog {
+  width: min(960px, calc(100% - 32px));
+  padding: clamp(16px, 3vw, 28px);
+}
+.apollo-comparison-heading,
+.apollo-comparison-run-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.apollo-comparison-heading h2 {
+  color: #def2f5;
+  font-size: clamp(22px, 4vw, 29px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.apollo-comparison-heading p {
+  color: #e1e8f4;
+  font-size: 16px;
+  margin-top: 10px;
+}
+.apollo-comparison-settings,
+.apollo-comparison-count {
+  color: #b2c6de;
+  font-size: 14px;
+  margin: 10px 0;
+}
+.apollo-comparison-count strong {
+  margin-left: 4px;
+  color: #e1e8f4;
+}
+.apollo-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+  margin-top: 18px;
+}
+.apollo-comparison-run {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #0b1321;
+}
+.apollo-comparison-run h3 {
+  font-size: 20px;
+  font-weight: 600;
+}
+.apollo-comparison-run h4 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.apollo-comparison-run .released-answer,
+.apollo-comparison-run .withheld-answer {
+  margin-top: 10px;
+  font-size: 16px;
+}
+.apollo-comparison-passages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.apollo-comparison-run button[aria-expanded="true"] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+@media (max-width: 760px) {
+  .guided-lab .lab-intro {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .apollo-comparison-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .lab-drawer-overlay {
   position: fixed;
   inset: 0;
