@@ -15,6 +15,10 @@ Build a knowledge index, follow a question to its checked answer, and inspect th
 
 ![RAG Learning with its full 3D knowledge-building overview](docs/screenshots/lab-overview.jpg)
 
+## Shareable demonstrations
+
+The context lesson links to the H17 top-K workbench. The evaluation lesson links to the release experiment and its endorsement slice. The tools lesson links to Agent Authority Explorer and its SOLID notes. Each has a direct URL for sharing a specific example. [Route map, paired previews and verification](docs/TEACHING-SITE-MIGRATION.md)
+
 ## The five learnings
 
 - **Context — RAG and embeddings:** follow source text into chunks, seven-dimensional toy vectors, and an index; compare exact words with semantic features and inspect retrieved evidence.

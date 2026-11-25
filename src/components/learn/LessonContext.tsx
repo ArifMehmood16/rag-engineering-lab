@@ -112,6 +112,12 @@ export function LessonContext() {
             a tight budget forces trade-offs.
           </p>
           <RetrievalLab />
+          <Link
+            to="/demos/top-k"
+            className="mt-5 inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+          >
+            Try top-K on a policy and its dated amendment
+          </Link>
         </Section>
 
         <Section

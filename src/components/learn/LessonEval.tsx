@@ -119,6 +119,12 @@ export function LessonEval() {
             that changed are highlighted and labelled.
           </p>
           <EvalLab />
+          <Link
+            to="/demos/release-evaluation"
+            className="mt-5 inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+          >
+            Compare policy releases by question group
+          </Link>
         </Section>
 
         <Section id="apply" step="3 · Apply it to EvidenceLens" title="Planned dataset design">
