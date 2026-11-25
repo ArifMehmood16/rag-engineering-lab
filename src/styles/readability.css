@@ -341,3 +341,80 @@
   white-space: nowrap;
   max-width: 100%;
 }
+
+/* The comparison belongs to the visible tools, clear of the scene's hit area. */
+.lab-utility-bar .search-comparison-trigger {
+  color: #b2eee4;
+}
+.immersive-shell > header > a {
+  border-color: transparent;
+  box-shadow: none;
+}
+.gallery-card .gallery-intro-heading h2 {
+  max-width: 16ch;
+  color: #e7f5f4;
+  font-size: clamp(27px, 2.6vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+@media (max-width: 999px) {
+  .lab-utility-bar > div {
+    gap: 2px;
+    padding: 0 4px;
+  }
+  .lab-utility-bar button {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .lab-utility-bar .action-detail {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1000px) {
+  .scene-preparing.scene-overview .world-label {
+    max-width: none;
+  }
+}
+/* Place the first label above its source pages on compact overview maps. */
+@media (max-width: 599px) {
+  .scene-preparing.scene-overview .world-label strong {
+    white-space: normal;
+    line-height: 1.2;
+    display: block;
+  }
+  .scene-preparing.scene-overview .world-label[data-node="source"] {
+    transform: translate(-50%, calc(-100% - 24px));
+  }
+}
+
+.mobile-chapters {
+  display: none;
+}
+@media (max-width: 999px) {
+  .gallery-story .story-ruler > ol {
+    display: none;
+  }
+  .gallery-header .mobile-chapters {
+    display: block;
+    margin-left: auto;
+    max-width: 7rem;
+    min-height: 36px;
+    border: 1px solid #486174;
+    border-radius: 5px;
+    padding: 0 4px;
+    background: #101f30;
+    color: #d8e9ef;
+    font: 500 13px/1.4 var(--font-sans);
+  }
+  .story-gallery-shell:has(.mobile-chapters) .gallery-header {
+    padding-block: 3px;
+  }
+}

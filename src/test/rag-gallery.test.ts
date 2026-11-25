@@ -19,6 +19,15 @@ describe("the vertical learning gallery", () => {
     expect(galleryEntryTarget(0, centers, bounds, 300)).toBe(8);
     expect(galleryEntryTarget(1, centers, bounds, 300)).toBe(588);
   });
+  it("opens on the introduction when the next card fills more of the first viewport", () => {
+    const bounds = [
+      { top: 0, height: 261 },
+      { top: 275, height: 482 },
+    ];
+    const centers = bounds.map((b) => b.top + b.height / 2);
+    expect(galleryReadingSelection(cards.slice(0, 2), centers, bounds, 0, 678).index).toBe(0);
+    expect(galleryReadingSelection(cards.slice(0, 2), centers, bounds, 240, 678).index).toBe(1);
+  });
   it("keeps a tall example in focus until the next example is more visible", () => {
     const long = cards.slice(0, 2);
     const bounds = [

@@ -5,18 +5,11 @@ export function AppBrand({ className }: { className?: string }) {
   return (
     <Link
       to="/"
-      aria-label="RAG Learning home"
+      aria-label="RAG Engineering Lab home"
       className={cn("inline-flex min-w-0 items-center gap-2.5 rounded-md", className)}
     >
       <img src="/logo.svg" alt="" width={36} height={36} className="size-9 shrink-0" />
-      <span className="min-w-0">
-        <span className="block whitespace-nowrap font-display text-[15px] font-semibold leading-5 tracking-[0.03em]">
-          RAG LEARNING
-        </span>
-        <span className="block font-mono text-[12px] leading-4 tracking-[0.18em] text-muted-foreground">
-          AI LEARNING LAB
-        </span>
-      </span>
+      <span className="lab-wordmark">RAG Engineering Lab</span>
     </Link>
   );
 }

@@ -218,7 +218,9 @@ describe("five visible concept views", () => {
     );
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
     fireEvent.click(screen.getByRole("button", { name: "Back to flow" }));
-    expect(current()).toHaveTextContent("Scroll the cards");
+    expect(
+      within(current()).getByRole("heading", { name: "Build a searchable index" }),
+    ).toBeInTheDocument();
   });
   it("separates schema and support checks and explains the tool-call authority", () => {
     render(<Lab />);
@@ -258,7 +260,9 @@ describe("RAG card gallery", () => {
     render(<Lab />);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next sub-step" })).not.toBeInTheDocument();
-    expect(current()).toHaveTextContent("Scroll the cards.");
+    expect(
+      within(current()).getByRole("heading", { name: "Build a searchable index" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Scrollable learning cards" })).toHaveAttribute(
       "tabindex",
       "0",
@@ -266,7 +270,9 @@ describe("RAG card gallery", () => {
     focusCard(0, "input");
     expect(currentRegion("Step input")).toHaveTextContent("No question has been asked");
     answerStream();
-    expect(current()).toHaveTextContent("One complete path.");
+    expect(
+      within(current()).getByRole("heading", { name: "Follow a question to its answer" }),
+    ).toBeInTheDocument();
     focusCard(0, "input");
     expect(currentRegion("Step input")).toHaveTextContent("Who walked on the Moon");
     expect(progress()).toHaveAttribute("aria-valuenow", "0");
@@ -294,7 +300,9 @@ describe("RAG card gallery", () => {
     render(<Lab />);
     focusCard(2, "output");
     answerStream();
-    expect(current()).toHaveTextContent("One complete path.");
+    expect(
+      within(current()).getByRole("heading", { name: "Follow a question to its answer" }),
+    ).toBeInTheDocument();
     focusCard(3, "output");
     fireEvent.click(screen.getByRole("button", { name: /Build knowledge Documents/ }));
     expect(current()).toHaveTextContent("Embeddings · the result");

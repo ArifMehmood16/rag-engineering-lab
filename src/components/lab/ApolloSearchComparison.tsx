@@ -123,9 +123,11 @@ export function ApolloSearchComparison({
 
   return (
     <Dialog.Root open={runs !== null} onOpenChange={changeOpen}>
-      <Dialog.Trigger type="button" className={btnVariants({ variant: "primary" })}>
+      <Dialog.Trigger type="button" className="search-comparison-trigger">
         <GitCompareArrows size={16} aria-hidden />
-        Compare Keyword and Hybrid
+        <span>
+          Compare<span className="action-detail"> Keyword and Hybrid</span>
+        </span>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="lab-drawer-overlay" />

@@ -73,7 +73,7 @@ export function Lab() {
   const [visible, setVisible] = useState(true);
   const [compare, setCompare] = useState(false);
   const [apolloComparisonOpen, setApolloComparisonOpen] = useState(false);
-  const [tour, setTour] = useState<number | null>(0);
+  const [tour, setTour] = useState<number | null>(null);
   const [details, setDetails] = useState<"configure" | "trace" | "learn" | null>(null);
   const current = EXPERIMENTS.find((e) => e.id === experiment)!;
   const questionId = APOLLO_QUESTIONS.find((q) => q.text === engine.ctx.question)?.id ?? "crew";
@@ -171,7 +171,6 @@ export function Lab() {
             <span>Source-backed fixtures · no live LLM</span>
             <span>Example data: 2 NASA pages</span>
           </div>
-          <ApolloSearchComparison onOpenChange={setApolloComparisonOpen} />
         </div>
       </header>
 
@@ -196,16 +195,22 @@ export function Lab() {
         visible={visible && details === null && !apolloComparisonOpen}
       />
       <div className="lab-utility-bar">
-        <span>One system. Every transformation.</span>
         <div>
+          <ApolloSearchComparison onOpenChange={setApolloComparisonOpen} />
           <button type="button" onClick={() => setTour(0)}>
-            <Info size={13} /> Tips
+            <Info size={15} aria-hidden /> Tips
           </button>
           <button type="button" onClick={() => setDetails("configure")}>
-            <SlidersHorizontal size={13} /> Explore details
+            <SlidersHorizontal size={15} aria-hidden />{" "}
+            <span>
+              Explore<span className="action-detail"> details</span>
+            </span>
           </button>
           <button type="button" onClick={() => setDetails("trace")}>
-            <Layers size={13} /> Inspect run
+            <Layers size={15} aria-hidden />{" "}
+            <span>
+              Inspect<span className="action-detail"> run</span>
+            </span>
           </button>
           <Link to="/overview">
             Five concepts <ArrowUpRight size={13} />
@@ -527,7 +532,7 @@ const TOUR_STEPS = [
   {
     selector: 'button[aria-label="Open lesson menu"]',
     title: "Menu, top right",
-    text: "Opens the five lessons, the overview, the architecture map, implementation priorities, and writing exercises.",
+    text: "Open the worked examples, lesson overview, architecture map or writing exercises here.",
   },
 ] as const;
 

@@ -1,3 +1,4 @@
+import { LessonContents } from "./LessonContents";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import {
@@ -22,18 +23,6 @@ import { Takeaways } from "./Takeaways";
 import { ThinkingCheck } from "./ThinkingCheck";
 import { Badge, Callout, CodeBlock, Section, btnVariants } from "./ui";
 
-const TOC = [
-  ["understand", "Understand it"],
-  ["lab", "See it work"],
-  ["apply", "Apply it to EvidenceLens"],
-  ["assess", "Assess the current plan"],
-  ["implement", "Try a small implementation"],
-  ["verify", "Verify the change"],
-  ["tradeoffs", "Inspect trade-offs"],
-  ["quiz", "Check understanding"],
-  ["notes", "Capture a takeaway"],
-] as const;
-
 const List = ({ title, items, tone }: { title: string; items: string[]; tone?: "warn" }) => (
   <div className="rounded-lg border border-border bg-card p-4">
     <p className="font-semibold">{title}</p>
@@ -50,7 +39,7 @@ const List = ({ title, items, tone }: { title: string; items: string[]; tone?: "
 export function LessonAgents() {
   const lesson = getLesson("tools-agents")!;
   return (
-    <article className="mx-auto max-w-4xl px-5 py-10 lg:px-10">
+    <article className="lesson-reader mx-auto max-w-4xl px-5 py-10 lg:px-10">
       <header>
         <p className="eyebrow">Lesson 05 · {lesson.concept}</p>
         <h1 className="mt-2 text-4xl font-medium sm:text-5xl">{lesson.title}</h1>
@@ -58,17 +47,7 @@ export function LessonAgents() {
           “Agent” is not a synonym for “app with an LLM”. Most of what a RAG system needs is a
           workflow your code controls — with tools the model may propose but never runs itself.
         </p>
-        <nav aria-label="Lesson sections" className="mt-6 flex flex-wrap gap-2">
-          {TOC.map(([id, label], i) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className="rounded-full border border-border bg-card px-3 py-1 text-xs hover:bg-muted"
-            >
-              {i + 1}. {label}
-            </a>
-          ))}
-        </nav>
+        <LessonContents />
       </header>
 
       <div className="mt-10 space-y-14">

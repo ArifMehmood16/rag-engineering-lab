@@ -47,7 +47,7 @@ function ReleaseExperiment() {
             </button>
           ))}
         </div>
-        <table className="w-full max-w-2xl text-left tabular-nums">
+        <table className="release-results w-full text-left tabular-nums">
           <caption className="sr-only">
             {RELEASE_SLICES[slice]} results. Latency is measured across the full fixture.
           </caption>
@@ -68,7 +68,14 @@ function ReleaseExperiment() {
                     {release}
                   </th>
                   <td>{count.join("/")}</td>
-                  <td>{pct(count)}%</td>
+                  <td>
+                    <span className="release-rate">
+                      <span aria-hidden="true">
+                        <i style={{ width: pct(count) + "%" }} />
+                      </span>
+                      {pct(count)}%
+                    </span>
+                  </td>
                   <td>{EVALUATION.p95Ms[release].toLocaleString("en-GB")} ms</td>
                 </tr>
               );
@@ -81,16 +88,13 @@ function ReleaseExperiment() {
           ms.
         </p>
       </section>
-      <section
-        id="release-gate"
-        className="max-w-2xl space-y-3 rounded-md border-l-4 border-accent bg-accent-soft p-5"
-      >
+      <section id="release-gate" className="release-gate space-y-3">
         <h2 className="text-2xl">Release gate · {gate.pass ? "Pass" : "Hold"}</h2>
         <ul className="space-y-1">
           {gate.checks.map((check) => (
             <li key={check.label}>
-              <strong>{check.pass ? "Pass" : "Fail"}</strong> · {check.label} · observed{" "}
-              {check.detail}
+              <strong data-pass={check.pass}>{check.pass ? "Pass" : "Fail"}</strong> · {check.label}{" "}
+              · observed {check.detail}
             </li>
           ))}
         </ul>
