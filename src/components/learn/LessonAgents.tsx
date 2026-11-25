@@ -121,6 +121,12 @@ export function LessonAgents() {
           </p>
           <div className="mt-5">
             <ToolCallLab />
+            <Link
+              to="/showcases/agent-authority"
+              className="mt-5 inline-flex min-h-11 items-center text-primary underline underline-offset-4"
+            >
+              Compare the agent’s permissions on a supplier email
+            </Link>
           </div>
           <h3 className="mt-12 text-2xl">B. Context-budget lab</h3>
           <p className="prose-body mb-4 mt-2 max-w-2xl">

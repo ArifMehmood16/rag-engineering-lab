@@ -14,7 +14,11 @@ import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as RoadmapRouteImport } from './routes/roadmap'
 import { Route as WritingRouteImport } from './routes/writing'
+import { Route as DemosReleaseEvaluationRouteImport } from './routes/demos.release-evaluation'
+import { Route as DemosTopKRouteImport } from './routes/demos.top-k'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
+import { Route as ShowcasesAgentAuthorityIndexRouteImport } from './routes/showcases.agent-authority.index'
+import { Route as ShowcasesAgentAuthoritySolidRouteImport } from './routes/showcases.agent-authority.solid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,11 +45,33 @@ const WritingRoute = WritingRouteImport.update({
   path: '/writing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemosReleaseEvaluationRoute = DemosReleaseEvaluationRouteImport.update({
+  id: '/demos/release-evaluation',
+  path: '/demos/release-evaluation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemosTopKRoute = DemosTopKRouteImport.update({
+  id: '/demos/top-k',
+  path: '/demos/top-k',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LessonsSlugRoute = LessonsSlugRouteImport.update({
   id: '/lessons/$slug',
   path: '/lessons/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShowcasesAgentAuthorityIndexRoute =
+  ShowcasesAgentAuthorityIndexRouteImport.update({
+    id: '/showcases/agent-authority/',
+    path: '/showcases/agent-authority/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ShowcasesAgentAuthoritySolidRoute =
+  ShowcasesAgentAuthoritySolidRouteImport.update({
+    id: '/showcases/agent-authority/solid',
+    path: '/showcases/agent-authority/solid',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,7 +79,11 @@ export interface FileRoutesByFullPath {
   '/overview': typeof OverviewRoute
   '/roadmap': typeof RoadmapRoute
   '/writing': typeof WritingRoute
+  '/demos/release-evaluation': typeof DemosReleaseEvaluationRoute
+  '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
+  '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority/': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,7 +91,11 @@ export interface FileRoutesByTo {
   '/overview': typeof OverviewRoute
   '/roadmap': typeof RoadmapRoute
   '/writing': typeof WritingRoute
+  '/demos/release-evaluation': typeof DemosReleaseEvaluationRoute
+  '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
+  '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,7 +104,11 @@ export interface FileRoutesById {
   '/overview': typeof OverviewRoute
   '/roadmap': typeof RoadmapRoute
   '/writing': typeof WritingRoute
+  '/demos/release-evaluation': typeof DemosReleaseEvaluationRoute
+  '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
+  '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority/': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,7 +118,11 @@ export interface FileRouteTypes {
     | '/overview'
     | '/roadmap'
     | '/writing'
+    | '/demos/release-evaluation'
+    | '/demos/top-k'
     | '/lessons/$slug'
+    | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -88,7 +130,11 @@ export interface FileRouteTypes {
     | '/overview'
     | '/roadmap'
     | '/writing'
+    | '/demos/release-evaluation'
+    | '/demos/top-k'
     | '/lessons/$slug'
+    | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority'
   id:
     | '__root__'
     | '/'
@@ -96,7 +142,11 @@ export interface FileRouteTypes {
     | '/overview'
     | '/roadmap'
     | '/writing'
+    | '/demos/release-evaluation'
+    | '/demos/top-k'
     | '/lessons/$slug'
+    | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -105,7 +155,11 @@ export interface RootRouteChildren {
   OverviewRoute: typeof OverviewRoute
   RoadmapRoute: typeof RoadmapRoute
   WritingRoute: typeof WritingRoute
+  DemosReleaseEvaluationRoute: typeof DemosReleaseEvaluationRoute
+  DemosTopKRoute: typeof DemosTopKRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
+  ShowcasesAgentAuthoritySolidRoute: typeof ShowcasesAgentAuthoritySolidRoute
+  ShowcasesAgentAuthorityIndexRoute: typeof ShowcasesAgentAuthorityIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,11 +199,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WritingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demos/release-evaluation': {
+      id: '/demos/release-evaluation'
+      path: '/demos/release-evaluation'
+      fullPath: '/demos/release-evaluation'
+      preLoaderRoute: typeof DemosReleaseEvaluationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demos/top-k': {
+      id: '/demos/top-k'
+      path: '/demos/top-k'
+      fullPath: '/demos/top-k'
+      preLoaderRoute: typeof DemosTopKRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lessons/$slug': {
       id: '/lessons/$slug'
       path: '/lessons/$slug'
       fullPath: '/lessons/$slug'
       preLoaderRoute: typeof LessonsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/showcases/agent-authority/': {
+      id: '/showcases/agent-authority/'
+      path: '/showcases/agent-authority'
+      fullPath: '/showcases/agent-authority/'
+      preLoaderRoute: typeof ShowcasesAgentAuthorityIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/showcases/agent-authority/solid': {
+      id: '/showcases/agent-authority/solid'
+      path: '/showcases/agent-authority/solid'
+      fullPath: '/showcases/agent-authority/solid'
+      preLoaderRoute: typeof ShowcasesAgentAuthoritySolidRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -161,7 +243,11 @@ const rootRouteChildren: RootRouteChildren = {
   OverviewRoute: OverviewRoute,
   RoadmapRoute: RoadmapRoute,
   WritingRoute: WritingRoute,
+  DemosReleaseEvaluationRoute: DemosReleaseEvaluationRoute,
+  DemosTopKRoute: DemosTopKRoute,
   LessonsSlugRoute: LessonsSlugRoute,
+  ShowcasesAgentAuthoritySolidRoute: ShowcasesAgentAuthoritySolidRoute,
+  ShowcasesAgentAuthorityIndexRoute: ShowcasesAgentAuthorityIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
