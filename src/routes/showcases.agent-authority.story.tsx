@@ -329,7 +329,7 @@ function Explorer() {
           Everything below is rendered by the same deterministic scene model as the graph above.
         </p>
 
-        <div className="mt-5 grid gap-6 md:grid-cols-2">
+        <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="rounded-xl border bg-card p-5">
             <h3 className="font-semibold">Article figures (3 JPGs · 2400×1350)</h3>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -352,7 +352,7 @@ function Explorer() {
             <Button
               variant="outline"
               onClick={() => run("Figures ZIP", () => downloadAllPresetsZip())}
-              className="mt-3 rounded-md border px-3 py-1.5 text-sm hover:bg-background"
+              className="mt-3 h-auto min-h-9 max-w-full whitespace-normal rounded-md border px-3 py-1.5 text-sm hover:bg-background"
             >
               Download all three as ZIP (JPG + captions)
             </Button>
@@ -460,7 +460,7 @@ function Explorer() {
               <Button
                 variant="outline"
                 onClick={() => run("Standalone HTML", () => downloadStandaloneHtml())}
-                className="mt-3 rounded-md border px-3 py-1.5 text-sm hover:bg-background"
+                className="mt-3 h-auto min-h-9 max-w-full whitespace-normal rounded-md border px-3 py-1.5 text-sm hover:bg-background"
               >
                 agent-authority-explorer.html
               </Button>

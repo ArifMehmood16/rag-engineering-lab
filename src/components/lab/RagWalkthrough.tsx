@@ -16,6 +16,7 @@ import type { EvidenceRecord } from "@/content/apollo";
 import {
   KNOWLEDGE_WALKTHROUGH,
   REQUEST_WALKTHROUGH,
+  WALKTHROUGH_INTROS,
   KNOWLEDGE_TAKEAWAYS,
   REQUEST_TAKEAWAYS,
 } from "@/content/rag-walkthrough";
@@ -128,6 +129,8 @@ export function RagWalkthrough(props: Props) {
     }
   }, [stream, stage, output, decisionVisible, frames, visible, concept]);
   const { goTo } = gallery;
+  const jumpToChapter = (n: number) =>
+    goTo(cards.findIndex((item) => item.stage === n && item.kind !== "intro"));
   const repeat = useCallback(() => {
     const last = frames.at(-1)!;
     highestFrame.current = 0;
@@ -148,35 +151,16 @@ export function RagWalkthrough(props: Props) {
           return (
             <>
               <header className="story-card-heading gallery-intro-heading">
-                <span className="gallery-start">
-                  <Mouse size={14} /> START HERE
-                </span>
-                <h2>
-                  {stream === "knowledge" ? (
-                    <>
-                      Scroll the cards.
-                      <br />
-                      Watch the system move.
-                    </>
-                  ) : (
-                    <>
-                      One question.
-                      <br />
-                      One complete path.
-                    </>
-                  )}
-                </h2>
+                <h2>{item.title}</h2>
               </header>
               <div className="story-card-body gallery-intro-body">
                 <p>
-                  Scroll this column. Each step shows its input, the change, and the result. The
-                  scene settles so you can read; scrolling continues the story.
+                  {stream === "request" && scenario
+                    ? scenario.purpose
+                    : WALKTHROUGH_INTROS[stream].description}
                 </p>
                 <p className="gallery-intro-context">
-                  {stream === "knowledge"
-                    ? "Follow source documents into chunks, vectors, and a searchable index."
-                    : (scenario?.purpose ??
-                      "Follow the configured question from input to answer. Routing selects a model for later; retrieval comes first.")}
+                  Scroll the cards. The diagram follows the step you are reading.
                 </p>
                 <ol className="reading-method" aria-label="How to follow each step">
                   <li>See the input</li>
@@ -484,6 +468,21 @@ export function RagWalkthrough(props: Props) {
               <small>Scroll ↓ · input → change → result</small>
             </span>
           </div>
+          <select
+            className="mobile-chapters"
+            aria-label="Jump to chapter"
+            value=""
+            onChange={(event) => jumpToChapter(Number(event.currentTarget.value))}
+          >
+            <option value="" disabled>
+              Chapters
+            </option>
+            {stages.map((n, i) => (
+              <option key={n} value={n}>
+                {i + 1}. {steps[n]!.short}
+              </option>
+            ))}
+          </select>
           <span>
             {String(selected + 1).padStart(2, "0")} <b>/ {cards.length}</b>
           </span>
@@ -580,9 +579,7 @@ export function RagWalkthrough(props: Props) {
                   aria-label={`Jump to ${s.short}`}
                   onClick={(event) => {
                     event.preventDefault();
-                    gallery.goTo(
-                      cards.findIndex((item) => item.stage === n && item.kind !== "intro"),
-                    );
+                    jumpToChapter(n);
                   }}
                 >
                   <span>

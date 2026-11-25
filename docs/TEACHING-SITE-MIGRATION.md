@@ -68,7 +68,7 @@ Run `bun run test`, `bunx tsc --noEmit`, `bun run lint` and `bun run build` in e
 
 Both local Worker builds passed the handoff, direct-load and refresh checks. Prep passed 100 tests and the Lab passed 154 tests. TypeScript and production builds passed in both repositories. Lint reported six existing warnings in Prep and eleven in the Lab, all outside the changed files.
 
-The original Lab homepage, overview, five lessons, architecture, roadmap and writing routes were also checked on direct load and refresh. In desktop Chromium at 1440 × 900 the existing homepage scroll scene intercepts a pointer click on “Compare Keyword and Hybrid” on both the public site and this preview. Keyboard activation opens the comparison on both.
+The original Lab homepage, overview, five lessons, architecture, roadmap and writing routes were also checked on direct load and refresh. The Lab now exposes “Compare Keyword and Hybrid” in the walkthrough toolbar. Open the comparison, inspect a citation and close it to return to the same step. On a phone, the toolbar labels this action “Compare”.
 
 ## Publication sequence for a later change
 

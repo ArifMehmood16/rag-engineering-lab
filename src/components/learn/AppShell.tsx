@@ -1,90 +1,71 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import * as Dialog from "@radix-ui/react-dialog";
-import { Circle, Clock, Github, Linkedin, Menu, X } from "lucide-react";
+import {
+  BookOpen,
+  ChartNoAxesColumn,
+  FileStack,
+  Github,
+  Linkedin,
+  Menu,
+  Route,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { CROSS_LESSON_PAGES, WORKED_EXAMPLES } from "@/content/lab-directory";
 import { LESSONS } from "@/content/lessons";
 import { AppBrand } from "./AppBrand";
 import { btnVariants } from "./ui";
 import { cn } from "@/lib/utils";
 
+const exampleIcons = {
+  "/demos/top-k": FileStack,
+  "/demos/release-evaluation": ChartNoAxesColumn,
+  "/showcases/agent-authority": ShieldCheck,
+};
+
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
-  const path = useRouterState({ select: (s) => s.location.pathname });
+  const activeOptions = { exact: true, includeSearch: false };
   return (
-    <nav aria-label="Site" className="flex flex-col gap-1">
-      <Link
-        to="/"
-        onClick={onNavigate}
-        aria-current={path === "/" ? "page" : undefined}
-        className={cn(
-          "rounded-md px-3 py-2 font-mono text-xs uppercase tracking-widest hover:bg-muted",
-          path === "/" && "bg-card text-primary",
-        )}
-      >
-        The RAG lab
+    <nav aria-label="Site" className="lab-nav">
+      <Link to="/" activeOptions={activeOptions} onClick={onNavigate}>
+        <Route size={17} aria-hidden /> Live walkthrough
       </Link>
-      <Link
-        to="/overview"
-        onClick={onNavigate}
-        aria-current={path === "/overview" ? "page" : undefined}
-        className={cn(
-          "rounded-md px-3 py-2 text-sm hover:bg-muted",
-          path === "/overview" && "bg-card font-semibold shadow-sm",
-        )}
-      >
-        Overview
+      <Link to="/overview" activeOptions={activeOptions} onClick={onNavigate}>
+        <BookOpen size={17} aria-hidden /> Lab overview
       </Link>
-      <p className="eyebrow mt-4 px-3">Five lessons</p>
-      <ol className="mt-1 flex flex-col gap-0.5">
-        {LESSONS.map((l) => {
-          const active = path === `/lessons/${l.slug}`;
-          const Icon = l.status === "planned" ? Clock : Circle;
-          const state = l.status === "planned" ? "planned" : "available";
-          return (
-            <li key={l.slug}>
-              <Link
-                to="/lessons/$slug"
-                params={{ slug: l.slug }}
-                onClick={onNavigate}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex gap-3 rounded-md px-3 py-2 text-sm hover:bg-muted",
-                  active && "bg-card shadow-sm",
-                  l.status === "planned" && "text-muted-foreground",
-                )}
-              >
-                <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />
-                <span>
-                  <span className="font-mono text-xs">0{l.number}</span>{" "}
-                  <span className={cn(active && "font-semibold")}>{l.concept}</span>
-                  <span className="sr-only"> ({state})</span>
-                  {l.status === "planned" && (
-                    <span className="block text-xs">Planned next increment</span>
-                  )}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
+      <h2>Worked examples</h2>
+      {WORKED_EXAMPLES.map(({ to, title }) => {
+        const Icon = exampleIcons[to];
+        return (
+          <Link key={to} to={to} onClick={onNavigate} activeOptions={{ includeSearch: false }}>
+            <Icon size={17} aria-hidden /> {title}
+          </Link>
+        );
+      })}
+      <h2>Five lessons</h2>
+      <ol>
+        {LESSONS.map((lesson) => (
+          <li key={lesson.slug}>
+            <Link
+              to="/lessons/$slug"
+              params={{ slug: lesson.slug }}
+              activeOptions={activeOptions}
+              onClick={onNavigate}
+            >
+              <span className="nav-lesson-number">{String(lesson.number).padStart(2, "0")}</span>
+              <span>
+                {lesson.concept}
+                {lesson.status === "planned" && <small className="block">Planned</small>}
+              </span>
+            </Link>
+          </li>
+        ))}
       </ol>
-      <p className="eyebrow mt-4 px-3">Across lessons</p>
-      {(
-        [
-          ["/architecture", "Architecture map"],
-          ["/roadmap", "Implementation priorities"],
-          ["/writing", "Writing exercises"],
-        ] as const
-      ).map(([to, label]) => (
-        <Link
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          aria-current={path === to ? "page" : undefined}
-          className={cn(
-            "rounded-md px-3 py-2 text-sm hover:bg-muted",
-            path === to && "bg-card font-semibold shadow-sm",
-          )}
-        >
-          {label}
+      <h2>Across lessons</h2>
+      {CROSS_LESSON_PAGES.map(({ to, title }) => (
+        <Link key={to} to={to} activeOptions={activeOptions} onClick={onNavigate}>
+          {title}
         </Link>
       ))}
     </nav>
@@ -99,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       className={cn(
         "min-h-screen",
         lab && "immersive-shell",
-        !lab && "lg:grid lg:grid-cols-[17rem_1fr]",
+        !lab && "reader-shell lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]",
       )}
     >
       <a
@@ -136,7 +117,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Dialog.Trigger>
           <Dialog.Portal>
             <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/30" />
-            <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-[85%] max-w-xs overflow-y-auto bg-sidebar px-3 py-6 shadow-xl">
+            <Dialog.Content className="fixed inset-y-0 left-0 z-50 w-[85%] max-w-xs overflow-y-auto overscroll-contain bg-sidebar px-3 py-6 shadow-xl">
               <div className="flex items-start justify-between">
                 <Dialog.Title asChild>
                   <div>
@@ -151,7 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </Dialog.Close>
               </div>
               <Dialog.Description className="sr-only">
-                Navigate between the overview and five lessons.
+                Explore the walkthrough, worked examples and lessons.
               </Dialog.Description>
               <div className="mt-6">
                 <NavList onNavigate={() => setOpen(false)} />

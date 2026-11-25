@@ -59,3 +59,15 @@ export const LESSONS: LessonMeta[] = [
 ];
 
 export const getLesson = (slug: string) => LESSONS.find((l) => l.slug === slug);
+
+export const LESSON_SECTIONS = [
+  ["understand", "Understand it"],
+  ["lab", "See it work"],
+  ["apply", "Apply it to EvidenceLens"],
+  ["assess", "Assess the current plan"],
+  ["implement", "Try a small implementation"],
+  ["verify", "Verify the change"],
+  ["tradeoffs", "Inspect trade-offs"],
+  ["quiz", "Check understanding"],
+  ["notes", "Capture a takeaway"],
+] as const;

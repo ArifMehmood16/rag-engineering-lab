@@ -6,6 +6,19 @@ export interface WalkthroughStep {
   work: { title: string; detail: string }[];
 }
 
+export const WALKTHROUGH_INTROS = {
+  knowledge: {
+    title: "Build a searchable index",
+    description:
+      "Follow two NASA source pages as the system splits them into passages, embeds them and builds an index.",
+  },
+  request: {
+    title: "Follow a question to its answer",
+    description:
+      "Follow the configured question through retrieval, context selection and answer checks.",
+  },
+} as const;
+
 export const KNOWLEDGE_WALKTHROUGH: WalkthroughStep[] = [
   {
     title: "Read and identify the source material",

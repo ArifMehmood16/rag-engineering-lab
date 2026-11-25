@@ -21,7 +21,7 @@ export function useRagGallery(
   const elements = useRef(new Map<string, HTMLElement>());
   const centers = useRef<number[]>([]);
   const bounds = useRef<{ top: number; height: number }[]>([]);
-  const measured = useRef(new Set<StoryStream>());
+  const atStart = useRef<Record<StoryStream, boolean>>({ knowledge: true, request: true });
   const places = useRef<Record<StoryStream, Omit<Focus, "stream">>>({
     knowledge: { index: 0, offset: 0, transfer: 0 },
     request: { index: 0, offset: 0, transfer: 0 },
@@ -48,6 +48,7 @@ export function useRagGallery(
           )
         : gallerySelection(cards, centers.current, list.scrollTop, list.clientHeight);
       places.current[stream] = next;
+      atStart.current[stream] = list.scrollTop <= 0;
       const rounded = { ...next, transfer: Math.round(next.transfer * 500) / 500, stream };
       setFocus((prev) =>
         prev.stream === stream && prev.index === rounded.index && prev.transfer === rounded.transfer
@@ -92,12 +93,11 @@ export function useRagGallery(
       centers.current = bounds.current.map((card) => card.top + card.height / 2);
       list.scrollTo({
         top:
-          readLongCardsFromStart && !measured.current.has(stream)
+          readLongCardsFromStart && atStart.current[stream]
             ? 0
             : galleryScrollTarget(saved, centers.current, list.clientHeight),
         behavior: "instant",
       });
-      measured.current.add(stream);
       paintAndMeasure();
     };
     measureNow.current = paintAndMeasure;

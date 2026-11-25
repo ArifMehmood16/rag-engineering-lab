@@ -1,4 +1,8 @@
-import { KNOWLEDGE_WALKTHROUGH, REQUEST_WALKTHROUGH } from "@/content/rag-walkthrough";
+import {
+  KNOWLEDGE_WALKTHROUGH,
+  REQUEST_WALKTHROUGH,
+  WALKTHROUGH_INTROS,
+} from "@/content/rag-walkthrough";
 import type { EngineState } from "./apollo-engine";
 import type { StoryStream } from "./rag-scroll-story";
 
@@ -27,7 +31,7 @@ export function storyCards(
       stage: 0,
       beat: 0,
       kind: "intro",
-      title: "Scroll the cards. Watch the system move.",
+      title: WALKTHROUGH_INTROS[stream].title,
     },
   ];
   steps.slice(0, count).forEach((step, stage) => {
@@ -111,6 +115,8 @@ export function galleryReadingSelection(
   top: number,
   height: number,
 ) {
+  // A short intro can share the first viewport with a taller example. Wait for the reader to scroll.
+  if (top <= 0) return gallerySelection(cards, centers, top, height, 0);
   let selected = gallerySelection(cards, centers, top, height).index;
   const visible = (index: number) => {
     const card = bounds[index];
