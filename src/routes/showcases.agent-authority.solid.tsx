@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { demoHead } from "@/lib/demo-head";
 import { DemoPage } from "@/components/learn/DemoPage";
-import { DESIGN_NOTES, EXPLORER } from "@/content/agent-authority";
+import { AuthorityDiagram } from "@/components/learn/AuthorityDiagram";
+import { DESIGN_NOTES } from "@/content/agent-authority";
 
 const title = "SOLID and authority";
 const intro =
@@ -30,8 +31,28 @@ function Notes() {
           className="max-w-3xl scroll-mt-20 space-y-3 border-t pt-5"
         >
           <h2 className="text-2xl">{note.name}</h2>
-          <p>{note.pitfall}</p>
-          <p>{note.design}</p>
+          <p>{note.oneLine}</p>
+          <div className="max-w-md">
+            <AuthorityDiagram k={note.id} />
+          </div>
+          <p>{note.application}</p>
+          <details className="rounded-md border bg-card p-4">
+            <summary className="cursor-pointer font-semibold">
+              Design pitfall and proposed implementation
+            </summary>
+            <div className="mt-4 space-y-3">
+              <h3 className="font-semibold">Design pitfall</h3>
+              <p>{note.pitfall}</p>
+              <pre className="overflow-x-auto rounded-md bg-muted p-3 text-sm">
+                <code>{note.bad}</code>
+              </pre>
+              <h3 className="font-semibold">Proposed design and required enforcement</h3>
+              <p>{note.proposed}</p>
+              <pre className="overflow-x-auto rounded-md bg-muted p-3 text-sm">
+                <code>{note.good}</code>
+              </pre>
+            </div>
+          </details>
         </section>
       ))}
       <nav
@@ -39,7 +60,7 @@ function Notes() {
         className="flex flex-wrap gap-5 text-primary underline underline-offset-4"
       >
         <Link to="/showcases/agent-authority">Compare permissions for order #1042</Link>
-        <a href={EXPLORER + "/solid"}>Original design notes and pseudocode</a>
+        <Link to="/showcases/agent-authority/story">Animated story and exports</Link>
       </nav>
     </DemoPage>
   );

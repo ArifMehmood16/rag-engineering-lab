@@ -19,6 +19,7 @@ import { Route as DemosTopKRouteImport } from './routes/demos.top-k'
 import { Route as LessonsSlugRouteImport } from './routes/lessons.$slug'
 import { Route as ShowcasesAgentAuthorityIndexRouteImport } from './routes/showcases.agent-authority.index'
 import { Route as ShowcasesAgentAuthoritySolidRouteImport } from './routes/showcases.agent-authority.solid'
+import { Route as ShowcasesAgentAuthorityStoryRouteImport } from './routes/showcases.agent-authority.story'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +73,12 @@ const ShowcasesAgentAuthoritySolidRoute =
     path: '/showcases/agent-authority/solid',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ShowcasesAgentAuthorityStoryRoute =
+  ShowcasesAgentAuthorityStoryRouteImport.update({
+    id: '/showcases/agent-authority/story',
+    path: '/showcases/agent-authority/story',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority/story': typeof ShowcasesAgentAuthorityStoryRoute
   '/showcases/agent-authority/': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRoutesByTo {
@@ -95,6 +103,7 @@ export interface FileRoutesByTo {
   '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority/story': typeof ShowcasesAgentAuthorityStoryRoute
   '/showcases/agent-authority': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRoutesById {
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/demos/top-k': typeof DemosTopKRoute
   '/lessons/$slug': typeof LessonsSlugRoute
   '/showcases/agent-authority/solid': typeof ShowcasesAgentAuthoritySolidRoute
+  '/showcases/agent-authority/story': typeof ShowcasesAgentAuthorityStoryRoute
   '/showcases/agent-authority/': typeof ShowcasesAgentAuthorityIndexRoute
 }
 export interface FileRouteTypes {
@@ -122,6 +132,7 @@ export interface FileRouteTypes {
     | '/demos/top-k'
     | '/lessons/$slug'
     | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority/story'
     | '/showcases/agent-authority/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -134,6 +145,7 @@ export interface FileRouteTypes {
     | '/demos/top-k'
     | '/lessons/$slug'
     | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority/story'
     | '/showcases/agent-authority'
   id:
     | '__root__'
@@ -146,6 +158,7 @@ export interface FileRouteTypes {
     | '/demos/top-k'
     | '/lessons/$slug'
     | '/showcases/agent-authority/solid'
+    | '/showcases/agent-authority/story'
     | '/showcases/agent-authority/'
   fileRoutesById: FileRoutesById
 }
@@ -159,6 +172,7 @@ export interface RootRouteChildren {
   DemosTopKRoute: typeof DemosTopKRoute
   LessonsSlugRoute: typeof LessonsSlugRoute
   ShowcasesAgentAuthoritySolidRoute: typeof ShowcasesAgentAuthoritySolidRoute
+  ShowcasesAgentAuthorityStoryRoute: typeof ShowcasesAgentAuthorityStoryRoute
   ShowcasesAgentAuthorityIndexRoute: typeof ShowcasesAgentAuthorityIndexRoute
 }
 
@@ -234,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShowcasesAgentAuthoritySolidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/showcases/agent-authority/story': {
+      id: '/showcases/agent-authority/story'
+      path: '/showcases/agent-authority/story'
+      fullPath: '/showcases/agent-authority/story'
+      preLoaderRoute: typeof ShowcasesAgentAuthorityStoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -247,6 +268,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemosTopKRoute: DemosTopKRoute,
   LessonsSlugRoute: LessonsSlugRoute,
   ShowcasesAgentAuthoritySolidRoute: ShowcasesAgentAuthoritySolidRoute,
+  ShowcasesAgentAuthorityStoryRoute: ShowcasesAgentAuthorityStoryRoute,
   ShowcasesAgentAuthorityIndexRoute: ShowcasesAgentAuthorityIndexRoute,
 }
 export const routeTree = rootRouteImport

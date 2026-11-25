@@ -1,6 +1,6 @@
 # Reviewing the teaching-site split
 
-AI Engineer Prep hosts interview rehearsals, technical follow-ups, mock interviews and case defences. RAG Engineering Lab hosts shareable demonstrations. This change adds four Lab pages. The LinkedIn landing page at `/`, the five lesson addresses, `/overview`, `/architecture`, `/roadmap` and `/writing` keep their existing jobs.
+AI Engineer Prep hosts interview rehearsals, technical follow-ups, mock interviews and case defences. RAG Engineering Lab hosts shareable demonstrations. This change adds Lab pages for the policy, release and permissions examples. The LinkedIn landing page at `/`, the five lesson addresses, `/overview`, `/architecture`, `/roadmap` and `/writing` keep their existing jobs.
 
 ## Preview the handoff
 
@@ -54,7 +54,7 @@ The Lab URL records applied controls. K takes integers 1–4. The budget is 0–
 
 **Release evaluation.** Prep keeps `/labs/evaluation`, the decision at `#decide` and the existing scored-answer illustration at `#tool-screen`. The three choices, justification, worked defence and retry are local to the activity. Its previous subgroup selector had no URL parameter. Lab lesson `/lessons/evaluation#lab` links to `/demos/release-evaluation`. The new URL accepts `slice=overall` (default), `single` or `endorsement`. Each group shows the same fixture-wide latency figures.
 
-**Agent Authority Explorer.** Lab lesson `/lessons/tools-agents#lab` links to `/showcases/agent-authority`. Its two runs compare the same order, note and delivery request. `run=enforced` selects application-enforced limits. Broad access is the default. The companion `/showcases/agent-authority/solid` page supports `#S`, `#O`, `#L`, `#I` and `#D`. The showcase links back to the [public animated comparison and exports](https://agent-authority-explorer.lovable.app/) and [original design notes with pseudocode](https://agent-authority-explorer.lovable.app/solid). The Lab pages use the public teaching story and its design notes.
+**Agent Authority Explorer.** Lab lesson `/lessons/tools-agents#lab` links to `/showcases/agent-authority`. Its two runs compare the same order, note and delivery request. `run=enforced` selects application-enforced limits. Broad access is the default. The companion `/showcases/agent-authority/solid` page supports `#S`, `#O`, `#L`, `#I` and `#D`. The [animated story and exports](https://rag-engineering-lab.lovable.app/showcases/agent-authority/story) use the original deterministic scene engine. The [design notes](https://rag-engineering-lab.lovable.app/showcases/agent-authority/solid) include the five original diagrams and pseudocode examples. Both are served by the Lab. The story accepts `?capture` for the recorder view.
 
 ## Review evidence
 
@@ -74,8 +74,8 @@ The original Lab homepage, overview, five lessons, architecture, roadmap and wri
 
 1. Publish the reviewed Lab first. Test the four destination URLs and the three lesson links on the public Lab origin. Open the existing LinkedIn homepage address and exercise its Apollo walkthrough.
 2. Publish Prep after the public Lab checks pass. Verify the old reranked URL from a fresh tab and reload it. Follow both chapter handoffs and the release-defence link. The 307 keeps the old workbench address reversible.
-3. Keep the standalone Explorer serving both pages throughout review. When authorised to transition it, first add visible links on its homepage and design notes to their respective Lab pages. Preserve access to the animation, figures, video exports and full notes at a durable address before replacing either entry point. Update the Lab’s original-story links to that address so redirects cannot loop.
-4. Once those destinations are live, configure separate redirects on the **old Explorer host**. Map `/` to Lab `/showcases/agent-authority` and `/solid` to Lab `/showcases/agent-authority/solid`. Test direct load and reload on both old URLs, plus the archived exports. Keep the old hostname and redirect service available for article and LinkedIn readers.
+3. Publish the Lab story and full notes before retiring the standalone app. Test the figure ZIP, portrait recording and offline HTML player. The original Lovable source revision is `3c93e45dca4199cdb3e4849891b4261ebd27ea31`.
+4. Keep the old Lovable hostname as the redirect service. Forward its homepage to Lab `/showcases/agent-authority/story` so the original LinkedIn and Medium links still open the animation. Forward `/solid` to Lab `/showcases/agent-authority/solid`. Preserve the query, including `?capture`, and the fragment. Verify both old addresses in a fresh browser after publishing. The Lab links only to its own story and exports, so there is no return trip to the retired app.
 
 ## Further candidates
 
