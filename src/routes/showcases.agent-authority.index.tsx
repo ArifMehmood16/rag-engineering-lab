@@ -2,12 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { demoHead } from "@/lib/demo-head";
 import { DemoPage } from "@/components/learn/DemoPage";
 import { btnVariants } from "@/components/learn/ui";
-import {
-  AUTHORITY_INTRO,
-  AUTHORITY_RUNS,
-  AUTHORITY_TITLE,
-  EXPLORER,
-} from "@/content/agent-authority";
+import { AUTHORITY_INTRO, AUTHORITY_RUNS, AUTHORITY_TITLE } from "@/content/agent-authority";
 
 type Run = keyof typeof AUTHORITY_RUNS;
 export const Route = createFileRoute("/showcases/agent-authority/")({
@@ -65,7 +60,7 @@ function Authority() {
         className="flex flex-wrap gap-5 text-primary underline underline-offset-4"
       >
         <Link to="/showcases/agent-authority/solid">Read the SOLID design notes</Link>
-        <a href={EXPLORER}>Original animated story and exports</a>
+        <Link to="/showcases/agent-authority/story">Animated story and exports</Link>
       </nav>
     </DemoPage>
   );
